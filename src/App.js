@@ -20,7 +20,9 @@ useEffect(() => {
     .on("postgres_changes", { event: "*", schema: "public", table: "news" }, fetchData)
     .on("postgres_changes", { event: "*", schema: "public", table: "mps" }, fetchData)
     .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, fetchData)
-    .subscribe();
+    .subscribe((status) => {
+      console.log("Realtime status:", status);
+    });
 
   return () => {
     supabase.removeChannel(channel);
