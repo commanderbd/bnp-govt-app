@@ -11,9 +11,21 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+useEffect(() => {
+  fetchData();
+
+  const channel = supabase
+    .channel("realtime-updates")
+    .on("postgres_changes", { event: "*", schema: "public", table: "ministers" }, fetchData)
+    .on("postgres_changes", { event: "*", schema: "public", table: "news" }, fetchData)
+    .on("postgres_changes", { event: "*", schema: "public", table: "mps" }, fetchData)
+    .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, fetchData)
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   async function fetchData() {
     setLoading(true);
