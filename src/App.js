@@ -181,7 +181,7 @@ useEffect(() => {
                 <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
                   <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
                   <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 আসন: {m.constituency} · {m.district}</div>
-                  <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>📞 {m.phone}</div>
+                  <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>🌾 {m.party}</div>
                 </div>
               ))}
             </div>
