@@ -1,6 +1,21 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
+function formatBanglaDate(dateStr) {
+  try {
+    const date = new Date(dateStr);
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "Asia/Dhaka"
+    };
+    return date.toLocaleDateString("bn-BD", options);
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("news");
   const [search, setSearch] = useState("");
@@ -125,7 +140,7 @@ useEffect(() => {
                 <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
                   <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
                   <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
-                  <div style={{ fontSize: 11, color: "#5a7a8a" }}>🕐 {n.time}</div>
+                  <div style={{ fontSize: 11, color: "#5a7a8a" }}>🕐 {formatBanglaDate(n.time)}</div>
                 </div>
               ))}
             </div>
