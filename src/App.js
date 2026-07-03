@@ -10,10 +10,7 @@ function formatBanglaDate(dateStr) {
     return dateStr;
   }
 }
-
-const BNP_LOGO = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/BNP%20Flag.png";
-const LEADER_IMG = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/election-frame-photo(1).png";
-
+const BNP_LOGO = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/election-frame-photo(1).png";
 export default function App() {
   const [activeTab, setActiveTab] = useState("news");
   const [search, setSearch] = useState("");
@@ -186,11 +183,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             <img src={BNP_LOGO} alt="বিএনপি লোগো"
               style={{ width: 36, height: 36, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2 }}
-              onError={e => e.target.style.display = "none"}
-            />
-            <img src={LEADER_IMG} alt="তারেক রহমান"
-              style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid #C9A84C" }}
-              onError={e => e.target.style.display = "none"}
+              onError={e => e.target.style.display = "none"}  
             />
           </div>
         )}
