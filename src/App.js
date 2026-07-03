@@ -152,7 +152,47 @@ export default function App() {
       </div>
 
       {/* হেডার */}
-      <div style={{ background: "#006A4E", borderBottom: "3px solid #C9A84C", padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, position: "sticky", top: 0, zIndex: 100 }}>
+      <div style={{ background: "#006A4E", borderBottom: "3px solid #C9A84C", padding: "12px 20px", display: "flex", alignItems: "center", gap: 16, position: "sticky", top: 0, zIndex: 100 }}>
+  
+  {/* থ্রি লাইন বাটন */}
+  <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
+    background: "transparent", border: "none", cursor: "pointer",
+    padding: 4, display: "flex", flexDirection: "column", gap: 5, flexShrink: 0
+  }}>
+    <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
+    <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
+    <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
+  </button>
+
+  {/* শিরোনাম */}
+  <div style={{ flex: 1 }}>
+    <div style={{ fontSize: 16, fontWeight: "bold" }}>
+      {selectedGovt ? `🏛️ ${selectedGovt.name}` : "🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার"}
+    </div>
+    <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 3 }}>
+      {selectedGovt ? `📅 ${selectedGovt.period}` : "ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬"}
+    </div>
+  </div>
+
+  {/* ডান পাশে লোগো ও ছবি */}
+  {!selectedGovt && (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+      {/* বিএনপি লোগো */}
+      <img
+        src="https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/BNP%20Flag.png"
+        alt="বিএনপি লোগো"
+        style={{ width: 36, height: 36, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2 }}
+      />
+      {/* নেতৃত্বের ছবি */}
+      <img
+        src="https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/election-frame-photo(1).png"
+        alt="তারেক রহমান"
+        style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid #C9A84C" }}
+      />
+    </div>
+  )}
+
+</div>
         {/* থ্রি লাইন বাটন */}
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
           background: "transparent", border: "none", cursor: "pointer",
