@@ -27,8 +27,31 @@ export default function App() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [m, n, mp, p, g, hm, a] = await Promise.all([
+        supabase.from("ministers").select("*").order("id"),
+        supabase.from("news").select("*").order("id", { ascending: false }),
+        supabase.from("mps").select("*").order("id"),
+        supabase.from("projects").select("*").order("id"),
+        supabase.from("governments").select("*").order("id"),
+        supabase.from("historical_ministers").select("*").order("id"),
+        supabase.from("achievements").select("*").order("id"),
+      ]);
+      setMinisters(m.data || []);
+      setNews(n.data || []);
+      console.log("MPS DATA:", mp.data);
+      setMps(mp.data || []);
+      setProjects(p.data || []);
+      setGovernments(g.data || []);
+      setHistMinisters(hm.data || []);
+      setAchievements(a.data || []);
+      setLoading(false);
+    }
+
     fetchData();
+
     const channel = supabase
       .channel("realtime-updates")
       .on("postgres_changes", { event: "*", schema: "public", table: "ministers" }, fetchData)
@@ -38,31 +61,10 @@ export default function App() {
       .subscribe((status) => {
         console.log("Realtime status:", status);
       });
+
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  async function fetchData() {
-    setLoading(true);
-    const [m, n, mp, p, g, hm, a] = await Promise.all([
-      supabase.from("ministers").select("*").order("id"),
-      supabase.from("news").select("*").order("id", { ascending: false }),
-      supabase.from("mps").select("*").order("id"),
-      supabase.from("projects").select("*").order("id"),
-      supabase.from("governments").select("*").order("id"),
-      supabase.from("historical_ministers").select("*").order("id"),
-      supabase.from("achievements").select("*").order("id"),
-    ]);
-    setMinisters(m.data || []);
-    setNews(n.data || []);
-    setMps(mp.data || []);
-    console.log("MPS DATA:", mp.data);
-    console.log("SELECTED GOVT:", selectedGovt);
-    setProjects(p.data || []);
-    setGovernments(g.data || []);
-    setHistMinisters(hm.data || []);
-    setAchievements(a.data || []);
-    setLoading(false);
-  }
 
   const filteredMinisters = ministers.filter(m =>
     m.name.includes(search) || m.ministry.includes(search)
