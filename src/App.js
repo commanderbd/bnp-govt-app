@@ -55,6 +55,8 @@ export default function App() {
     setMinisters(m.data || []);
     setNews(n.data || []);
     setMps(mp.data || []);
+    console.log("MPS DATA:", mp.data);
+console.log("SELECTED GOVT:", selectedGovt);
     setProjects(p.data || []);
     setGovernments(g.data || []);
     setHistMinisters(hm.data || []);
@@ -84,7 +86,7 @@ export default function App() {
   ];
 
   const currentGovtMinisters = selectedGovt
-    ? histMinisters.filter(m => m.government_id === selectedGovt.id)
+    ? histMinisters.filter(m => Number(m.government_id) === Number(selectedGovt.id))
     : [];
   const currentGovtAchievements = selectedGovt
     ? achievements.filter(a => a.government_id === selectedGovt.id)
@@ -251,13 +253,13 @@ export default function App() {
                     onChange={e => setSearch(e.target.value)}
                     style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }}
                   />
-                  {mps.filter(m => m.government_id === selectedGovt.id &&
+                  {mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) &&
                     (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
                   ).length === 0 ? (
                     <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
                       এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।
                     </div>
-                  ) : mps.filter(m => m.government_id === selectedGovt.id &&
+                  ) : mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) &&
                     (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
                   ).map((m, i) => (
                     <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
