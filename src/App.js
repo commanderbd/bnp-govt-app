@@ -27,6 +27,25 @@ export default function App() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+  if (!selectedGovt) return;
+
+  async function fetchGovtMps() {
+    const { data } = await supabase
+      .from("mps")
+      .select("*")
+      .eq("government_id", selectedGovt.id)
+      .order("id")
+      .limit(500);
+    if (data) setMps(prev => {
+      const otherMps = prev.filter(m => m.government_id !== selectedGovt.id);
+      return [...otherMps, ...data];
+    });
+  }
+
+  fetchGovtMps();
+}, [selectedGovt]);
+
 useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -51,7 +70,6 @@ useEffect(() => {
     }
 
     fetchData();
-
     const channel = supabase
       .channel("realtime-updates")
       .on("postgres_changes", { event: "*", schema: "public", table: "ministers" }, fetchData)
