@@ -56,7 +56,7 @@ export default function App() {
     setNews(n.data || []);
     setMps(mp.data || []);
     console.log("MPS DATA:", mp.data);
-console.log("SELECTED GOVT:", selectedGovt);
+    console.log("SELECTED GOVT:", selectedGovt);
     setProjects(p.data || []);
     setGovernments(g.data || []);
     setHistMinisters(hm.data || []);
