@@ -231,14 +231,41 @@ export default function App() {
                 </div>
               )}
 
-              {/* এমপি তালিকা */}
-              {govtTab === "mps" && (
-                <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>🏗️</div>
-                  এই সরকারের এমপি তালিকা শীঘ্রই যোগ করা হবে।
-                  <div style={{ fontSize: 12, marginTop: 8 }}>Supabase → mps টেবিলে government_id যোগ করে সংযুক্ত করুন</div>
-                </div>
-              )}
+{/* এমপি তালিকা */}
+{govtTab === "mps" && (
+  <div>
+    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
+      🏅 সংসদ সদস্য তালিকা
+    </h2>
+    <input
+      placeholder="নাম, আসন বা জেলা দিয়ে খুঁজুন..."
+      value={search}
+      onChange={e => setSearch(e.target.value)}
+      style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }}
+    />
+    {mps
+      .filter(m => m.government_id === selectedGovt.id &&
+        (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
+      )
+      .length === 0 ? (
+        <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
+          এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।
+          <div style={{ fontSize: 12, marginTop: 8 }}>Supabase → mps টেবিলে government_id: {selectedGovt.id} দিয়ে যোগ করুন</div>
+        </div>
+      ) : mps
+        .filter(m => m.government_id === selectedGovt.id &&
+          (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
+        )
+        .map((m, i) => (
+          <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
+            <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
+            <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 আসন: {m.constituency} · {m.district}</div>
+            <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>🌾 {m.party}</div>
+          </div>
+        ))
+    }
+  </div>
+)}
 
               {/* সাফল্য */}
               {govtTab === "achievements" && (
