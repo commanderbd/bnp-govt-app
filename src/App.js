@@ -4,12 +4,7 @@ import { supabase } from "./supabase";
 function formatBanglaDate(dateStr) {
   try {
     const date = new Date(dateStr);
-    const options = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "Asia/Dhaka"
-    };
+    const options = { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Dhaka" };
     return date.toLocaleDateString("bn-BD", options);
   } catch {
     return dateStr;
@@ -19,58 +14,57 @@ function formatBanglaDate(dateStr) {
 export default function App() {
   const [activeTab, setActiveTab] = useState("news");
   const [search, setSearch] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedGovt, setSelectedGovt] = useState(null);
+  const [govtTab, setGovtTab] = useState("ministers");
+
   const [ministers, setMinisters] = useState([]);
   const [news, setNews] = useState([]);
   const [mps, setMps] = useState([]);
   const [projects, setProjects] = useState([]);
+  const [governments, setGovernments] = useState([]);
+  const [histMinisters, setHistMinisters] = useState([]);
+  const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-useEffect(() => {
-  fetchData();
-
-  const channel = supabase
-    .channel("realtime-updates")
-    .on("postgres_changes", { event: "*", schema: "public", table: "ministers" }, fetchData)
-    .on("postgres_changes", { event: "*", schema: "public", table: "news" }, fetchData)
-    .on("postgres_changes", { event: "*", schema: "public", table: "mps" }, fetchData)
-    .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, fetchData)
-    .subscribe((status) => {
-      console.log("Realtime status:", status);
-    });
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, []);
+  useEffect(() => {
+    fetchData();
+    const channel = supabase
+      .channel("realtime-updates")
+      .on("postgres_changes", { event: "*", schema: "public", table: "ministers" }, fetchData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "news" }, fetchData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "mps" }, fetchData)
+      .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, fetchData)
+      .subscribe((status) => {
+        console.log("Realtime status:", status);
+      });
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   async function fetchData() {
     setLoading(true);
-    setError(null);
-
-    const [ministerRes, newsRes, mpRes, projectRes] = await Promise.all([
+    const [m, n, mp, p, g, hm, a] = await Promise.all([
       supabase.from("ministers").select("*").order("id"),
       supabase.from("news").select("*").order("id", { ascending: false }),
       supabase.from("mps").select("*").order("id"),
       supabase.from("projects").select("*").order("id"),
+      supabase.from("governments").select("*").order("id"),
+      supabase.from("historical_ministers").select("*").order("id"),
+      supabase.from("achievements").select("*").order("id"),
     ]);
-
-    if (ministerRes.error || newsRes.error || mpRes.error || projectRes.error) {
-      setError("ডেটাবেস সংযোগে সমস্যা হয়েছে।");
-    } else {
-      setMinisters(ministerRes.data || []);
-      setNews(newsRes.data || []);
-      setMps(mpRes.data || []);
-      setProjects(projectRes.data || []);
-    }
-
+    setMinisters(m.data || []);
+    setNews(n.data || []);
+    setMps(mp.data || []);
+    setProjects(p.data || []);
+    setGovernments(g.data || []);
+    setHistMinisters(hm.data || []);
+    setAchievements(a.data || []);
     setLoading(false);
   }
 
   const filteredMinisters = ministers.filter(m =>
     m.name.includes(search) || m.ministry.includes(search)
   );
-
   const filteredMps = mps.filter(m =>
     m.name.includes(search) || m.constituency.includes(search) || m.district.includes(search)
   );
@@ -82,135 +76,269 @@ useEffect(() => {
     { id: "projects", label: "🔨 প্রকল্প" },
   ];
 
+  const govtTabs = [
+    { id: "ministers", label: "👥 মন্ত্রিসভা" },
+    { id: "mps", label: "🏅 এমপি তালিকা" },
+    { id: "achievements", label: "🏆 সাফল্য" },
+  ];
+
+  // নির্বাচিত সরকারের তথ্য
+  const currentGovtMinisters = selectedGovt
+    ? histMinisters.filter(m => m.government_id === selectedGovt.id)
+    : [];
+  const currentGovtAchievements = selectedGovt
+    ? achievements.filter(a => a.government_id === selectedGovt.id)
+    : [];
+
   return (
     <div style={{ fontFamily: "sans-serif", background: "#0D1B2A", minHeight: "100vh", color: "#F5F0E8" }}>
 
-      {/* হেডার */}
-      <div style={{ background: "#006A4E", borderBottom: "3px solid #C9A84C", padding: "16px 20px" }}>
-        <div style={{ fontSize: 18, fontWeight: "bold" }}>
-          🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার
+      {/* Sidebar Overlay */}
+      {sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.6)", zIndex: 200
+        }} />
+      )}
+
+      {/* Sidebar */}
+      <div style={{
+        position: "fixed", top: 0, left: sidebarOpen ? 0 : -320,
+        width: 300, height: "100vh", background: "#0a1520",
+        borderRight: "2px solid #C9A84C", zIndex: 300,
+        transition: "left 0.3s ease", overflowY: "auto"
+      }}>
+        {/* Sidebar Header */}
+        <div style={{ background: "#006A4E", padding: "16px 20px", borderBottom: "2px solid #C9A84C" }}>
+          <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>🏛️ বিএনপি সরকার সমূহ</div>
+          <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 3 }}>ইতিহাস ও তথ্যভান্ডার</div>
         </div>
-        <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>
-          ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬
+
+        {/* Government List */}
+        <div style={{ padding: 12 }}>
+          {governments.map((g, i) => (
+            <div key={i} onClick={() => {
+              setSelectedGovt(g);
+              setSidebarOpen(false);
+              setGovtTab("ministers");
+            }} style={{
+              background: selectedGovt?.id === g.id ? "rgba(201,168,76,0.2)" : "#112233",
+              border: `1px solid ${selectedGovt?.id === g.id ? "#C9A84C" : "#1e3348"}`,
+              borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`,
+              borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer",
+              transition: "all 0.2s"
+            }}>
+              <div style={{ fontSize: 14, fontWeight: "bold", color: "#e8f0f5" }}>
+                {g.is_current && <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>বর্তমান</span>}
+                {g.prime_minister}
+              </div>
+              <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>{g.name}</div>
+              <div style={{ fontSize: 11, color: "#5a7a8a", marginTop: 3 }}>📅 {g.period}</div>
+            </div>
+          ))}
+
+          {/* বর্তমান সরকারে ফেরত */}
+          <div onClick={() => { setSelectedGovt(null); setSidebarOpen(false); }}
+            style={{
+              background: !selectedGovt ? "rgba(0,106,78,0.2)" : "transparent",
+              border: `1px solid ${!selectedGovt ? "#006A4E" : "#1e3348"}`,
+              borderRadius: 8, padding: 12, marginTop: 8,
+              cursor: "pointer", textAlign: "center",
+              fontSize: 13, color: "#4ecba0"
+            }}>
+            🏠 মূল ড্যাশবোর্ডে ফিরুন
+          </div>
+        </div>
+      </div>
+
+      {/* হেডার */}
+      <div style={{ background: "#006A4E", borderBottom: "3px solid #C9A84C", padding: "16px 20px", display: "flex", alignItems: "center", gap: 16, position: "sticky", top: 0, zIndex: 100 }}>
+        {/* থ্রি লাইন বাটন */}
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
+          background: "transparent", border: "none", cursor: "pointer",
+          padding: 4, display: "flex", flexDirection: "column", gap: 5
+        }}>
+          <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
+          <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
+          <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
+        </button>
+
+        <div>
+          <div style={{ fontSize: 16, fontWeight: "bold" }}>
+            {selectedGovt ? `🏛️ ${selectedGovt.name}` : "🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার"}
+          </div>
+          <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 3 }}>
+            {selectedGovt ? `📅 ${selectedGovt.period}` : "ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬"}
+          </div>
         </div>
       </div>
 
       {/* ট্যাব মেনু */}
       <div style={{ display: "flex", background: "#0a1520", borderBottom: "2px solid #1a2e40", overflowX: "auto" }}>
-        {tabs.map(tab => (
-          <button key={tab.id} onClick={() => { setActiveTab(tab.id); setSearch(""); }} style={{
-            background: activeTab === tab.id ? "rgba(201,168,76,0.15)" : "transparent",
+        {(selectedGovt ? govtTabs : tabs).map(tab => (
+          <button key={tab.id} onClick={() => {
+            selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id);
+            setSearch("");
+          }} style={{
+            background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent",
             border: "none",
-            borderBottom: activeTab === tab.id ? "3px solid #C9A84C" : "3px solid transparent",
-            color: activeTab === tab.id ? "#C9A84C" : "#6a8a9a",
-            padding: "12px 18px",
-            cursor: "pointer",
-            fontSize: 13,
-            whiteSpace: "nowrap",
-            fontFamily: "sans-serif"
+            borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent",
+            color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : "#6a8a9a",
+            padding: "12px 18px", cursor: "pointer",
+            fontSize: 13, whiteSpace: "nowrap", fontFamily: "sans-serif"
           }}>
             {tab.label}
           </button>
         ))}
       </div>
 
-      {error && (
-        <div style={{ background: "#3a1010", border: "1px solid #c0392b", borderRadius: 8, margin: 20, padding: 16, color: "#ff8a8a" }}>
-          ⚠️ {error}
-        </div>
-      )}
-
       {loading && (
-        <div style={{ textAlign: "center", padding: 60, color: "#C9A84C", fontSize: 16 }}>
-          ⏳ তথ্য লোড হচ্ছে...
-        </div>
+        <div style={{ textAlign: "center", padding: 60, color: "#C9A84C" }}>⏳ তথ্য লোড হচ্ছে...</div>
       )}
 
-      {!loading && !error && (
+      {!loading && (
         <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
 
-          {/* সংবাদ */}
-          {activeTab === "news" && (
+          {/* ===== পূর্ববর্তী সরকার ভিউ ===== */}
+          {selectedGovt && (
             <div>
-              <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
-                সর্বশেষ সংবাদ
-              </h2>
-              {news.length === 0 && <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>কোনো সংবাদ নেই</div>}
-              {news.map((n, i) => (
-                <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
-                  <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
-                  <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
-                  <div style={{ fontSize: 11, color: "#5a7a8a" }}>🕐 {formatBanglaDate(n.time)}</div>
+              {/* সরকারের বিবরণ */}
+              <div style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 20 }}>
+                <div style={{ fontSize: 13, color: "#a0c0d0", lineHeight: 1.7 }}>{selectedGovt.description}</div>
+              </div>
+
+              {/* মন্ত্রিসভা */}
+              {govtTab === "ministers" && (
+                <div>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
+                    👥 মন্ত্রিসভা
+                  </h2>
+                  {currentGovtMinisters.length === 0 ? (
+                    <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
+                      এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।
+                      <div style={{ fontSize: 12, marginTop: 8 }}>Supabase → historical_ministers টেবিলে যোগ করুন</div>
+                    </div>
+                  ) : currentGovtMinisters.map((m, i) => (
+                    <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon || "👤"}</div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
+                        <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
+                        <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>📁 {m.ministry}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* এমপি তালিকা */}
+              {govtTab === "mps" && (
+                <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>🏗️</div>
+                  এই সরকারের এমপি তালিকা শীঘ্রই যোগ করা হবে।
+                  <div style={{ fontSize: 12, marginTop: 8 }}>Supabase → mps টেবিলে government_id যোগ করে সংযুক্ত করুন</div>
+                </div>
+              )}
+
+              {/* সাফল্য */}
+              {govtTab === "achievements" && (
+                <div>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
+                    🏆 উল্লেখযোগ্য সাফল্য
+                  </h2>
+                  {currentGovtAchievements.length === 0 ? (
+                    <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
+                      এই সরকারের সাফল্যের তথ্য এখনো যোগ করা হয়নি।
+                    </div>
+                  ) : currentGovtAchievements.map((a, i) => (
+                    <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>🏆 {a.category}</div>
+                      <div style={{ fontSize: 15, fontWeight: "bold", marginBottom: 6 }}>{a.title}</div>
+                      <div style={{ fontSize: 13, color: "#a0c0d0", lineHeight: 1.6 }}>{a.description}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {/* মন্ত্রিসভা */}
-          {activeTab === "ministers" && (
+          {/* ===== মূল ড্যাশবোর্ড ভিউ ===== */}
+          {!selectedGovt && (
             <div>
-              <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
-                মন্ত্রিসভা
-              </h2>
-              <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}
-                style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
-              {filteredMinisters.length === 0 && <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>কোনো ফলাফল নেই</div>}
-              {filteredMinisters.map((m, i) => (
-                <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon}</div>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
-                    <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
-                    <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>📁 {m.ministry}</div>
-                  </div>
+
+              {/* সংবাদ */}
+              {activeTab === "news" && (
+                <div>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>সর্বশেষ সংবাদ</h2>
+                  {news.length === 0 && <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>কোনো সংবাদ নেই</div>}
+                  {news.map((n, i) => (
+                    <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
+                      <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
+                      <div style={{ fontSize: 11, color: "#5a7a8a" }}>🕐 {formatBanglaDate(n.time)}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* মন্ত্রিসভা */}
+              {activeTab === "ministers" && (
+                <div>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>মন্ত্রিসভা</h2>
+                  <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}
+                    style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                  {filteredMinisters.map((m, i) => (
+                    <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon}</div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
+                        <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
+                        <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>📁 {m.ministry}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* এমপি তালিকা */}
+              {activeTab === "mps" && (
+                <div>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>সংসদ সদস্য তালিকা</h2>
+                  <input placeholder="নাম, আসন বা জেলা দিয়ে খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}
+                    style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                  {filteredMps.map((m, i) => (
+                    <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
+                      <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
+                      <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 আসন: {m.constituency} · {m.district}</div>
+                      <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>🌾 {m.party}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* উন্নয়ন প্রকল্প */}
+              {activeTab === "projects" && (
+                <div>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>উন্নয়ন প্রকল্প</h2>
+                  {projects.map((p, i) => (
+                    <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 18, marginBottom: 12 }}>
+                      <div style={{ fontSize: 15, fontWeight: "bold", marginBottom: 8 }}>{p.title}</div>
+                      <div style={{ fontSize: 12, color: "#6a8a9a", marginBottom: 8 }}>📁 {p.ministry}</div>
+                      <div style={{ height: 8, background: "#1e3348", borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
+                        <div style={{ height: "100%", width: `${p.progress}%`, background: "linear-gradient(90deg, #006A4E, #C9A84C)", borderRadius: 4 }} />
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6a8a9a" }}>
+                        <span>💰 {p.budget}</span>
+                        <span>{p.progress}%</span>
+                        <span style={{ color: p.status === "নতুন" ? "#C9A84C" : "#4ecba0" }}>● {p.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
             </div>
           )}
-
-          {/* এমপি তালিকা */}
-          {activeTab === "mps" && (
-            <div>
-              <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
-                সংসদ সদস্য তালিকা
-              </h2>
-              <input placeholder="নাম, আসন বা জেলা দিয়ে খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}
-                style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
-              {filteredMps.length === 0 && <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>কোনো ফলাফল নেই</div>}
-              {filteredMps.map((m, i) => (
-                <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
-                  <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
-                  <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 আসন: {m.constituency} · {m.district}</div>
-                  <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>🌾 {m.party}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* উন্নয়ন প্রকল্প */}
-          {activeTab === "projects" && (
-            <div>
-              <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
-                উন্নয়ন প্রকল্প
-              </h2>
-              {projects.length === 0 && <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>কোনো প্রকল্প নেই</div>}
-              {projects.map((p, i) => (
-                <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 18, marginBottom: 12 }}>
-                  <div style={{ fontSize: 15, fontWeight: "bold", marginBottom: 8 }}>{p.title}</div>
-                  <div style={{ fontSize: 12, color: "#6a8a9a", marginBottom: 8 }}>📁 {p.ministry}</div>
-                  <div style={{ height: 8, background: "#1e3348", borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
-                    <div style={{ height: "100%", width: `${p.progress}%`, background: "linear-gradient(90deg, #006A4E, #C9A84C)", borderRadius: 4 }} />
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6a8a9a" }}>
-                    <span>💰 {p.budget}</span>
-                    <span>{p.progress}%</span>
-                    <span style={{ color: p.status === "নতুন" ? "#C9A84C" : "#4ecba0" }}>● {p.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
         </div>
       )}
     </div>
