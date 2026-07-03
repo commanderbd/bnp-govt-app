@@ -33,7 +33,7 @@ useEffect(() => {
       const [m, n, mp, p, g, hm, a] = await Promise.all([
         supabase.from("ministers").select("*").order("id"),
         supabase.from("news").select("*").order("id", { ascending: false }),
-        supabase.from("mps").select("*").order("id"),
+        supabase.from("mps").select("*").order("id").limit(3000),
         supabase.from("projects").select("*").order("id"),
         supabase.from("governments").select("*").order("id"),
         supabase.from("historical_ministers").select("*").order("id"),
