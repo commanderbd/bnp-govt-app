@@ -11,6 +11,9 @@ function formatBanglaDate(dateStr) {
   }
 }
 
+const BNP_LOGO = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/BNP%20Flag.png";
+const LEADER_IMG = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/election-frame-photo(1).png";
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("news");
   const [search, setSearch] = useState("");
@@ -66,7 +69,8 @@ export default function App() {
     m.name.includes(search) || m.ministry.includes(search)
   );
   const filteredMps = mps.filter(m =>
-    m.name.includes(search) || m.constituency.includes(search) || m.district.includes(search)
+    m.government_id === 1 &&
+    (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
   );
 
   const tabs = [
@@ -82,7 +86,6 @@ export default function App() {
     { id: "achievements", label: "🏆 সাফল্য" },
   ];
 
-  // নির্বাচিত সরকারের তথ্য
   const currentGovtMinisters = selectedGovt
     ? histMinisters.filter(m => m.government_id === selectedGovt.id)
     : [];
@@ -108,28 +111,30 @@ export default function App() {
         borderRight: "2px solid #C9A84C", zIndex: 300,
         transition: "left 0.3s ease", overflowY: "auto"
       }}>
-        {/* Sidebar Header */}
         <div style={{ background: "#006A4E", padding: "16px 20px", borderBottom: "2px solid #C9A84C" }}>
           <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>🏛️ বিএনপি সরকার সমূহ</div>
           <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 3 }}>ইতিহাস ও তথ্যভান্ডার</div>
         </div>
 
-        {/* Government List */}
         <div style={{ padding: 12 }}>
           {governments.map((g, i) => (
             <div key={i} onClick={() => {
               setSelectedGovt(g);
               setSidebarOpen(false);
               setGovtTab("ministers");
+              setSearch("");
             }} style={{
               background: selectedGovt?.id === g.id ? "rgba(201,168,76,0.2)" : "#112233",
               border: `1px solid ${selectedGovt?.id === g.id ? "#C9A84C" : "#1e3348"}`,
               borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`,
-              borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer",
-              transition: "all 0.2s"
+              borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer"
             }}>
               <div style={{ fontSize: 14, fontWeight: "bold", color: "#e8f0f5" }}>
-                {g.is_current && <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>বর্তমান</span>}
+                {g.is_current && (
+                  <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>
+                    বর্তমান
+                  </span>
+                )}
                 {g.prime_minister}
               </div>
               <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>{g.name}</div>
@@ -137,8 +142,7 @@ export default function App() {
             </div>
           ))}
 
-          {/* বর্তমান সরকারে ফেরত */}
-          <div onClick={() => { setSelectedGovt(null); setSidebarOpen(false); }}
+          <div onClick={() => { setSelectedGovt(null); setSidebarOpen(false); setSearch(""); }}
             style={{
               background: !selectedGovt ? "rgba(0,106,78,0.2)" : "transparent",
               border: `1px solid ${!selectedGovt ? "#006A4E" : "#1e3348"}`,
@@ -152,58 +156,23 @@ export default function App() {
       </div>
 
       {/* হেডার */}
-      <div style={{ background: "#006A4E", borderBottom: "3px solid #C9A84C", padding: "12px 20px", display: "flex", alignItems: "center", gap: 16, position: "sticky", top: 0, zIndex: 100 }}>
-  
-  {/* থ্রি লাইন বাটন */}
-  <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
-    background: "transparent", border: "none", cursor: "pointer",
-    padding: 4, display: "flex", flexDirection: "column", gap: 5, flexShrink: 0
-  }}>
-    <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
-    <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
-    <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
-  </button>
-
-  {/* শিরোনাম */}
-  <div style={{ flex: 1 }}>
-    <div style={{ fontSize: 16, fontWeight: "bold" }}>
-      {selectedGovt ? `🏛️ ${selectedGovt.name}` : "🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার"}
-    </div>
-    <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 3 }}>
-      {selectedGovt ? `📅 ${selectedGovt.period}` : "ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬"}
-    </div>
-  </div>
-
-  {/* ডান পাশে লোগো ও ছবি */}
-  {!selectedGovt && (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-      {/* বিএনপি লোগো */}
-      <img
-        src="https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/BNP%20Flag.png"
-        alt="বিএনপি লোগো"
-        style={{ width: 36, height: 36, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2 }}
-      />
-      {/* নেতৃত্বের ছবি */}
-      <img
-        src="https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/election-frame-photo(1).png"
-        alt="তারেক রহমান"
-        style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid #C9A84C" }}
-      />
-    </div>
-  )}
-
-</div>
-        {/* থ্রি লাইন বাটন */}
+      <div style={{
+        background: "#006A4E", borderBottom: "3px solid #C9A84C",
+        padding: "12px 20px", display: "flex", alignItems: "center",
+        gap: 16, position: "sticky", top: 0, zIndex: 100
+      }}>
+        {/* থ্রি লাইন */}
         <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
           background: "transparent", border: "none", cursor: "pointer",
-          padding: 4, display: "flex", flexDirection: "column", gap: 5
+          padding: 4, display: "flex", flexDirection: "column", gap: 5, flexShrink: 0
         }}>
           <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
           <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
           <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
         </button>
 
-        <div>
+        {/* শিরোনাম */}
+        <div style={{ flex: 1 }}>
           <div style={{ fontSize: 16, fontWeight: "bold" }}>
             {selectedGovt ? `🏛️ ${selectedGovt.name}` : "🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার"}
           </div>
@@ -211,6 +180,20 @@ export default function App() {
             {selectedGovt ? `📅 ${selectedGovt.period}` : "ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬"}
           </div>
         </div>
+
+        {/* লোগো ও ছবি */}
+        {!selectedGovt && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <img src={BNP_LOGO} alt="বিএনপি লোগো"
+              style={{ width: 36, height: 36, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2 }}
+              onError={e => e.target.style.display = "none"}
+            />
+            <img src={LEADER_IMG} alt="তারেক রহমান"
+              style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "2px solid #C9A84C" }}
+              onError={e => e.target.style.display = "none"}
+            />
+          </div>
+        )}
       </div>
 
       {/* ট্যাব মেনু */}
@@ -239,28 +222,25 @@ export default function App() {
       {!loading && (
         <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
 
-          {/* ===== পূর্ববর্তী সরকার ভিউ ===== */}
+          {/* পূর্ববর্তী সরকার ভিউ */}
           {selectedGovt && (
             <div>
-              {/* সরকারের বিবরণ */}
               <div style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 20 }}>
                 <div style={{ fontSize: 13, color: "#a0c0d0", lineHeight: 1.7 }}>{selectedGovt.description}</div>
               </div>
 
-              {/* মন্ত্রিসভা */}
               {govtTab === "ministers" && (
                 <div>
-                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
-                    👥 মন্ত্রিসভা
-                  </h2>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>👥 মন্ত্রিসভা</h2>
                   {currentGovtMinisters.length === 0 ? (
                     <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
                       এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।
-                      <div style={{ fontSize: 12, marginTop: 8 }}>Supabase → historical_ministers টেবিলে যোগ করুন</div>
                     </div>
                   ) : currentGovtMinisters.map((m, i) => (
                     <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon || "👤"}</div>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+                        {m.icon || "👤"}
+                      </div>
                       <div>
                         <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
                         <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
@@ -271,48 +251,34 @@ export default function App() {
                 </div>
               )}
 
-{/* এমপি তালিকা */}
-{govtTab === "mps" && (
-  <div>
-    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
-      🏅 সংসদ সদস্য তালিকা
-    </h2>
-    <input
-      placeholder="নাম, আসন বা জেলা দিয়ে খুঁজুন..."
-      value={search}
-      onChange={e => setSearch(e.target.value)}
-      style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }}
-    />
-    {mps
-      .filter(m => m.government_id === selectedGovt.id &&
-        (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
-      )
-      .length === 0 ? (
-        <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
-          এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।
-          <div style={{ fontSize: 12, marginTop: 8 }}>Supabase → mps টেবিলে government_id: {selectedGovt.id} দিয়ে যোগ করুন</div>
-        </div>
-      ) : mps
-        .filter(m => m.government_id === selectedGovt.id &&
-          (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
-        )
-        .map((m, i) => (
-          <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
-            <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
-            <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 আসন: {m.constituency} · {m.district}</div>
-            <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>🌾 {m.party}</div>
-          </div>
-        ))
-    }
-  </div>
-)}
+              {govtTab === "mps" && (
+                <div>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>🏅 সংসদ সদস্য তালিকা</h2>
+                  <input placeholder="নাম, আসন বা জেলা দিয়ে খুঁজুন..." value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }}
+                  />
+                  {mps.filter(m => m.government_id === selectedGovt.id &&
+                    (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
+                  ).length === 0 ? (
+                    <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
+                      এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।
+                    </div>
+                  ) : mps.filter(m => m.government_id === selectedGovt.id &&
+                    (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
+                  ).map((m, i) => (
+                    <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
+                      <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
+                      <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 আসন: {m.constituency} · {m.district}</div>
+                      <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>🌾 {m.party}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              {/* সাফল্য */}
               {govtTab === "achievements" && (
                 <div>
-                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
-                    🏆 উল্লেখযোগ্য সাফল্য
-                  </h2>
+                  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>🏆 উল্লেখযোগ্য সাফল্য</h2>
                   {currentGovtAchievements.length === 0 ? (
                     <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>
                       এই সরকারের সাফল্যের তথ্য এখনো যোগ করা হয়নি।
@@ -329,11 +295,9 @@ export default function App() {
             </div>
           )}
 
-          {/* ===== মূল ড্যাশবোর্ড ভিউ ===== */}
+          {/* মূল ড্যাশবোর্ড ভিউ */}
           {!selectedGovt && (
             <div>
-
-              {/* সংবাদ */}
               {activeTab === "news" && (
                 <div>
                   <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>সর্বশেষ সংবাদ</h2>
@@ -348,15 +312,18 @@ export default function App() {
                 </div>
               )}
 
-              {/* মন্ত্রিসভা */}
               {activeTab === "ministers" && (
                 <div>
                   <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>মন্ত্রিসভা</h2>
-                  <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}
-                    style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                  <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }}
+                  />
                   {filteredMinisters.map((m, i) => (
                     <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon}</div>
+                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+                        {m.icon}
+                      </div>
                       <div>
                         <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
                         <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
@@ -367,12 +334,13 @@ export default function App() {
                 </div>
               )}
 
-              {/* এমপি তালিকা */}
               {activeTab === "mps" && (
                 <div>
                   <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>সংসদ সদস্য তালিকা</h2>
-                  <input placeholder="নাম, আসন বা জেলা দিয়ে খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}
-                    style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                  <input placeholder="নাম, আসন বা জেলা দিয়ে খুঁজুন..." value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }}
+                  />
                   {filteredMps.map((m, i) => (
                     <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
                       <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
@@ -383,7 +351,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* উন্নয়ন প্রকল্প */}
               {activeTab === "projects" && (
                 <div>
                   <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>উন্নয়ন প্রকল্প</h2>
@@ -403,7 +370,6 @@ export default function App() {
                   ))}
                 </div>
               )}
-
             </div>
           )}
         </div>
