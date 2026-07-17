@@ -80,15 +80,17 @@ def main():
                     time_str = datetime.now().strftime("%d %b %Y")
 
                 if not title or title in existing:
-                    continue
+    continue
 
-                item = {
-                    "title": title,
-                    "source": source,
-                    "time": time_str,
-                    "category": feed_info["category"]
-                }
+item = {
+    "title": title,
+    "source": source,
+    "time": time_str,
+    "category": feed_info["category"]
+}
 
-                if insert_news(item):
-                    existing.add(title)
-                    total_added += 1
+print(f"📤 Insert করছি: {item}")
+if insert_news(item):
+    existing.add(title)
+    total_added += 1
+    print(f"✅ যোগ হয়েছে: {title[:60]}")
