@@ -10,6 +10,61 @@ function formatBanglaDate(dateStr) {
     return dateStr;
   }
 }
+
+function SkeletonCard({ height = 80 }) {
+  const shimmerStyle = `
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.3s ease forwards; }
+`;
+  return (
+    <style>{shimmerStyle}</style>
+    <div style={{
+      background: "#112233",
+      border: "1px solid #1e3348",
+      borderRadius: 10,
+      padding: 16,
+      marginBottom: 12,
+      overflow: "hidden",
+      position: "relative"
+    }}>
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%)",
+        animation: "shimmer 1.5s infinite"
+      }} />
+      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "40%", marginBottom: 10 }} />
+      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "90%", marginBottom: 8 }} />
+      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "60%" }} />
+    </div>
+  );
+}
+
+function SkeletonStat() {
+  return (
+    <div style={{
+      background: "#112233", border: "1px solid #1e3348",
+      borderRadius: 10, padding: 16, textAlign: "center",
+      position: "relative", overflow: "hidden"
+    }}>
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%)",
+        animation: "shimmer 1.5s infinite"
+      }} />
+      <div style={{ height: 28, width: 28, background: "#1e3348", borderRadius: "50%", margin: "0 auto 8px" }} />
+      <div style={{ height: 20, background: "#1e3348", borderRadius: 4, width: "50%", margin: "0 auto 8px" }} />
+      <div style={{ height: 10, background: "#1e3348", borderRadius: 4, width: "70%", margin: "0 auto" }} />
+    </div>
+  );
+}
+
 const BNP_LOGO = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/election-frame-photo(1).png";
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
@@ -232,8 +287,20 @@ useEffect(() => {
       </div>
 
       {loading && (
-        <div style={{ textAlign: "center", padding: 60, color: "#C9A84C" }}>⏳ তথ্য লোড হচ্ছে...</div>
-      )}
+  {!loading && (
+  <div className="fade-in" style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
+    {/* স্ট্যাট কার্ড স্কেলেটন */}
+    <div style={{ height: 80, background: "#112233", border: "1px solid #1e3348", borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
+    </div>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
+      <SkeletonStat /><SkeletonStat /><SkeletonStat /><SkeletonStat />
+    </div>
+    <SkeletonCard />
+    <SkeletonCard />
+    <SkeletonCard />
+  </div>
+)}
 
       {!loading && (
         <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
