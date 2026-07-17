@@ -3,8 +3,8 @@ import requests
 import os
 from datetime import datetime
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
