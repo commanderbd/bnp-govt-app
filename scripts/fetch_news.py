@@ -9,7 +9,8 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 HEADERS = {
     "apikey": SUPABASE_KEY,
     "Authorization": f"Bearer {SUPABASE_KEY}",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
+    "Prefer": "return=minimal"
 }
 
 RSS_FEEDS = [
@@ -38,6 +39,7 @@ def get_existing_titles():
     )
     if res.status_code == 200:
         return {item["title"] for item in res.json()}
+    print(f"❌ Existing titles error: {res.status_code} - {res.text}")
     return set()
 
 def insert_news(item):
@@ -46,12 +48,15 @@ def insert_news(item):
         headers=HEADERS,
         json=item
     )
-    return res.status_code == 201
+    if res.status_code not in [200, 201]:
+        print(f"❌ Insert error: {res.status_code} - {res.text[:100]}")
+        return False
+    return True
 
 def main():
     existing = get_existing_titles()
     print(f"বিদ্যমান সংবাদ: {len(existing)}টি")
-    
+
     total_added = 0
 
     for feed_info in RSS_FEEDS:
@@ -59,10 +64,20 @@ def main():
             feed = feedparser.parse(feed_info["url"])
             print(f"Feed থেকে {len(feed.entries)}টি সংবাদ পাওয়া গেছে")
 
-            for entry in feed.entries:
+            for entry in feed.entries[:10]:
                 title = entry.get("title", "").strip()
                 source = entry.get("source", {}).get("title", "Google News")
-                published = entry.get("published", datetime.now().isoformat())
+
+                # তারিখ সহজ format-এ রাখুন
+                try:
+                    pub = entry.get("published", "")
+                    if pub:
+                        dt = datetime(*entry.published_parsed[:6])
+                        time_str = dt.strftime("%d %b %Y")
+                    else:
+                        time_str = datetime.now().strftime("%d %b %Y")
+                except:
+                    time_str = datetime.now().strftime("%d %b %Y")
 
                 if not title or title in existing:
                     continue
@@ -70,19 +85,10 @@ def main():
                 item = {
                     "title": title,
                     "source": source,
-                    "time": published,
+                    "time": time_str,
                     "category": feed_info["category"]
                 }
 
                 if insert_news(item):
                     existing.add(title)
                     total_added += 1
-                    print(f"✅ যোগ হয়েছে: {title[:50]}")
-
-        except Exception as e:
-            print(f"❌ Error: {e}")
-
-    print(f"\nমোট {total_added}টি নতুন সংবাদ যোগ হয়েছে")
-
-if __name__ == "__main__":
-    main()
