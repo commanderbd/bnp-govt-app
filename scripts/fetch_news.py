@@ -14,22 +14,10 @@ HEADERS = {
 }
 
 RSS_FEEDS = [
-    {
-        "url": "https://news.google.com/rss/search?q=বাংলাদেশ+সরকার+বিএনপি&hl=bn&gl=BD&ceid=BD:bn",
-        "category": "সরকারি"
-    },
-    {
-        "url": "https://news.google.com/rss/search?q=প্রধানমন্ত্রী+তারেক+রহমান&hl=bn&gl=BD&ceid=BD:bn",
-        "category": "সরকারি"
-    },
-    {
-        "url": "https://news.google.com/rss/search?q=বাংলাদেশ+জাতীয়+সংসদ&hl=bn&gl=BD&ceid=BD:bn",
-        "category": "সংসদ"
-    },
-    {
-        "url": "https://news.google.com/rss/search?q=বাংলাদেশ+মন্ত্রিসভা&hl=bn&gl=BD&ceid=BD:bn",
-        "category": "মন্ত্রিসভা"
-    },
+    {"url": "https://news.google.com/rss/search?q=বাংলাদেশ+সরকার+বিএনপি&hl=bn&gl=BD&ceid=BD:bn", "category": "সরকারি"},
+    {"url": "https://news.google.com/rss/search?q=প্রধানমন্ত্রী+তারেক+রহমান&hl=bn&gl=BD&ceid=BD:bn", "category": "সরকারি"},
+    {"url": "https://news.google.com/rss/search?q=বাংলাদেশ+জাতীয়+সংসদ&hl=bn&gl=BD&ceid=BD:bn", "category": "সংসদ"},
+    {"url": "https://news.google.com/rss/search?q=বাংলাদেশ+মন্ত্রিসভা&hl=bn&gl=BD&ceid=BD:bn", "category": "মন্ত্রিসভা"},
 ]
 
 def get_existing_titles():
@@ -49,14 +37,13 @@ def insert_news(item):
         json=item
     )
     if res.status_code not in [200, 201]:
-        print(f"❌ Insert error: {res.status_code} - {res.text[:100]}")
+        print(f"❌ Insert error: {res.status_code} - {res.text[:200]}")
         return False
     return True
 
 def main():
     existing = get_existing_titles()
     print(f"বিদ্যমান সংবাদ: {len(existing)}টি")
-
     total_added = 0
 
     for feed_info in RSS_FEEDS:
@@ -68,29 +55,39 @@ def main():
                 title = entry.get("title", "").strip()
                 source = entry.get("source", {}).get("title", "Google News")
 
-                # তারিখ সহজ format-এ রাখুন
                 try:
-                    pub = entry.get("published", "")
+                    pub = entry.get("published_parsed")
                     if pub:
-                        dt = datetime(*entry.published_parsed[:6])
+                        dt = datetime(*pub[:6])
                         time_str = dt.strftime("%d %b %Y")
                     else:
                         time_str = datetime.now().strftime("%d %b %Y")
-                except:
+                except Exception:
                     time_str = datetime.now().strftime("%d %b %Y")
 
-                if not title or title in existing:
-    continue
+                if not title:
+                    continue
 
-item = {
-    "title": title,
-    "source": source,
-    "time": time_str,
-    "category": feed_info["category"]
-}
+                if title in existing:
+                    continue
 
-print(f"📤 Insert করছি: {item}")
-if insert_news(item):
-    existing.add(title)
-    total_added += 1
-    print(f"✅ যোগ হয়েছে: {title[:60]}")
+                item = {
+                    "title": title,
+                    "source": source,
+                    "time": time_str,
+                    "category": feed_info["category"]
+                }
+
+                print(f"📤 Insert করছি: {title[:60]}")
+                if insert_news(item):
+                    existing.add(title)
+                    total_added += 1
+                    print(f"✅ যোগ হয়েছে: {title[:60]}")
+
+        except Exception as e:
+            print(f"❌ Feed error: {e}")
+
+    print(f"\nমোট {total_added}টি নতুন সংবাদ যোগ হয়েছে")
+
+if __name__ == "__main__":
+    main()
