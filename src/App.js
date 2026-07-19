@@ -70,6 +70,17 @@ function SkeletonStat() {
 
 const BNP_LOGO = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/bnp-logo.png";
 
+{/* সার্চ বাটন */}
+<button onClick={() => { setShowSearch(!showSearch); setGlobalSearch(""); }} style={{
+  background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+  border: "1px solid rgba(255,255,255,0.2)",
+  borderRadius: 20, padding: "4px 10px",
+  cursor: "pointer", color: "#fff",
+  fontSize: 16, flexShrink: 0
+}}>
+  🔍
+</button>
+
 {/* থিম টগল বাটন */}
 <button onClick={toggleTheme} style={{
   background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
@@ -96,17 +107,42 @@ export default function App() {
   const [histMinisters, setHistMinisters] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const T = isDark ? THEMES.dark : THEMES.light;
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const [isDark, setIsDark] = useState(() => {
   return localStorage.getItem("theme") !== "light";
 });
-const T = isDark ? THEMES.dark : THEMES.light;
 
 function toggleTheme() {
   const newMode = !isDark;
   setIsDark(newMode);
   localStorage.setItem("theme", newMode ? "dark" : "light");
 }
+
+const searchResults = globalSearch.trim().length < 2 ? [] : [
+  ...ministers
+    .filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch))
+    .slice(0, 3)
+    .map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
+
+  ...mps
+    .filter(m => Number(m.government_id) === 1 &&
+      (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch))))
+    .slice(0, 3)
+    .map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
+
+  ...news
+    .filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch)))
+    .slice(0, 3)
+    .map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
+
+  ...projects
+    .filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch)))
+    .slice(0, 3)
+    .map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
+];
+
   useEffect(() => {
     if (!selectedGovt) return;
     async function fetchGovtMps() {
@@ -229,6 +265,98 @@ function toggleTheme() {
           ))}
         </div>
 
+{/* গ্লোবাল সার্চ বার */}
+{showSearch && (
+  <div style={{
+    background: isDark ? "#0a1520" : "#E8F0F8",
+    borderBottom: `2px solid #C9A84C`,
+    padding: "12px 20px",
+    position: "sticky", top: 56, zIndex: 90
+  }}>
+    <div style={{ maxWidth: 700, margin: "0 auto", position: "relative" }}>
+      <input
+        autoFocus
+        placeholder="মন্ত্রী, এমপি, সংবাদ বা প্রকল্প খুঁজুন..."
+        value={globalSearch}
+        onChange={e => setGlobalSearch(e.target.value)}
+        style={{
+          width: "100%", background: T.card,
+          border: `1px solid #C9A84C`,
+          borderRadius: 8, padding: "10px 40px 10px 14px",
+          color: T.text, fontSize: 14,
+          boxSizing: "border-box", outline: "none"
+        }}
+      />
+      {globalSearch && (
+        <button onClick={() => setGlobalSearch("")} style={{
+          position: "absolute", right: 10, top: "50%",
+          transform: "translateY(-50%)",
+          background: "transparent", border: "none",
+          color: T.textMuted, cursor: "pointer", fontSize: 16
+        }}>✕</button>
+      )}
+    </div>
+
+    {/* সার্চ রেজাল্ট */}
+    {searchResults.length > 0 && (
+      <div style={{
+        maxWidth: 700, margin: "8px auto 0",
+        background: T.card, border: `1px solid ${T.border}`,
+        borderRadius: 8, overflow: "hidden"
+      }}>
+        {searchResults.map((result, i) => (
+          <div key={i} onClick={() => {
+            setActiveTab(result.tab);
+            setShowSearch(false);
+            setGlobalSearch("");
+            setSelectedGovt(null);
+          }} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "12px 16px",
+            borderBottom: i < searchResults.length - 1 ? `1px solid ${T.border}` : "none",
+            cursor: "pointer",
+            transition: "background 0.15s"
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = isDark ? "#162840" : "#EAF2FB"}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          >
+            <span style={{ fontSize: 18 }}>{result.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontSize: 13, fontWeight: "bold", color: T.text,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+              }}>
+                {result.title}
+              </div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                {result.subtitle}
+              </div>
+            </div>
+            <span style={{
+              fontSize: 10, color: "#C9A84C",
+              background: isDark ? "rgba(201,168,76,0.15)" : "rgba(201,168,76,0.2)",
+              padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap"
+            }}>
+              {result.type}
+            </span>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* কিছু না পাওয়া গেলে */}
+    {globalSearch.trim().length >= 2 && searchResults.length === 0 && (
+      <div style={{
+        maxWidth: 700, margin: "8px auto 0",
+        background: T.card, border: `1px solid ${T.border}`,
+        borderRadius: 8, padding: "16px",
+        textAlign: "center", color: T.textMuted, fontSize: 13
+      }}>
+        "{globalSearch}" এর জন্য কোনো ফলাফল পাওয়া যায়নি
+      </div>
+    )}
+  </div>
+)}
         {/* স্কেলেটন লোডার */}
         {loading && (
           <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
