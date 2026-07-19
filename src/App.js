@@ -107,45 +107,40 @@ export default function App() {
   const [histMinisters, setHistMinisters] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const T = isDark ? THEMES.dark : THEMES.light;
-  const [globalSearch, setGlobalSearch] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const [isDark, setIsDark] = useState(() => {
-  try {
-    return localStorage.getItem("theme") !== "light";
-  } catch {
-    return true;
+    try { return localStorage.getItem("theme") !== "light"; }
+    catch { return true; }
+  });
+  const [showSearch, setShowSearch] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState("");
+
+  const T = isDark ? THEMES.dark : THEMES.light;
+
+  function toggleTheme() {
+    const newMode = !isDark;
+    setIsDark(newMode);
+    try { localStorage.setItem("theme", newMode ? "dark" : "light"); } catch {}
   }
-});
 
-function toggleTheme() {
-  const newMode = !isDark;
-  setIsDark(newMode);
-  localStorage.setItem("theme", newMode ? "dark" : "light");
-}
-
-const searchResults = globalSearch.trim().length < 2 ? [] : [
-  ...ministers
-    .filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch))
-    .slice(0, 3)
-    .map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
-
-  ...mps
-    .filter(m => Number(m.government_id) === 1 &&
-      (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch))))
-    .slice(0, 3)
-    .map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
-
-  ...news
-    .filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch)))
-    .slice(0, 3)
-    .map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
-
-  ...projects
-    .filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch)))
-    .slice(0, 3)
-    .map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
-];
+  const searchResults = globalSearch.trim().length < 2 ? [] : [
+    ...ministers
+      .filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch))
+      .slice(0, 3)
+      .map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
+    ...mps
+      .filter(m => Number(m.government_id) === 1 &&
+        (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch))))
+      .slice(0, 3)
+      .map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
+    ...news
+      .filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch)))
+      .slice(0, 3)
+      .map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
+    ...projects
+      .filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch)))
+      .slice(0, 3)
+      .map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
+  ];
 
   useEffect(() => {
     if (!selectedGovt) return;
