@@ -111,7 +111,11 @@ export default function App() {
   const [globalSearch, setGlobalSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [isDark, setIsDark] = useState(() => {
-  return localStorage.getItem("theme") !== "light";
+  try {
+    return localStorage.getItem("theme") !== "light";
+  } catch {
+    return true;
+  }
 });
 
 function toggleTheme() {
