@@ -13,6 +13,31 @@ const shimmerStyle = `
   .fade-in { animation: fadeIn 0.3s ease forwards; }
 `;
 
+const THEMES = {
+  dark: {
+    bg: "#0D1B2A",
+    card: "#112233",
+    border: "#1e3348",
+    text: "#F5F0E8",
+    textMuted: "#6a8a9a",
+    textSecondary: "#a0c0d0",
+    navBg: "#0a1520",
+    navBorder: "#1a2e40",
+    sidebarBg: "#0a1520",
+  },
+  light: {
+    bg: "#F0F4F8",
+    card: "#FFFFFF",
+    border: "#D0DCE8",
+    text: "#1A2A3A",
+    textMuted: "#5A7A8A",
+    textSecondary: "#3A5A6A",
+    navBg: "#E0EAF4",
+    navBorder: "#C0D4E4",
+    sidebarBg: "#EAF0F8",
+  }
+};
+
 function formatBanglaDate(dateStr) {
   try {
     const date = new Date(dateStr);
@@ -23,7 +48,7 @@ function formatBanglaDate(dateStr) {
 
 function SkeletonCard() {
   return (
-    <div style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 12, overflow: "hidden", position: "relative" }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 12, overflow: "hidden", position: "relative" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
       <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "40%", marginBottom: 10 }} />
       <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "90%", marginBottom: 8 }} />
@@ -34,7 +59,7 @@ function SkeletonCard() {
 
 function SkeletonStat() {
   return (
-    <div style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, textAlign: "center", position: "relative", overflow: "hidden" }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
       <div style={{ height: 28, width: 28, background: "#1e3348", borderRadius: "50%", margin: "0 auto 8px" }} />
       <div style={{ height: 20, background: "#1e3348", borderRadius: 4, width: "50%", margin: "0 auto 8px" }} />
@@ -44,6 +69,18 @@ function SkeletonStat() {
 }
 
 const BNP_LOGO = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/bnp-logo.png";
+
+{/* থিম টগল বাটন */}
+<button onClick={toggleTheme} style={{
+  background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+  border: "1px solid rgba(255,255,255,0.2)",
+  borderRadius: 20, padding: "4px 10px",
+  cursor: "pointer", color: "#fff",
+  fontSize: 16, flexShrink: 0,
+  display: "flex", alignItems: "center", gap: 4
+}}>
+  {isDark ? "☀️" : "🌙"}
+</button>
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
@@ -60,6 +97,16 @@ export default function App() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [isDark, setIsDark] = useState(() => {
+  return localStorage.getItem("theme") !== "light";
+});
+const T = isDark ? THEMES.dark : THEMES.light;
+
+function toggleTheme() {
+  const newMode = !isDark;
+  setIsDark(newMode);
+  localStorage.setItem("theme", newMode ? "dark" : "light");
+}
   useEffect(() => {
     if (!selectedGovt) return;
     async function fetchGovtMps() {
@@ -125,13 +172,13 @@ export default function App() {
   return (
     <>
       <style>{shimmerStyle}</style>
-      <div style={{ fontFamily: "sans-serif", background: "#0D1B2A", minHeight: "100vh", color: "#F5F0E8" }}>
+      <div style={{ fontFamily: "sans-serif", background: T.bg, minHeight: "100vh", color: T.text }}>
 
         {sidebarOpen && (
           <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 200 }} />
         )}
 
-        <div style={{ position: "fixed", top: 0, left: sidebarOpen ? 0 : -320, width: 300, height: "100vh", background: "#0a1520", borderRight: "2px solid #C9A84C", zIndex: 300, transition: "left 0.3s ease", overflowY: "auto" }}>
+        <div style={{ position: "fixed", top: 0, left: sidebarOpen ? 0 : -320, width: 300, height: "100vh", background: T.sidebarBg, borderRight: "2px solid #C9A84C", zIndex: 300, transition: "left 0.3s ease", overflowY: "auto" }}>
           <div style={{ background: "#006A4E", padding: "16px 20px", borderBottom: "2px solid #C9A84C" }}>
             <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>🏛️ বিএনপি সরকার সমূহ</div>
             <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 3 }}>ইতিহাস ও তথ্যভান্ডার</div>
@@ -174,9 +221,9 @@ export default function App() {
         </div>
 
         {/* ট্যাব মেনু */}
-        <div style={{ display: "flex", background: "#0a1520", borderBottom: "2px solid #1a2e40", overflowX: "auto" }}>
+        <div style={{ display: "flex", background: T.navBg, borderBottom: `2px solid ${T.navBorder}`, overflowX: "auto" }}>
           {(selectedGovt ? govtTabs : tabs).map(tab => (
-            <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); }} style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : "#6a8a9a", padding: "12px 18px", cursor: "pointer", fontSize: 13, whiteSpace: "nowrap", fontFamily: "sans-serif" }}>
+            <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); }} style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "12px 18px", cursor: "pointer", fontSize: 13, whiteSpace: "nowrap", fontFamily: "sans-serif" }}>
               {tab.label}
             </button>
           ))}
@@ -185,7 +232,7 @@ export default function App() {
         {/* স্কেলেটন লোডার */}
         {loading && (
           <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
-            <div style={{ height: 80, background: "#112233", border: "1px solid #1e3348", borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
+            <div style={{ height: 80, background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
@@ -202,8 +249,8 @@ export default function App() {
             {/* পূর্ববর্তী সরকার ভিউ */}
             {selectedGovt && (
               <div>
-                <div style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 20 }}>
-                  <div style={{ fontSize: 13, color: "#a0c0d0", lineHeight: 1.7 }}>{selectedGovt.description}</div>
+                <div style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 20 }}>
+                  <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.7 }}>{selectedGovt.description}</div>
                 </div>
 
                 {govtTab === "ministers" && (
@@ -212,12 +259,12 @@ export default function App() {
                     {currentGovtMinisters.length === 0
                       ? <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।</div>
                       : currentGovtMinisters.map((m, i) => (
-                        <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
+                        <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
                           <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon || "👤"}</div>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
                             <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
-                            <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>📁 {m.ministry}</div>
+                            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>📁 {m.ministry}</div>
                           </div>
                         </div>
                       ))}
@@ -227,14 +274,14 @@ export default function App() {
                 {govtTab === "mps" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>🏅 সংসদ সদস্য তালিকা</h2>
-                    <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                    <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) && (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))).length === 0
                       ? <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।</div>
                       : mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) && (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))).map((m, i) => (
-                        <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
+                        <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10 }}>
                           <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
                           <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
-                          <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>🌾 {m.party}</div>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
                         </div>
                       ))}
                   </div>
@@ -246,10 +293,10 @@ export default function App() {
                     {currentGovtAchievements.length === 0
                       ? <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>এই সরকারের সাফল্যের তথ্য এখনো যোগ করা হয়নি।</div>
                       : currentGovtAchievements.map((a, i) => (
-                        <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+                        <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 12 }}>
                           <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>🏆 {a.category}</div>
                           <div style={{ fontSize: 15, fontWeight: "bold", marginBottom: 6 }}>{a.title}</div>
-                          <div style={{ fontSize: 13, color: "#a0c0d0", lineHeight: 1.6 }}>{a.description}</div>
+                          <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>{a.description}</div>
                         </div>
                       ))}
                   </div>
@@ -276,7 +323,7 @@ export default function App() {
                         { label: "উন্নয়ন প্রকল্প", value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects" },
                         { label: "সর্বশেষ সংবাদ", value: news.length, icon: "📰", color: "#9F5DCF", tab: "news" },
                       ].map((stat, i) => (
-                        <div key={i} onClick={() => setActiveTab(stat.tab)} style={{ background: "#112233", border: `1px solid ${stat.color}`, borderRadius: 10, padding: 16, cursor: "pointer", textAlign: "center" }}>
+                        <div key={i} onClick={() => setActiveTab(stat.tab)} style={{ background: T.card, border: `1px solid ${stat.color}`, borderRadius: 10, padding: 16, cursor: "pointer", textAlign: "center" }}>
                           <div style={{ fontSize: 28 }}>{stat.icon}</div>
                           <div style={{ fontSize: 26, fontWeight: "bold", color: stat.color, margin: "6px 0" }}>{stat.value}</div>
                           <div style={{ fontSize: 12, color: "#8aaabb" }}>{stat.label}</div>
@@ -286,12 +333,12 @@ export default function App() {
 
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 14, fontSize: 15 }}>🔨 চলমান প্রকল্প</h2>
                     {projects.filter(p => p.status === "চলমান").slice(0, 3).map((p, i) => (
-                      <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: 14, marginBottom: 10 }}>
+                      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 14, marginBottom: 10 }}>
                         <div style={{ fontSize: 13, fontWeight: "bold", marginBottom: 6 }}>{p.title}</div>
                         <div style={{ height: 6, background: "#1e3348", borderRadius: 3, overflow: "hidden", marginBottom: 6 }}>
                           <div style={{ height: "100%", width: `${p.progress}%`, background: "linear-gradient(90deg, #006A4E, #C9A84C)", borderRadius: 3 }} />
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#6a8a9a" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: T.textMuted }}>
                           <span>💰 {p.budget}</span>
                           <span style={{ color: "#4ecba0" }}>{p.progress}% সম্পন্ন</span>
                         </div>
@@ -300,7 +347,7 @@ export default function App() {
 
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, margin: "20px 0 14px", fontSize: 15 }}>📰 সর্বশেষ সংবাদ</h2>
                     {news.slice(0, 3).map((n, i) => (
-                      <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 14, marginBottom: 10 }}>
+                      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 14, marginBottom: 10 }}>
                         <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 4 }}>{n.source} · {n.category}</div>
                         <div style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 4 }}>{n.title}</div>
                         <div style={{ fontSize: 11, color: "#5a7a8a" }}>🕐 {formatBanglaDate(n.time)}</div>
@@ -313,7 +360,7 @@ export default function App() {
 
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, margin: "20px 0 14px", fontSize: 15 }}>🏛️ বিএনপি সরকারসমূহ</h2>
                     {governments.map((g, i) => (
-                      <div key={i} onClick={() => { setSelectedGovt(g); setGovtTab("ministers"); }} style={{ background: "#112233", border: `1px solid ${g.is_current ? "#006A4E" : "#1e3348"}`, borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`, borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div key={i} onClick={() => { setSelectedGovt(g); setGovtTab("ministers"); }} style={{ background: T.card, border: `1px solid ${g.is_current ? "#006A4E" : "#1e3348"}`, borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`, borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: "bold", color: "#e8f0f5" }}>
                             {g.is_current && <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>বর্তমান</span>}
@@ -334,7 +381,7 @@ export default function App() {
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>সর্বশেষ সংবাদ</h2>
                     {news.length === 0 && <div style={{ color: "#5a7a8a", textAlign: "center", padding: 40 }}>কোনো সংবাদ নেই</div>}
                     {news.map((n, i) => (
-                      <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+                      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
                         <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
                         <div style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
                         <div style={{ fontSize: 11, color: "#5a7a8a" }}>🕐 {formatBanglaDate(n.time)}</div>
@@ -347,14 +394,14 @@ export default function App() {
                 {activeTab === "ministers" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>মন্ত্রিসভা</h2>
-                    <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                    <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMinisters.map((m, i) => (
-                      <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
+                      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
                         <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon}</div>
                         <div>
                           <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
                           <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
-                          <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>📁 {m.ministry}</div>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>📁 {m.ministry}</div>
                         </div>
                       </div>
                     ))}
@@ -365,12 +412,12 @@ export default function App() {
                 {activeTab === "mps" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>সংসদ সদস্য তালিকা</h2>
-                    <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: "#112233", border: "1px solid #1e3348", borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                    <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: "#F5F0E8", fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMps.map((m, i) => (
-                      <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 10 }}>
+                      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10 }}>
                         <div style={{ fontSize: 15, fontWeight: "bold", color: "#e8f0f5" }}>{m.name}</div>
                         <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
-                        <div style={{ fontSize: 12, color: "#6a8a9a", marginTop: 3 }}>🌾 {m.party}</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
                       </div>
                     ))}
                   </div>
@@ -381,13 +428,13 @@ export default function App() {
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>উন্নয়ন প্রকল্প</h2>
                     {projects.map((p, i) => (
-                      <div key={i} style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 18, marginBottom: 12 }}>
+                      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 18, marginBottom: 12 }}>
                         <div style={{ fontSize: 15, fontWeight: "bold", marginBottom: 8 }}>{p.title}</div>
-                        <div style={{ fontSize: 12, color: "#6a8a9a", marginBottom: 8 }}>📁 {p.ministry}</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>📁 {p.ministry}</div>
                         <div style={{ height: 8, background: "#1e3348", borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
                           <div style={{ height: "100%", width: `${p.progress}%`, background: "linear-gradient(90deg, #006A4E, #C9A84C)", borderRadius: 4 }} />
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6a8a9a" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textMuted }}>
                           <span>💰 {p.budget}</span>
                           <span>{p.progress}%</span>
                           <span style={{ color: p.status === "নতুন" ? "#C9A84C" : "#4ecba0" }}>● {p.status}</span>
