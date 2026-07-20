@@ -1,6 +1,6 @@
-import AdminPanel from "./AdminPanel";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
+import AdminPanel from "./AdminPanel";
 
 const shimmerStyle = `
   @keyframes shimmer {
@@ -36,24 +36,24 @@ function formatBanglaDate(dateStr) {
   } catch { return dateStr; }
 }
 
-function SkeletonCard({ T = THEMES.dark }) {
+function SkeletonCard() {
   return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 12, overflow: "hidden", position: "relative" }}>
+    <div style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 12, overflow: "hidden", position: "relative" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
-      <div style={{ height: 12, background: T.border, borderRadius: 4, width: "40%", marginBottom: 10 }} />
-      <div style={{ height: 12, background: T.border, borderRadius: 4, width: "90%", marginBottom: 8 }} />
-      <div style={{ height: 12, background: T.border, borderRadius: 4, width: "60%" }} />
+      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "40%", marginBottom: 10 }} />
+      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "90%", marginBottom: 8 }} />
+      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "60%" }} />
     </div>
   );
 }
 
-function SkeletonStat({ T = THEMES.dark }) {
+function SkeletonStat() {
   return (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, textAlign: "center", position: "relative", overflow: "hidden" }}>
+    <div style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
-      <div style={{ height: 28, width: 28, background: T.border, borderRadius: "50%", margin: "0 auto 8px" }} />
-      <div style={{ height: 20, background: T.border, borderRadius: 4, width: "50%", margin: "0 auto 8px" }} />
-      <div style={{ height: 10, background: T.border, borderRadius: 4, width: "70%", margin: "0 auto" }} />
+      <div style={{ height: 28, width: 28, background: "#1e3348", borderRadius: "50%", margin: "0 auto 8px" }} />
+      <div style={{ height: 20, background: "#1e3348", borderRadius: 4, width: "50%", margin: "0 auto 8px" }} />
+      <div style={{ height: 10, background: "#1e3348", borderRadius: 4, width: "70%", margin: "0 auto" }} />
     </div>
   );
 }
@@ -146,8 +146,6 @@ export default function App() {
 
   const T = isDark ? THEMES.dark : THEMES.light;
 
-  const currentGovtId = governments.find(g => g.is_current)?.id ?? 1;
-
   function toggleTheme() {
     const newMode = !isDark;
     setIsDark(newMode);
@@ -188,7 +186,7 @@ export default function App() {
           style={{ background: "#1DA1F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>Twitter/X</a>
         <a href={`https://wa.me/?text=${text}%20${url}`} target="_blank" rel="noreferrer"
           style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>WhatsApp</a>
-        <button onClick={() => navigator.clipboard.writeText(`${title} ${window.location.href}`).then(() => alert("কপি হয়েছে!"))}
+        <button onClick={() => shareContent(title)}
           style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
           🔗 কপি
         </button>
@@ -208,8 +206,8 @@ export default function App() {
       <style>body{font-family:Arial,sans-serif;padding:20px}h1{color:#006A4E;font-size:18px}table{width:100%;border-collapse:collapse}@media print{button{display:none}}</style>
       </head><body>
       <h1>🇧🇩 ${title}</h1>
-      <p style="color:#666;font-size:12px">গণপ্রজাতন্ত্রী বাংলাদেশ সরকার · ত্রয়োদশ জাতীয় সংসদ · তারিখ: ${new Date().toLocaleDateString("bn-BD")}</p>
-      <button onclick="window.print()" style="background:#006A4E;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-bottom:16px">🖨️ প্রিন্ট / PDF সেভ করুন</button>
+      <p>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার · ত্রয়োদশ জাতীয় সংসদ · ${new Date().toLocaleDateString("bn-BD")}</p>
+      <button onclick="window.print()" style="background:#006A4E;color:#fff;border:none;padding:8px 16px;cursor:pointer;margin-bottom:16px">🖨️ প্রিন্ট / PDF</button>
       <table><thead><tr>${tableHeaders}</tr></thead><tbody>${tableRows}</tbody></table>
       </body></html>`);
     printWindow.document.close();
@@ -217,7 +215,7 @@ export default function App() {
 
   const searchResults = globalSearch.trim().length < 2 ? [] : [
     ...ministers.filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch)).slice(0, 3).map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
-    ...mps.filter(m => Number(m.government_id) === currentGovtId && (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch)))).slice(0, 3).map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
+    ...mps.filter(m => Number(m.government_id) === 1 && (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch)))).slice(0, 3).map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
     ...news.filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch))).slice(0, 3).map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
     ...projects.filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch))).slice(0, 3).map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
   ];
@@ -263,7 +261,7 @@ export default function App() {
   }, []);
 
   const filteredMinisters = ministers.filter(m => m.name.includes(search) || m.ministry.includes(search));
-  const filteredMps = mps.filter(m => Number(m.government_id) === currentGovtId &&
+  const filteredMps = mps.filter(m => Number(m.government_id) === 1 &&
     (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
   );
 
@@ -291,7 +289,6 @@ export default function App() {
       <style>{shimmerStyle}</style>
       <div style={{ fontFamily: "sans-serif", background: T.bg, minHeight: "100vh", color: T.text }}>
 
-        {/* Sidebar Overlay */}
         {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 200 }} />}
 
         {/* Sidebar */}
@@ -340,7 +337,7 @@ export default function App() {
           <button onClick={() => setShowLogin(!showLogin)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 13, flexShrink: 0 }}>🔐</button>
         </div>
 
-        {/* গ্লোবাল সার্চ বার */}
+        {/* গ্লোবাল সার্চ */}
         {showSearch && (
           <div style={{ background: isDark ? "#0a1520" : "#E8F0F8", borderBottom: "2px solid #C9A84C", padding: "12px 20px", position: "sticky", top: 56, zIndex: 90 }}>
             <div style={{ maxWidth: 700, margin: "0 auto", position: "relative" }}>
@@ -373,6 +370,16 @@ export default function App() {
           </div>
         )}
 
+        {/* ট্যাব মেনু */}
+        <div style={{ display: "flex", background: T.navBg, borderBottom: `2px solid ${T.navBorder}`, overflowX: "auto" }}>
+          {(selectedGovt ? govtTabs : tabs).map(tab => (
+            <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); }}
+              style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "12px 18px", cursor: "pointer", fontSize: 13, whiteSpace: "nowrap", fontFamily: "sans-serif" }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* লগইন মডাল */}
         {showLogin && (
           <div onClick={() => setShowLogin(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -384,33 +391,24 @@ export default function App() {
                 onKeyDown={e => e.key === "Enter" && handleLogin()}
                 style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", marginBottom: 14, fontFamily: "sans-serif" }} />
               {loginError && <div style={{ color: "#ff8a8a", fontSize: 12, marginBottom: 10, textAlign: "center" }}>⚠️ {loginError}</div>}
-              <button onClick={handleLogin} disabled={loginLoading} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 8, padding: "12px", cursor: "pointer", fontSize: 14, fontWeight: "bold", width: "100%" }}>
+              <button onClick={handleLogin} disabled={loginLoading}
+                style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 8, padding: "12px", cursor: "pointer", fontSize: 14, fontWeight: "bold", width: "100%" }}>
                 {loginLoading ? "লগইন হচ্ছে..." : "লগইন করুন"}
               </button>
             </div>
           </div>
         )}
 
-        {/* ট্যাব মেনু */}
-        <div style={{ display: "flex", background: T.navBg, borderBottom: `2px solid ${T.navBorder}`, overflowX: "auto" }}>
-          {(selectedGovt ? govtTabs : tabs).map(tab => (
-            <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); }}
-              style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "12px 18px", cursor: "pointer", fontSize: 13, whiteSpace: "nowrap", fontFamily: "sans-serif" }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         {/* স্কেলেটন লোডার */}
         {loading && (
           <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
-            <div style={{ height: 80, background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
+            <div style={{ height: 80, background: "#112233", border: "1px solid #1e3348", borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
-              <SkeletonStat T={T} /><SkeletonStat T={T} /><SkeletonStat T={T} /><SkeletonStat T={T} />
+              <SkeletonStat /><SkeletonStat /><SkeletonStat /><SkeletonStat />
             </div>
-            <SkeletonCard T={T} /><SkeletonCard T={T} /><SkeletonCard T={T} />
+            <SkeletonCard /><SkeletonCard /><SkeletonCard />
           </div>
         )}
 
@@ -418,7 +416,7 @@ export default function App() {
         {!loading && (
           <div className="fade-in" style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
 
-            {/* পূর্ববর্তী সরকার ভিউ */}
+            {/* পূর্ববর্তী সরকার */}
             {selectedGovt && (
               <div>
                 <div style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 20 }}>
@@ -448,10 +446,13 @@ export default function App() {
                 {govtTab === "mps" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>🏅 সংসদ সদস্য তালিকা</h2>
-                    <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
-                    {mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) && (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))).length === 0
+                    <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)}
+                      style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                    {mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) &&
+                      (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))).length === 0
                       ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।</div>
-                      : mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) && (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))).map((m, i) => (
+                      : mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) &&
+                        (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))).map((m, i) => (
                         <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
                           <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
                             {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : "🏅"}
@@ -498,7 +499,7 @@ export default function App() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
                         { label: "মোট মন্ত্রী", value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers" },
-                        { label: "সংসদ সদস্য", value: mps.filter(m => Number(m.government_id) === currentGovtId).length, icon: "🏅", color: "#C9A84C", tab: "mps" },
+                        { label: "সংসদ সদস্য", value: mps.filter(m => Number(m.government_id) === 1).length, icon: "🏅", color: "#C9A84C", tab: "mps" },
                         { label: "উন্নয়ন প্রকল্প", value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects" },
                         { label: "সর্বশেষ সংবাদ", value: news.length, icon: "📰", color: "#9F5DCF", tab: "news" },
                       ].map((stat, i) => (
@@ -528,7 +529,8 @@ export default function App() {
                           {projects.slice(0, 4).map((p, i) => (
                             <DonutChart key={i} value={p.progress} max={100}
                               label={p.title.length > 12 ? p.title.slice(0, 12) + "..." : p.title}
-                              color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF"][i % 4]} />
+                              color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF"][i % 4]}
+                            />
                           ))}
                         </div>
                       </div>
@@ -607,7 +609,8 @@ export default function App() {
                         📥 PDF ডাউনলোড
                       </button>
                     </div>
-                    <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                    <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}
+                      style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMinisters.map((m, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
                         <div style={{ width: 52, height: 52, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
@@ -634,7 +637,8 @@ export default function App() {
                         📥 PDF ডাউনলোড
                       </button>
                     </div>
-                    <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                    <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)}
+                      style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMps.map((m, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
                         <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
@@ -672,7 +676,8 @@ export default function App() {
                         <HorizontalBar key={i}
                           label={p.title.length > 20 ? p.title.slice(0, 20) + "..." : p.title}
                           value={p.progress} max={100}
-                          color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF", "#E8593C"][i % 5]} />
+                          color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF", "#E8593C"][i % 5]}
+                        />
                       ))}
                     </div>
                     {projects.map((p, i) => (
