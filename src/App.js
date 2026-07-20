@@ -57,6 +57,70 @@ function SkeletonStat() {
   );
 }
 
+function BarChart({ data, title }) {
+  const max = Math.max(...data.map(d => d.value), 1);
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 12, paddingLeft: 4 }}>{title}</h3>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120, padding: "0 4px" }}>
+        {data.map((d, i) => (
+          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            <div style={{ fontSize: 10, color: "#C9A84C", fontWeight: "bold" }}>{d.value}</div>
+            <div style={{
+              width: "100%", borderRadius: "4px 4px 0 0",
+              height: `${(d.value / max) * 80}px`,
+              background: `linear-gradient(180deg, ${d.color || "#006A4E"}, ${d.color ? d.color + "88" : "#004d38"})`,
+              minHeight: 4, transition: "height 0.6s ease"
+            }} />
+            <div style={{ fontSize: 9, color: "#8aaabb", textAlign: "center", lineHeight: 1.3, width: "100%" }}>{d.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DonutChart({ value, max, label, color }) {
+  const pct = Math.min((value / max) * 100, 100);
+  const r = 36;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <div style={{ position: "relative", width: 88, height: 88 }}>
+        <svg width="88" height="88" viewBox="0 0 88 88">
+          <circle cx="44" cy="44" r={r} fill="none" stroke="#1e3348" strokeWidth="10" />
+          <circle cx="44" cy="44" r={r} fill="none" stroke={color || "#006A4E"} strokeWidth="10"
+            strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+            transform="rotate(-90 44 44)"
+            style={{ transition: "stroke-dasharray 0.8s ease" }}
+          />
+        </svg>
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", textAlign: "center" }}>
+          <div style={{ fontSize: 14, fontWeight: "bold", color: color || "#006A4E" }}>{Math.round(pct)}%</div>
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: "#8aaabb", textAlign: "center" }}>{label}</div>
+      <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold" }}>{value}/{max}</div>
+    </div>
+  );
+}
+
+function HorizontalBar({ label, value, max, color }) {
+  const pct = Math.min((value / max) * 100, 100);
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+        <span style={{ color: "#e8f0f5" }}>{label}</span>
+        <span style={{ color: color || "#C9A84C", fontWeight: "bold" }}>{value}%</span>
+      </div>
+      <div style={{ height: 8, background: "#1e3348", borderRadius: 4, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${color || "#006A4E"}, #C9A84C)`, borderRadius: 4, transition: "width 0.8s ease" }} />
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [search, setSearch] = useState("");
@@ -357,7 +421,38 @@ export default function App() {
                         </div>
                       ))}
                     </div>
+{/* মন্ত্রণালয়ভিত্তিক চার্ট */}
+{ministers.length > 0 && (
+  <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
+    <BarChart
+      title="📊 মন্ত্রিসভার বিভাগ অনুযায়ী বিতরণ"
+      data={[
+        { label: "পূর্ণ মন্ত্রী", value: ministers.filter(m => m.role === "মন্ত্রী" || m.role === "প্রধানমন্ত্রী" || m.role === "সিনিয়র মন্ত্রী").length, color: "#006A4E" },
+        { label: "প্রতিমন্ত্রী", value: ministers.filter(m => m.role === "প্রতিমন্ত্রী").length, color: "#C9A84C" },
+        { label: "টেকনোক্র্যাট", value: ministers.filter(m => m.role && m.role.includes("টেকনোক্র্যাট")).length, color: "#3B8BD4" },
+        { label: "উপমন্ত্রী", value: ministers.filter(m => m.role === "উপমন্ত্রী").length, color: "#9F5DCF" },
+      ]}
+    />
+  </div>
+)}
 
+{/* প্রকল্প অগ্রগতি ডোনাট চার্ট */}
+{projects.length > 0 && (
+  <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
+    <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 16 }}>🎯 প্রকল্প অগ্রগতি</h3>
+    <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 12 }}>
+      {projects.slice(0, 4).map((p, i) => (
+        <DonutChart
+          key={i}
+          value={p.progress}
+          max={100}
+          label={p.title.length > 12 ? p.title.slice(0, 12) + "..." : p.title}
+          color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF"][i % 4]}
+        />
+      ))}
+    </div>
+  </div>
+)}
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 14, fontSize: 15 }}>🔨 চলমান প্রকল্প</h2>
                     {projects.filter(p => p.status === "চলমান").slice(0, 3).map((p, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 14, marginBottom: 10 }}>
@@ -481,6 +576,33 @@ export default function App() {
                       </div>
                     ))}
                   </div>
+                  {/* প্রকল্পের সারসংক্ষেপ */}
+<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+  {[
+    { label: "চলমান", value: projects.filter(p => p.status === "চলমান").length, color: "#4ecba0" },
+    { label: "নতুন", value: projects.filter(p => p.status === "নতুন").length, color: "#C9A84C" },
+    { label: "সম্পন্ন", value: projects.filter(p => p.status === "সম্পন্ন").length, color: "#3B8BD4" },
+  ].map((s, i) => (
+    <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, textAlign: "center" }}>
+      <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{s.value}</div>
+      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
+    </div>
+  ))}
+</div>
+
+{/* অগ্রগতি বার চার্ট */}
+<div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
+  <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 14 }}>📈 প্রকল্পের অগ্রগতি তুলনা</h3>
+  {projects.map((p, i) => (
+    <HorizontalBar
+      key={i}
+      label={p.title.length > 20 ? p.title.slice(0, 20) + "..." : p.title}
+      value={p.progress}
+      max={100}
+      color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF", "#E8593C"][i % 5]}
+    />
+  ))}
+</div>
                 )}
               </div>
             )}
