@@ -156,6 +156,93 @@ export default function App() {
     ...news.filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch))).slice(0, 3).map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
     ...projects.filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch))).slice(0, 3).map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
   ];
+function shareContent(title, text) {
+  if (navigator.share) {
+    navigator.share({ title, text, url: window.location.href })
+      .catch(() => {});
+  } else {
+    navigator.clipboard.writeText(`${title}\n${text}\n${window.location.href}`)
+      .then(() => alert("লিংক কপি হয়েছে!"))
+      .catch(() => {});
+  }
+}
+
+function ShareButton({ title, text }) {
+  return (
+    <button onClick={() => shareContent(title, text)} style={{
+      background: "transparent",
+      border: `1px solid ${isDark ? "#1e3348" : "#D0DCE8"}`,
+      borderRadius: 6, padding: "4px 10px",
+      cursor: "pointer", color: "#C9A84C",
+      fontSize: 12, display: "flex", alignItems: "center", gap: 4
+    }}>
+      📤 শেয়ার
+    </button>
+  );
+}
+
+function SocialShare({ title }) {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent(title);
+  return (
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+      <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`} target="_blank" rel="noreferrer"
+        style={{ background: "#1877F2", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer", textDecoration: "none" }}>
+        Facebook
+      </a>
+      <a href={`https://twitter.com/intent/tweet?text=${text}&url=${url}`} target="_blank" rel="noreferrer"
+        style={{ background: "#1DA1F2", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer", textDecoration: "none" }}>
+        Twitter/X
+      </a>
+      <a href={`https://wa.me/?text=${text}%20${url}`} target="_blank" rel="noreferrer"
+        style={{ background: "#25D366", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer", textDecoration: "none" }}>
+        WhatsApp
+      </a>
+      <button onClick={() => { navigator.clipboard.writeText(`${title} ${window.location.href}`).then(() => alert("কপি হয়েছে!")); }}
+        style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+        🔗 কপি
+      </button>
+    </div>
+  );
+}
+
+function downloadPDF(title, rows, columns) {
+  const printWindow = window.open("", "_blank");
+  const tableRows = rows.map(row =>
+    `<tr>${columns.map(col => `<td style="padding:8px;border:1px solid #ddd;font-size:12px">${row[col.key] || "-"}</td>`).join("")}</tr>`
+  ).join("");
+
+  const tableHeaders = columns.map(col =>
+    `<th style="padding:8px;border:1px solid #ddd;background:#006A4E;color:#fff;font-size:12px">${col.label}</th>`
+  ).join("");
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${title}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #006A4E; font-size: 18px; margin-bottom: 6px; }
+        p { color: #666; font-size: 12px; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; }
+        @media print { button { display: none; } }
+      </style>
+    </head>
+    <body>
+      <h1>🇧🇩 ${title}</h1>
+      <p>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার · ত্রয়োদশ জাতীয় সংসদ · তারিখ: ${new Date().toLocaleDateString("bn-BD")}</p>
+      <button onclick="window.print()" style="background:#006A4E;color:#fff;border:none;padding:8px 16px;borderRadius:4px;cursor:pointer;margin-bottom:16px">🖨️ প্রিন্ট / PDF সেভ করুন</button>
+      <table>
+        <thead><tr>${tableHeaders}</tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
 
   useEffect(() => {
     if (!selectedGovt) return;
@@ -507,6 +594,17 @@ export default function App() {
                         <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
                         <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
                         <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
+                        {/* সংবাদ কার্ড */}
+{news.map((n, i) => (
+  <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+    <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
+    <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+      <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
+      <SocialShare title={n.title} />
+    </div>
+  </div>
+))}
                       </div>
                     ))}
                   </div>
@@ -516,6 +614,16 @@ export default function App() {
                 {activeTab === "ministers" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>মন্ত্রিসভা</h2>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>মন্ত্রিসভা</h2>
+  <button onClick={() => downloadPDF("মন্ত্রিসভা তালিকা", ministers, [
+    { key: "name", label: "নাম" },
+    { key: "role", label: "পদবি" },
+    { key: "ministry", label: "মন্ত্রণালয়" },
+  ])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
+    📥 PDF ডাউনলোড
+  </button>
+</div>
                     <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMinisters.map((m, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
