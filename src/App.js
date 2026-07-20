@@ -36,24 +36,24 @@ function formatBanglaDate(dateStr) {
   } catch { return dateStr; }
 }
 
-function SkeletonCard() {
+function SkeletonCard({ T = THEMES.dark }) {
   return (
-    <div style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 12, overflow: "hidden", position: "relative" }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 12, overflow: "hidden", position: "relative" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
-      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "40%", marginBottom: 10 }} />
-      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "90%", marginBottom: 8 }} />
-      <div style={{ height: 12, background: "#1e3348", borderRadius: 4, width: "60%" }} />
+      <div style={{ height: 12, background: T.border, borderRadius: 4, width: "40%", marginBottom: 10 }} />
+      <div style={{ height: 12, background: T.border, borderRadius: 4, width: "90%", marginBottom: 8 }} />
+      <div style={{ height: 12, background: T.border, borderRadius: 4, width: "60%" }} />
     </div>
   );
 }
 
-function SkeletonStat() {
+function SkeletonStat({ T = THEMES.dark }) {
   return (
-    <div style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, textAlign: "center", position: "relative", overflow: "hidden" }}>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
-      <div style={{ height: 28, width: 28, background: "#1e3348", borderRadius: "50%", margin: "0 auto 8px" }} />
-      <div style={{ height: 20, background: "#1e3348", borderRadius: 4, width: "50%", margin: "0 auto 8px" }} />
-      <div style={{ height: 10, background: "#1e3348", borderRadius: 4, width: "70%", margin: "0 auto" }} />
+      <div style={{ height: 28, width: 28, background: T.border, borderRadius: "50%", margin: "0 auto 8px" }} />
+      <div style={{ height: 20, background: T.border, borderRadius: 4, width: "50%", margin: "0 auto 8px" }} />
+      <div style={{ height: 10, background: T.border, borderRadius: 4, width: "70%", margin: "0 auto" }} />
     </div>
   );
 }
@@ -146,6 +146,8 @@ export default function App() {
 
   const T = isDark ? THEMES.dark : THEMES.light;
 
+  const currentGovtId = governments.find(g => g.is_current)?.id ?? 1;
+
   function toggleTheme() {
     const newMode = !isDark;
     setIsDark(newMode);
@@ -215,7 +217,7 @@ export default function App() {
 
   const searchResults = globalSearch.trim().length < 2 ? [] : [
     ...ministers.filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch)).slice(0, 3).map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
-    ...mps.filter(m => Number(m.government_id) === 1 && (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch)))).slice(0, 3).map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
+    ...mps.filter(m => Number(m.government_id) === currentGovtId && (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch)))).slice(0, 3).map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
     ...news.filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch))).slice(0, 3).map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
     ...projects.filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch))).slice(0, 3).map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
   ];
@@ -261,7 +263,7 @@ export default function App() {
   }, []);
 
   const filteredMinisters = ministers.filter(m => m.name.includes(search) || m.ministry.includes(search));
-  const filteredMps = mps.filter(m => Number(m.government_id) === 1 &&
+  const filteredMps = mps.filter(m => Number(m.government_id) === currentGovtId &&
     (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
   );
 
@@ -402,13 +404,13 @@ export default function App() {
         {/* স্কেলেটন লোডার */}
         {loading && (
           <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
-            <div style={{ height: 80, background: "#112233", border: "1px solid #1e3348", borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
+            <div style={{ height: 80, background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent)", animation: "shimmer 1.5s infinite" }} />
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
-              <SkeletonStat /><SkeletonStat /><SkeletonStat /><SkeletonStat />
+              <SkeletonStat T={T} /><SkeletonStat T={T} /><SkeletonStat T={T} /><SkeletonStat T={T} />
             </div>
-            <SkeletonCard /><SkeletonCard /><SkeletonCard />
+            <SkeletonCard T={T} /><SkeletonCard T={T} /><SkeletonCard T={T} />
           </div>
         )}
 
@@ -496,7 +498,7 @@ export default function App() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
                         { label: "মোট মন্ত্রী", value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers" },
-                        { label: "সংসদ সদস্য", value: mps.filter(m => Number(m.government_id) === 1).length, icon: "🏅", color: "#C9A84C", tab: "mps" },
+                        { label: "সংসদ সদস্য", value: mps.filter(m => Number(m.government_id) === currentGovtId).length, icon: "🏅", color: "#C9A84C", tab: "mps" },
                         { label: "উন্নয়ন প্রকল্প", value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects" },
                         { label: "সর্বশেষ সংবাদ", value: news.length, icon: "📰", color: "#9F5DCF", tab: "news" },
                       ].map((stat, i) => (
