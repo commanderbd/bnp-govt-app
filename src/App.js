@@ -1,3 +1,4 @@
+import AdminPanel from "./AdminPanel";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
@@ -14,6 +15,9 @@ const shimmerStyle = `
 `;
 
 const THEMES = {
+  <button onClick={() => setShowLogin(!showLogin)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 13, flexShrink: 0 }}>
+  🔐
+</button>
   dark: {
     bg: "#0D1B2A", card: "#112233", border: "#1e3348",
     text: "#F5F0E8", textMuted: "#6a8a9a", textSecondary: "#a0c0d0",
@@ -136,6 +140,30 @@ export default function App() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(() => {
+    const [isAdmin, setIsAdmin] = useState(false);
+const [showLogin, setShowLogin] = useState(false);
+const [loginEmail, setLoginEmail] = useState("");
+const [loginPassword, setLoginPassword] = useState("");
+const [loginError, setLoginError] = useState("");
+const [loginLoading, setLoginLoading] = useState(false);
+
+async function handleLogin() {
+  setLoginLoading(true);
+  setLoginError("");
+  const { error } = await supabase.auth.signInWithPassword({
+    email: loginEmail,
+    password: loginPassword
+  });
+  if (error) setLoginError("ইমেইল বা পাসওয়ার্ড ভুল");
+  else { setIsAdmin(true); setShowLogin(false); }
+  setLoginLoading(false);
+}
+
+async function handleLogout() {
+  await supabase.auth.signOut();
+  setIsAdmin(false);
+}
+if (isAdmin) return <AdminPanel onLogout={handleLogout} isDark={isDark} T={T} />;
     try { return localStorage.getItem("theme") !== "light"; }
     catch { return true; }
   });
@@ -402,6 +430,23 @@ function downloadPDF(title, rows, columns) {
         </div>
 
         {/* স্কেলেটন লোডার */}
+        {/* লগইন মডাল */}
+{showLogin && (
+  <div onClick={() => setShowLogin(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div onClick={e => e.stopPropagation()} style={{ background: T.card, border: "2px solid #C9A84C", borderRadius: 12, padding: 28, width: 320, maxWidth: "90vw" }}>
+      <div style={{ fontSize: 18, fontWeight: "bold", color: "#C9A84C", marginBottom: 20, textAlign: "center" }}>🔐 অ্যাডমিন লগইন</div>
+      <input placeholder="ইমেইল" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
+        style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", marginBottom: 10, fontFamily: "sans-serif" }} />
+      <input type="password" placeholder="পাসওয়ার্ড" value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && handleLogin()}
+        style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", marginBottom: 14, fontFamily: "sans-serif" }} />
+      {loginError && <div style={{ color: "#ff8a8a", fontSize: 12, marginBottom: 10, textAlign: "center" }}>⚠️ {loginError}</div>}
+      <button onClick={handleLogin} disabled={loginLoading} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 8, padding: "12px", cursor: "pointer", fontSize: 14, fontWeight: "bold", width: "100%" }}>
+        {loginLoading ? "লগইন হচ্ছে..." : "লগইন করুন"}
+      </button>
+    </div>
+  </div>
+)}
         {loading && (
           <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
             <div style={{ height: 80, background: "#112233", border: "1px solid #1e3348", borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
