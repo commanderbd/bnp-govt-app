@@ -419,9 +419,7 @@ export default function App() {
                           <div style={{ fontSize: 26, fontWeight: "bold", color: stat.color, margin: "6px 0" }}>{stat.value}</div>
                           <div style={{ fontSize: 12, color: T.textMuted }}>{stat.label}</div>
                         </div>
-                      ))}
-                    </div>
-{/* মন্ত্রণালয়ভিত্তিক চার্ট */}
+                        {/* মন্ত্রণালয়ভিত্তিক চার্ট */}
 {ministers.length > 0 && (
   <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
     <BarChart
@@ -453,6 +451,9 @@ export default function App() {
     </div>
   </div>
 )}
+                      ))}
+                    </div>
+
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 14, fontSize: 15 }}>🔨 চলমান প্রকল্প</h2>
                     {projects.filter(p => p.status === "চলমান").slice(0, 3).map((p, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 14, marginBottom: 10 }}>
@@ -561,22 +562,7 @@ export default function App() {
                 {activeTab === "projects" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>উন্নয়ন প্রকল্প</h2>
-                    {projects.map((p, i) => (
-                      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 18, marginBottom: 12 }}>
-                        <div style={{ fontSize: 15, fontWeight: "bold", color: T.text, marginBottom: 8 }}>{p.title}</div>
-                        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>📁 {p.ministry}</div>
-                        <div style={{ height: 8, background: T.border, borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
-                          <div style={{ height: "100%", width: `${p.progress}%`, background: "linear-gradient(90deg, #006A4E, #C9A84C)", borderRadius: 4 }} />
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textMuted }}>
-                          <span>💰 {p.budget}</span>
-                          <span>{p.progress}%</span>
-                          <span style={{ color: p.status === "নতুন" ? "#C9A84C" : "#4ecba0" }}>● {p.status}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {/* প্রকল্পের সারসংক্ষেপ */}
+                    {/* প্রকল্পের সারসংক্ষেপ */}
 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
   {[
     { label: "চলমান", value: projects.filter(p => p.status === "চলমান").length, color: "#4ecba0" },
@@ -603,6 +589,21 @@ export default function App() {
     />
   ))}
 </div>
+                    {projects.map((p, i) => (
+                      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 18, marginBottom: 12 }}>
+                        <div style={{ fontSize: 15, fontWeight: "bold", color: T.text, marginBottom: 8 }}>{p.title}</div>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>📁 {p.ministry}</div>
+                        <div style={{ height: 8, background: T.border, borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
+                          <div style={{ height: "100%", width: `${p.progress}%`, background: "linear-gradient(90deg, #006A4E, #C9A84C)", borderRadius: 4 }} />
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textMuted }}>
+                          <span>💰 {p.budget}</span>
+                          <span>{p.progress}%</span>
+                          <span style={{ color: p.status === "নতুন" ? "#C9A84C" : "#4ecba0" }}>● {p.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}
