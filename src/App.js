@@ -15,9 +15,6 @@ const shimmerStyle = `
 `;
 
 const THEMES = {
-  <button onClick={() => setShowLogin(!showLogin)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 13, flexShrink: 0 }}>
-  🔐
-</button>
   dark: {
     bg: "#0D1B2A", card: "#112233", border: "#1e3348",
     text: "#F5F0E8", textMuted: "#6a8a9a", textSecondary: "#a0c0d0",
@@ -70,12 +67,7 @@ function BarChart({ data, title }) {
         {data.map((d, i) => (
           <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
             <div style={{ fontSize: 10, color: "#C9A84C", fontWeight: "bold" }}>{d.value}</div>
-            <div style={{
-              width: "100%", borderRadius: "4px 4px 0 0",
-              height: `${(d.value / max) * 80}px`,
-              background: `linear-gradient(180deg, ${d.color || "#006A4E"}, ${d.color ? d.color + "88" : "#004d38"})`,
-              minHeight: 4, transition: "height 0.6s ease"
-            }} />
+            <div style={{ width: "100%", borderRadius: "4px 4px 0 0", height: `${(d.value / max) * 80}px`, background: `linear-gradient(180deg, ${d.color || "#006A4E"}, ${d.color ? d.color + "88" : "#004d38"})`, minHeight: 4, transition: "height 0.6s ease" }} />
             <div style={{ fontSize: 9, color: "#8aaabb", textAlign: "center", lineHeight: 1.3, width: "100%" }}>{d.label}</div>
           </div>
         ))}
@@ -140,35 +132,17 @@ export default function App() {
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(() => {
-    const [isAdmin, setIsAdmin] = useState(false);
-const [showLogin, setShowLogin] = useState(false);
-const [loginEmail, setLoginEmail] = useState("");
-const [loginPassword, setLoginPassword] = useState("");
-const [loginError, setLoginError] = useState("");
-const [loginLoading, setLoginLoading] = useState(false);
-
-async function handleLogin() {
-  setLoginLoading(true);
-  setLoginError("");
-  const { error } = await supabase.auth.signInWithPassword({
-    email: loginEmail,
-    password: loginPassword
-  });
-  if (error) setLoginError("ইমেইল বা পাসওয়ার্ড ভুল");
-  else { setIsAdmin(true); setShowLogin(false); }
-  setLoginLoading(false);
-}
-
-async function handleLogout() {
-  await supabase.auth.signOut();
-  setIsAdmin(false);
-}
-if (isAdmin) return <AdminPanel onLogout={handleLogout} isDark={isDark} T={T} />;
     try { return localStorage.getItem("theme") !== "light"; }
     catch { return true; }
   });
   const [showSearch, setShowSearch] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const T = isDark ? THEMES.dark : THEMES.light;
 
@@ -178,99 +152,73 @@ if (isAdmin) return <AdminPanel onLogout={handleLogout} isDark={isDark} T={T} />
     try { localStorage.setItem("theme", newMode ? "dark" : "light"); } catch {}
   }
 
+  async function handleLogin() {
+    setLoginLoading(true);
+    setLoginError("");
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+    if (error) setLoginError("ইমেইল বা পাসওয়ার্ড ভুল");
+    else { setIsAdmin(true); setShowLogin(false); }
+    setLoginLoading(false);
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setIsAdmin(false);
+  }
+
+  function shareContent(title) {
+    if (navigator.share) {
+      navigator.share({ title, url: window.location.href }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(`${title}\n${window.location.href}`)
+        .then(() => alert("লিংক কপি হয়েছে!")).catch(() => {});
+    }
+  }
+
+  function SocialShare({ title }) {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(title);
+    return (
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+        <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`} target="_blank" rel="noreferrer"
+          style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>Facebook</a>
+        <a href={`https://twitter.com/intent/tweet?text=${text}&url=${url}`} target="_blank" rel="noreferrer"
+          style={{ background: "#1DA1F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>Twitter/X</a>
+        <a href={`https://wa.me/?text=${text}%20${url}`} target="_blank" rel="noreferrer"
+          style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>WhatsApp</a>
+        <button onClick={() => navigator.clipboard.writeText(`${title} ${window.location.href}`).then(() => alert("কপি হয়েছে!"))}
+          style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+          🔗 কপি
+        </button>
+      </div>
+    );
+  }
+
+  function downloadPDF(title, rows, columns) {
+    const printWindow = window.open("", "_blank");
+    const tableRows = rows.map(row =>
+      `<tr>${columns.map(col => `<td style="padding:8px;border:1px solid #ddd;font-size:12px">${row[col.key] || "-"}</td>`).join("")}</tr>`
+    ).join("");
+    const tableHeaders = columns.map(col =>
+      `<th style="padding:8px;border:1px solid #ddd;background:#006A4E;color:#fff;font-size:12px">${col.label}</th>`
+    ).join("");
+    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+      <style>body{font-family:Arial,sans-serif;padding:20px}h1{color:#006A4E;font-size:18px}table{width:100%;border-collapse:collapse}@media print{button{display:none}}</style>
+      </head><body>
+      <h1>🇧🇩 ${title}</h1>
+      <p style="color:#666;font-size:12px">গণপ্রজাতন্ত্রী বাংলাদেশ সরকার · ত্রয়োদশ জাতীয় সংসদ · তারিখ: ${new Date().toLocaleDateString("bn-BD")}</p>
+      <button onclick="window.print()" style="background:#006A4E;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-bottom:16px">🖨️ প্রিন্ট / PDF সেভ করুন</button>
+      <table><thead><tr>${tableHeaders}</tr></thead><tbody>${tableRows}</tbody></table>
+      </body></html>`);
+    printWindow.document.close();
+  }
+
   const searchResults = globalSearch.trim().length < 2 ? [] : [
     ...ministers.filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch)).slice(0, 3).map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
     ...mps.filter(m => Number(m.government_id) === 1 && (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch)))).slice(0, 3).map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
     ...news.filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch))).slice(0, 3).map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
     ...projects.filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch))).slice(0, 3).map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
   ];
-function shareContent(title, text) {
-  if (navigator.share) {
-    navigator.share({ title, text, url: window.location.href })
-      .catch(() => {});
-  } else {
-    navigator.clipboard.writeText(`${title}\n${text}\n${window.location.href}`)
-      .then(() => alert("লিংক কপি হয়েছে!"))
-      .catch(() => {});
-  }
-}
-
-function ShareButton({ title, text }) {
-  return (
-    <button onClick={() => shareContent(title, text)} style={{
-      background: "transparent",
-      border: `1px solid ${isDark ? "#1e3348" : "#D0DCE8"}`,
-      borderRadius: 6, padding: "4px 10px",
-      cursor: "pointer", color: "#C9A84C",
-      fontSize: 12, display: "flex", alignItems: "center", gap: 4
-    }}>
-      📤 শেয়ার
-    </button>
-  );
-}
-
-function SocialShare({ title }) {
-  const url = encodeURIComponent(window.location.href);
-  const text = encodeURIComponent(title);
-  return (
-    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-      <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`} target="_blank" rel="noreferrer"
-        style={{ background: "#1877F2", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer", textDecoration: "none" }}>
-        Facebook
-      </a>
-      <a href={`https://twitter.com/intent/tweet?text=${text}&url=${url}`} target="_blank" rel="noreferrer"
-        style={{ background: "#1DA1F2", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer", textDecoration: "none" }}>
-        Twitter/X
-      </a>
-      <a href={`https://wa.me/?text=${text}%20${url}`} target="_blank" rel="noreferrer"
-        style={{ background: "#25D366", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer", textDecoration: "none" }}>
-        WhatsApp
-      </a>
-      <button onClick={() => { navigator.clipboard.writeText(`${title} ${window.location.href}`).then(() => alert("কপি হয়েছে!")); }}
-        style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
-        🔗 কপি
-      </button>
-    </div>
-  );
-}
-
-function downloadPDF(title, rows, columns) {
-  const printWindow = window.open("", "_blank");
-  const tableRows = rows.map(row =>
-    `<tr>${columns.map(col => `<td style="padding:8px;border:1px solid #ddd;font-size:12px">${row[col.key] || "-"}</td>`).join("")}</tr>`
-  ).join("");
-
-  const tableHeaders = columns.map(col =>
-    `<th style="padding:8px;border:1px solid #ddd;background:#006A4E;color:#fff;font-size:12px">${col.label}</th>`
-  ).join("");
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>${title}</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h1 { color: #006A4E; font-size: 18px; margin-bottom: 6px; }
-        p { color: #666; font-size: 12px; margin-bottom: 16px; }
-        table { width: 100%; border-collapse: collapse; }
-        @media print { button { display: none; } }
-      </style>
-    </head>
-    <body>
-      <h1>🇧🇩 ${title}</h1>
-      <p>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার · ত্রয়োদশ জাতীয় সংসদ · তারিখ: ${new Date().toLocaleDateString("bn-BD")}</p>
-      <button onclick="window.print()" style="background:#006A4E;color:#fff;border:none;padding:8px 16px;borderRadius:4px;cursor:pointer;margin-bottom:16px">🖨️ প্রিন্ট / PDF সেভ করুন</button>
-      <table>
-        <thead><tr>${tableHeaders}</tr></thead>
-        <tbody>${tableRows}</tbody>
-      </table>
-    </body>
-    </html>
-  `);
-  printWindow.document.close();
-}
 
   useEffect(() => {
     if (!selectedGovt) return;
@@ -334,6 +282,8 @@ function downloadPDF(title, rows, columns) {
   const currentGovtMinisters = selectedGovt ? histMinisters.filter(m => Number(m.government_id) === Number(selectedGovt.id)) : [];
   const currentGovtAchievements = selectedGovt ? achievements.filter(a => Number(a.government_id) === Number(selectedGovt.id)) : [];
 
+  if (isAdmin) return <AdminPanel onLogout={handleLogout} isDark={isDark} T={T} />;
+
   return (
     <>
       <style>{shimmerStyle}</style>
@@ -350,7 +300,8 @@ function downloadPDF(title, rows, columns) {
           </div>
           <div style={{ padding: 12 }}>
             {governments.map((g, i) => (
-              <div key={i} onClick={() => { setSelectedGovt(g); setSidebarOpen(false); setGovtTab("ministers"); setSearch(""); }} style={{ background: selectedGovt?.id === g.id ? "rgba(201,168,76,0.2)" : T.card, border: `1px solid ${selectedGovt?.id === g.id ? "#C9A84C" : T.border}`, borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`, borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer" }}>
+              <div key={i} onClick={() => { setSelectedGovt(g); setSidebarOpen(false); setGovtTab("ministers"); setSearch(""); }}
+                style={{ background: selectedGovt?.id === g.id ? "rgba(201,168,76,0.2)" : T.card, border: `1px solid ${selectedGovt?.id === g.id ? "#C9A84C" : T.border}`, borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`, borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer" }}>
                 <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>
                   {g.is_current && <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>বর্তমান</span>}
                   {g.prime_minister}
@@ -359,7 +310,8 @@ function downloadPDF(title, rows, columns) {
                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>📅 {g.period}</div>
               </div>
             ))}
-            <div onClick={() => { setSelectedGovt(null); setSidebarOpen(false); setSearch(""); }} style={{ background: !selectedGovt ? "rgba(0,106,78,0.2)" : "transparent", border: `1px solid ${!selectedGovt ? "#006A4E" : T.border}`, borderRadius: 8, padding: 12, marginTop: 8, cursor: "pointer", textAlign: "center", fontSize: 13, color: "#4ecba0" }}>
+            <div onClick={() => { setSelectedGovt(null); setSidebarOpen(false); setSearch(""); }}
+              style={{ background: !selectedGovt ? "rgba(0,106,78,0.2)" : "transparent", border: `1px solid ${!selectedGovt ? "#006A4E" : T.border}`, borderRadius: 8, padding: 12, marginTop: 8, cursor: "pointer", textAlign: "center", fontSize: 13, color: "#4ecba0" }}>
               🏠 মূল ড্যাশবোর্ডে ফিরুন
             </div>
           </div>
@@ -383,15 +335,15 @@ function downloadPDF(title, rows, columns) {
           {!selectedGovt && <img src={BNP_LOGO} alt="বিএনপি লোগো" style={{ width: 34, height: 34, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2, flexShrink: 0 }} onError={e => e.target.style.display = "none"} />}
           <button onClick={() => { setShowSearch(!showSearch); setGlobalSearch(""); }} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 15, flexShrink: 0 }}>🔍</button>
           <button onClick={toggleTheme} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 15, flexShrink: 0 }}>{isDark ? "☀️" : "🌙"}</button>
+          <button onClick={() => setShowLogin(!showLogin)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 13, flexShrink: 0 }}>🔐</button>
         </div>
 
         {/* গ্লোবাল সার্চ বার */}
         {showSearch && (
-          <div style={{ background: isDark ? "#0a1520" : "#E8F0F8", borderBottom: `2px solid #C9A84C`, padding: "12px 20px", position: "sticky", top: 56, zIndex: 90 }}>
+          <div style={{ background: isDark ? "#0a1520" : "#E8F0F8", borderBottom: "2px solid #C9A84C", padding: "12px 20px", position: "sticky", top: 56, zIndex: 90 }}>
             <div style={{ maxWidth: 700, margin: "0 auto", position: "relative" }}>
               <input autoFocus placeholder="মন্ত্রী, এমপি, সংবাদ বা প্রকল্প খুঁজুন..." value={globalSearch} onChange={e => setGlobalSearch(e.target.value)}
-                style={{ width: "100%", background: T.card, border: "1px solid #C9A84C", borderRadius: 8, padding: "10px 40px 10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none" }}
-              />
+                style={{ width: "100%", background: T.card, border: "1px solid #C9A84C", borderRadius: 8, padding: "10px 40px 10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none" }} />
               {globalSearch && <button onClick={() => setGlobalSearch("")} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", color: T.textMuted, cursor: "pointer", fontSize: 16 }}>✕</button>}
             </div>
             {searchResults.length > 0 && (
@@ -400,8 +352,7 @@ function downloadPDF(title, rows, columns) {
                   <div key={i} onClick={() => { setActiveTab(result.tab); setShowSearch(false); setGlobalSearch(""); setSelectedGovt(null); }}
                     style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: i < searchResults.length - 1 ? `1px solid ${T.border}` : "none", cursor: "pointer" }}
                     onMouseEnter={e => e.currentTarget.style.background = isDark ? "#162840" : "#EAF2FB"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                  >
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     <span style={{ fontSize: 18 }}>{result.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: "bold", color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{result.title}</div>
@@ -420,33 +371,35 @@ function downloadPDF(title, rows, columns) {
           </div>
         )}
 
+        {/* লগইন মডাল */}
+        {showLogin && (
+          <div onClick={() => setShowLogin(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: T.card, border: "2px solid #C9A84C", borderRadius: 12, padding: 28, width: 320, maxWidth: "90vw" }}>
+              <div style={{ fontSize: 18, fontWeight: "bold", color: "#C9A84C", marginBottom: 20, textAlign: "center" }}>🔐 অ্যাডমিন লগইন</div>
+              <input placeholder="ইমেইল" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
+                style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", marginBottom: 10, fontFamily: "sans-serif" }} />
+              <input type="password" placeholder="পাসওয়ার্ড" value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleLogin()}
+                style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", marginBottom: 14, fontFamily: "sans-serif" }} />
+              {loginError && <div style={{ color: "#ff8a8a", fontSize: 12, marginBottom: 10, textAlign: "center" }}>⚠️ {loginError}</div>}
+              <button onClick={handleLogin} disabled={loginLoading} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 8, padding: "12px", cursor: "pointer", fontSize: 14, fontWeight: "bold", width: "100%" }}>
+                {loginLoading ? "লগইন হচ্ছে..." : "লগইন করুন"}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ট্যাব মেনু */}
         <div style={{ display: "flex", background: T.navBg, borderBottom: `2px solid ${T.navBorder}`, overflowX: "auto" }}>
           {(selectedGovt ? govtTabs : tabs).map(tab => (
-            <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); }} style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "12px 18px", cursor: "pointer", fontSize: 13, whiteSpace: "nowrap", fontFamily: "sans-serif" }}>
+            <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); }}
+              style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "12px 18px", cursor: "pointer", fontSize: 13, whiteSpace: "nowrap", fontFamily: "sans-serif" }}>
               {tab.label}
             </button>
           ))}
         </div>
 
         {/* স্কেলেটন লোডার */}
-        {/* লগইন মডাল */}
-{showLogin && (
-  <div onClick={() => setShowLogin(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center" }}>
-    <div onClick={e => e.stopPropagation()} style={{ background: T.card, border: "2px solid #C9A84C", borderRadius: 12, padding: 28, width: 320, maxWidth: "90vw" }}>
-      <div style={{ fontSize: 18, fontWeight: "bold", color: "#C9A84C", marginBottom: 20, textAlign: "center" }}>🔐 অ্যাডমিন লগইন</div>
-      <input placeholder="ইমেইল" value={loginEmail} onChange={e => setLoginEmail(e.target.value)}
-        style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", marginBottom: 10, fontFamily: "sans-serif" }} />
-      <input type="password" placeholder="পাসওয়ার্ড" value={loginPassword} onChange={e => setLoginPassword(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && handleLogin()}
-        style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, boxSizing: "border-box", outline: "none", marginBottom: 14, fontFamily: "sans-serif" }} />
-      {loginError && <div style={{ color: "#ff8a8a", fontSize: 12, marginBottom: 10, textAlign: "center" }}>⚠️ {loginError}</div>}
-      <button onClick={handleLogin} disabled={loginLoading} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 8, padding: "12px", cursor: "pointer", fontSize: 14, fontWeight: "bold", width: "100%" }}>
-        {loginLoading ? "লগইন হচ্ছে..." : "লগইন করুন"}
-      </button>
-    </div>
-  </div>
-)}
         {loading && (
           <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
             <div style={{ height: 80, background: "#112233", border: "1px solid #1e3348", borderRadius: 12, marginBottom: 20, position: "relative", overflow: "hidden" }}>
@@ -477,7 +430,9 @@ function downloadPDF(title, rows, columns) {
                       ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।</div>
                       : currentGovtMinisters.map((m, i) => (
                         <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{m.icon || "👤"}</div>
+                          <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+                            {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : m.icon || "👤"}
+                          </div>
                           <div>
                             <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
                             <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
@@ -496,18 +451,15 @@ function downloadPDF(title, rows, columns) {
                       ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।</div>
                       : mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) && (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))).map((m, i) => (
                         <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-  <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
-    {m.photo_url
-      ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
-      : "🏅"
-    }
-  </div>
-  <div style={{ flex: 1 }}>
-    <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
-    <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
-    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
-  </div>
-</div>
+                          <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+                            {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : "🏅"}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
+                            <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
+                            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
+                          </div>
+                        </div>
                       ))}
                   </div>
                 )}
@@ -532,6 +484,7 @@ function downloadPDF(title, rows, columns) {
             {/* মূল ড্যাশবোর্ড */}
             {!selectedGovt && (
               <div>
+
                 {/* হোম ট্যাব */}
                 {activeTab === "home" && (
                   <div>
@@ -539,6 +492,7 @@ function downloadPDF(title, rows, columns) {
                       <div style={{ fontSize: 22, fontWeight: "bold", color: "#fff", marginBottom: 6 }}>🇧🇩 স্বাগতম</div>
                       <div style={{ fontSize: 13, color: "#C9A84C" }}>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — ত্রয়োদশ জাতীয় সংসদ</div>
                     </div>
+
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
                         { label: "মোট মন্ত্রী", value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers" },
@@ -551,40 +505,32 @@ function downloadPDF(title, rows, columns) {
                           <div style={{ fontSize: 26, fontWeight: "bold", color: stat.color, margin: "6px 0" }}>{stat.value}</div>
                           <div style={{ fontSize: 12, color: T.textMuted }}>{stat.label}</div>
                         </div>
-                        {/* মন্ত্রণালয়ভিত্তিক চার্ট */}
-{ministers.length > 0 && (
-  <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
-    <BarChart
-      title="📊 মন্ত্রিসভার বিভাগ অনুযায়ী বিতরণ"
-      data={[
-        { label: "পূর্ণ মন্ত্রী", value: ministers.filter(m => m.role === "মন্ত্রী" || m.role === "প্রধানমন্ত্রী" || m.role === "সিনিয়র মন্ত্রী").length, color: "#006A4E" },
-        { label: "প্রতিমন্ত্রী", value: ministers.filter(m => m.role === "প্রতিমন্ত্রী").length, color: "#C9A84C" },
-        { label: "টেকনোক্র্যাট", value: ministers.filter(m => m.role && m.role.includes("টেকনোক্র্যাট")).length, color: "#3B8BD4" },
-        { label: "উপমন্ত্রী", value: ministers.filter(m => m.role === "উপমন্ত্রী").length, color: "#9F5DCF" },
-      ]}
-    />
-  </div>
-)}
-
-{/* প্রকল্প অগ্রগতি ডোনাট চার্ট */}
-{projects.length > 0 && (
-  <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
-    <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 16 }}>🎯 প্রকল্প অগ্রগতি</h3>
-    <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 12 }}>
-      {projects.slice(0, 4).map((p, i) => (
-        <DonutChart
-          key={i}
-          value={p.progress}
-          max={100}
-          label={p.title.length > 12 ? p.title.slice(0, 12) + "..." : p.title}
-          color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF"][i % 4]}
-        />
-      ))}
-    </div>
-  </div>
-)}
                       ))}
                     </div>
+
+                    {ministers.length > 0 && (
+                      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
+                        <BarChart title="📊 মন্ত্রিসভার বিভাগ অনুযায়ী বিতরণ" data={[
+                          { label: "পূর্ণ মন্ত্রী", value: ministers.filter(m => m.role === "মন্ত্রী" || m.role === "প্রধানমন্ত্রী" || m.role === "সিনিয়র মন্ত্রী").length, color: "#006A4E" },
+                          { label: "প্রতিমন্ত্রী", value: ministers.filter(m => m.role === "প্রতিমন্ত্রী").length, color: "#C9A84C" },
+                          { label: "টেকনোক্র্যাট", value: ministers.filter(m => m.role && m.role.includes("টেকনোক্র্যাট")).length, color: "#3B8BD4" },
+                          { label: "উপমন্ত্রী", value: ministers.filter(m => m.role === "উপমন্ত্রী").length, color: "#9F5DCF" },
+                        ]} />
+                      </div>
+                    )}
+
+                    {projects.length > 0 && (
+                      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
+                        <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 16 }}>🎯 প্রকল্প অগ্রগতি</h3>
+                        <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 12 }}>
+                          {projects.slice(0, 4).map((p, i) => (
+                            <DonutChart key={i} value={p.progress} max={100}
+                              label={p.title.length > 12 ? p.title.slice(0, 12) + "..." : p.title}
+                              color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF"][i % 4]} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 14, fontSize: 15 }}>🔨 চলমান প্রকল্প</h2>
                     {projects.filter(p => p.status === "চলমান").slice(0, 3).map((p, i) => (
@@ -614,7 +560,8 @@ function downloadPDF(title, rows, columns) {
 
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, margin: "20px 0 14px", fontSize: 15 }}>🏛️ বিএনপি সরকারসমূহ</h2>
                     {governments.map((g, i) => (
-                      <div key={i} onClick={() => { setSelectedGovt(g); setGovtTab("ministers"); }} style={{ background: T.card, border: `1px solid ${g.is_current ? "#006A4E" : T.border}`, borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`, borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div key={i} onClick={() => { setSelectedGovt(g); setGovtTab("ministers"); }}
+                        style={{ background: T.card, border: `1px solid ${g.is_current ? "#006A4E" : T.border}`, borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`, borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
                           <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>
                             {g.is_current && <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>বর্তমান</span>}
@@ -638,18 +585,10 @@ function downloadPDF(title, rows, columns) {
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
                         <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
                         <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
-                        <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
-                        {/* সংবাদ কার্ড */}
-{news.map((n, i) => (
-  <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
-    <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
-    <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-      <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
-      <SocialShare title={n.title} />
-    </div>
-  </div>
-))}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                          <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
+                          <SocialShare title={n.title} />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -658,26 +597,20 @@ function downloadPDF(title, rows, columns) {
                 {/* মন্ত্রিসভা ট্যাব */}
                 {activeTab === "ministers" && (
                   <div>
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>মন্ত্রিসভা</h2>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>মন্ত্রিসভা</h2>
-  <button onClick={() => downloadPDF("মন্ত্রিসভা তালিকা", ministers, [
-    { key: "name", label: "নাম" },
-    { key: "role", label: "পদবি" },
-    { key: "ministry", label: "মন্ত্রণালয়" },
-  ])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
-    📥 PDF ডাউনলোড
-  </button>
-</div>  
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>মন্ত্রিসভা</h2>
+                      <button onClick={() => downloadPDF("মন্ত্রিসভা তালিকা", ministers, [
+                        { key: "name", label: "নাম" }, { key: "role", label: "পদবি" }, { key: "ministry", label: "মন্ত্রণালয়" },
+                      ])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
+                        📥 PDF ডাউনলোড
+                      </button>
+                    </div>
                     <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMinisters.map((m, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
                         <div style={{ width: 52, height: 52, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
-  {m.photo_url
-    ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; e.target.parentNode.innerHTML = m.icon || "👤"; }} />
-    : m.icon || "👤"
-  }
-</div>
+                          {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : m.icon || "👤"}
+                        </div>
                         <div>
                           <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
                           <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
@@ -691,33 +624,26 @@ function downloadPDF(title, rows, columns) {
                 {/* এমপি ট্যাব */}
                 {activeTab === "mps" && (
                   <div>
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>সংসদ সদস্য তালিকা</h2>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-  <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সংসদ সদস্য তালিকা</h2>
-  <button onClick={() => downloadPDF("সংসদ সদস্য তালিকা", filteredMps, [
-    { key: "name", label: "নাম" },
-    { key: "constituency", label: "আসন" },
-    { key: "district", label: "জেলা" },
-    { key: "party", label: "দল" },
-  ])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
-    📥 PDF ডাউনলোড
-  </button>
-</div>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সংসদ সদস্য তালিকা</h2>
+                      <button onClick={() => downloadPDF("সংসদ সদস্য তালিকা", filteredMps, [
+                        { key: "name", label: "নাম" }, { key: "constituency", label: "আসন" }, { key: "district", label: "জেলা" }, { key: "party", label: "দল" },
+                      ])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>
+                        📥 PDF ডাউনলোড
+                      </button>
+                    </div>
                     <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMps.map((m, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-  <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
-    {m.photo_url
-      ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
-      : "🏅"
-    }
-  </div>
-  <div style={{ flex: 1 }}>
-    <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
-    <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
-    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
-  </div>
-</div>
+                        <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+                          {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : "🏅"}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
+                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -726,33 +652,27 @@ function downloadPDF(title, rows, columns) {
                 {activeTab === "projects" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>উন্নয়ন প্রকল্প</h2>
-                    {/* প্রকল্পের সারসংক্ষেপ */}
-<div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
-  {[
-    { label: "চলমান", value: projects.filter(p => p.status === "চলমান").length, color: "#4ecba0" },
-    { label: "নতুন", value: projects.filter(p => p.status === "নতুন").length, color: "#C9A84C" },
-    { label: "সম্পন্ন", value: projects.filter(p => p.status === "সম্পন্ন").length, color: "#3B8BD4" },
-  ].map((s, i) => (
-    <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, textAlign: "center" }}>
-      <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{s.value}</div>
-      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
-    </div>
-  ))}
-</div>
-
-{/* অগ্রগতি বার চার্ট */}
-<div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
-  <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 14 }}>📈 প্রকল্পের অগ্রগতি তুলনা</h3>
-  {projects.map((p, i) => (
-    <HorizontalBar
-      key={i}
-      label={p.title.length > 20 ? p.title.slice(0, 20) + "..." : p.title}
-      value={p.progress}
-      max={100}
-      color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF", "#E8593C"][i % 5]}
-    />
-  ))}
-</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+                      {[
+                        { label: "চলমান", value: projects.filter(p => p.status === "চলমান").length, color: "#4ecba0" },
+                        { label: "নতুন", value: projects.filter(p => p.status === "নতুন").length, color: "#C9A84C" },
+                        { label: "সম্পন্ন", value: projects.filter(p => p.status === "সম্পন্ন").length, color: "#3B8BD4" },
+                      ].map((s, i) => (
+                        <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{s.value}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
+                      <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 14 }}>📈 প্রকল্পের অগ্রগতি তুলনা</h3>
+                      {projects.map((p, i) => (
+                        <HorizontalBar key={i}
+                          label={p.title.length > 20 ? p.title.slice(0, 20) + "..." : p.title}
+                          value={p.progress} max={100}
+                          color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF", "#E8593C"][i % 5]} />
+                      ))}
+                    </div>
                     {projects.map((p, i) => (
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 18, marginBottom: 12 }}>
                         <div style={{ fontSize: 15, fontWeight: "bold", color: T.text, marginBottom: 8 }}>{p.title}</div>
