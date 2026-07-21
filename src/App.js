@@ -130,6 +130,10 @@ export default function App() {
   const [governments, setGovernments] = useState([]);
   const [histMinisters, setHistMinisters] = useState([]);
   const [achievements, setAchievements] = useState([]);
+  const [decisions, setDecisions] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [showDecisions, setShowDecisions] = useState(false);
+  const [showDocuments, setShowDocuments] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(() => {
     try { return localStorage.getItem("theme") !== "light"; }
@@ -235,7 +239,7 @@ export default function App() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [m, n, mp, p, g, hm, a] = await Promise.all([
+      const [m, n, mp, p, g, hm, a, dec, doc] = await Promise.all([
         supabase.from("ministers").select("*").order("id"),
         supabase.from("news").select("*").order("created_at", { ascending: false }).limit(50),
         supabase.from("mps").select("*").order("id").limit(5000),
@@ -243,7 +247,9 @@ export default function App() {
         supabase.from("governments").select("*").order("id"),
         supabase.from("historical_ministers").select("*").order("id"),
         supabase.from("achievements").select("*").order("id"),
-      ]);
+        supabase.from("decisions").select("*").order("date", { ascending: false }),
+        supabase.from("documents").select("*").order("created_at", { ascending: false }),
+]);
       setMinisters(m.data || []);
       setNews(n.data || []);
       setMps(mp.data || []);
@@ -251,6 +257,8 @@ export default function App() {
       setGovernments(g.data || []);
       setHistMinisters(hm.data || []);
       setAchievements(a.data || []);
+      setDecisions(dec.data || []);
+      setDocuments(doc.data || []);
       setLoading(false);
     }
     fetchData();
@@ -322,6 +330,25 @@ export default function App() {
             ))}
             <div onClick={() => { setSelectedGovt(null); setSidebarOpen(false); setSearch(""); }}
               style={{ background: !selectedGovt ? "rgba(0,106,78,0.2)" : "transparent", border: `1px solid ${!selectedGovt ? "#006A4E" : T.border}`, borderRadius: 8, padding: 12, marginTop: 8, cursor: "pointer", textAlign: "center", fontSize: 13, color: "#4ecba0" }}>
+              {/* বিভাজক */}
+<div style={{ height: 1, background: T.border, margin: "8px 0" }} />
+
+{/* উল্লেখযোগ্য সিদ্ধান্ত */}
+<div onClick={() => { setShowDecisions(true); setShowDocuments(false); setSidebarOpen(false); setSelectedGovt(null); setActiveTab("home"); }}
+  style={{ background: showDecisions ? "rgba(201,168,76,0.2)" : T.card, border: `1px solid ${showDecisions ? "#C9A84C" : T.border}`, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer" }}>
+  <div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>⚖️ উল্লেখযোগ্য সিদ্ধান্ত</div>
+  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>গুরুত্বপূর্ণ সরকারি সিদ্ধান্তসমূহ</div>
+</div>
+
+{/* গুরুত্বপূর্ণ দলিল */}
+<div onClick={() => { setShowDocuments(true); setShowDecisions(false); setSidebarOpen(false); setSelectedGovt(null); setActiveTab("home"); }}
+  style={{ background: showDocuments ? "rgba(201,168,76,0.2)" : T.card, border: `1px solid ${showDocuments ? "#C9A84C" : T.border}`, borderLeft: "4px solid #3B8BD4", borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer" }}>
+  <div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>📄 গুরুত্বপূর্ণ দলিল</div>
+  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>সরকারি গেজেট ও দলিলসমূহ</div>
+</div>
+
+{/* বিভাজক */}
+<div style={{ height: 1, background: T.border, margin: "8px 0" }} />
               🏠 মূল ড্যাশবোর্ডে ফিরুন
             </div>
           </div>
@@ -496,6 +523,72 @@ export default function App() {
             )}
 
             {/* মূল ড্যাশবোর্ড */}
+            {/* উল্লেখযোগ্য সিদ্ধান্ত ভিউ */}
+{showDecisions && (
+  <div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C9A84C", paddingLeft: 10, fontSize: 16, margin: 0 }}>
+        ⚖️ উল্লেখযোগ্য সিদ্ধান্ত
+      </h2>
+      <button onClick={() => setShowDecisions(false)} style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "4px 12px", color: T.textMuted, cursor: "pointer", fontSize: 12, fontFamily: "sans-serif" }}>
+        ✕ বন্ধ
+      </button>
+    </div>
+
+    {decisions.length === 0 && (
+      <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>কোনো সিদ্ধান্ত পাওয়া যায়নি</div>
+    )}
+
+    {decisions.map((d, i) => (
+      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+          <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>{d.category}</div>
+          <div style={{ fontSize: 11, color: T.textMuted }}>📅 {d.date}</div>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: "bold", color: T.text, marginBottom: 6 }}>{d.title}</div>
+        <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>{d.description}</div>
+      </div>
+    ))}
+  </div>
+)}
+
+{/* গুরুত্বপূর্ণ দলিল ভিউ */}
+{showDocuments && (
+  <div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #3B8BD4", paddingLeft: 10, fontSize: 16, margin: 0 }}>
+        📄 গুরুত্বপূর্ণ দলিল
+      </h2>
+      <button onClick={() => setShowDocuments(false)} style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "4px 12px", color: T.textMuted, cursor: "pointer", fontSize: 12, fontFamily: "sans-serif" }}>
+        ✕ বন্ধ
+      </button>
+    </div>
+
+    {documents.length === 0 && (
+      <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>কোনো দলিল পাওয়া যায়নি</div>
+    )}
+
+    {documents.map((d, i) => (
+      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #3B8BD4", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+          <div style={{ fontSize: 11, color: "#3B8BD4", fontWeight: "bold" }}>{d.category}</div>
+          <div style={{ fontSize: 11, color: T.textMuted }}>📅 {d.date}</div>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: "bold", color: T.text, marginBottom: 6 }}>{d.title}</div>
+        {d.description && (
+          <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6, marginBottom: 8 }}>{d.description}</div>
+        )}
+        {d.file_url ? (
+          <a href={d.file_url} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#3B8BD4", color: "#fff", borderRadius: 6, padding: "6px 14px", fontSize: 12, textDecoration: "none" }}>
+            📥 ডাউনলোড করুন
+          </a>
+        ) : (
+          <span style={{ fontSize: 11, color: T.textMuted }}>ফাইল শীঘ্রই যোগ হবে</span>
+        )}
+      </div>
+    ))}
+  </div>
+)}
             {!selectedGovt && (
               <div>
 
@@ -632,15 +725,15 @@ export default function App() {
                <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>{n.source}</div>
                <span style={{ fontSize: 10, color: "#006A4E", background: isDark ? "rgba(0,106,78,0.2)" : "rgba(0,106,78,0.1)", padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 8 }}>
                  {n.category}
-          </span>
+               </span>
+             </div>
+            <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 8 }}>{n.title}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
+              <SocialShare title={n.title} />
+          </div>
         </div>
-        <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 8 }}>{n.title}</div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-          <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
-          <SocialShare title={n.title} />
-        </div>
-      </div>
-    ))}
+       ))}
 
     {/* আরো লোড বাটন */}
     {hasMore && (
