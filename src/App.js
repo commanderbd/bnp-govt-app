@@ -137,6 +137,9 @@ export default function App() {
   });
   const [showSearch, setShowSearch] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
+  const [newsCategory, setNewsCategory] = useState("সব");
+  const [newsPage, setNewsPage] = useState(1);
+  const NEWS_PER_PAGE = 10;
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
@@ -264,6 +267,14 @@ export default function App() {
   const filteredMps = mps.filter(m => Number(m.government_id) === 1 &&
     (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search)))
   );
+  const newsCategories = ["সব", "সরকারি", "অর্থনীতি", "সংসদ", "শিক্ষা", "আইনশৃঙ্খলা", "উন্নয়ন", "পররাষ্ট্র", "মন্ত্রিসভা"];
+
+  const filteredNews = newsCategory === "সব"
+  ? news
+  : news.filter(n => n.category === newsCategory);
+
+  const paginatedNews = filteredNews.slice(0, newsPage * NEWS_PER_PAGE);
+  const hasMore = paginatedNews.length < filteredNews.length;
 
   const tabs = [
     { id: "home", label: "🏠 হোম" },
