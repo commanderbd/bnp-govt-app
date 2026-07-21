@@ -594,9 +594,74 @@ export default function App() {
                 {/* সংবাদ ট্যাব */}
                 {activeTab === "news" && (
                   <div>
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>সর্বশেষ সংবাদ</h2>
-                    {news.length === 0 && <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>কোনো সংবাদ নেই</div>}
-                    {news.map((n, i) => (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>
+                        সর্বশেষ সংবাদ
+                      </h2>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>
+                        {filteredNews.length}টি সংবাদ
+                      </span>
+                    </div>
+
+                    {/* ক্যাটাগরি ফিল্টার */}
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                      {newsCategories.map(cat => (
+                        <button key={cat} onClick={() => { setNewsCategory(cat); setNewsPage(1); }} style={{
+                          background: newsCategory === cat ? "#006A4E" : "transparent",
+                          border: `1px solid ${newsCategory === cat ? "#006A4E" : T.border}`,
+                          borderRadius: 20, padding: "5px 12px",
+                          cursor: "pointer", fontSize: 12,
+                          color: newsCategory === cat ? "#fff" : T.textMuted,
+                          fontFamily: "sans-serif", transition: "all 0.2s"
+                    }}>
+                      {cat}
+                    </button>
+                 ))}
+               </div>
+
+               {/* সংবাদ তালিকা */}
+              {filteredNews.length === 0 && (
+               <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>
+                 এই ক্যাটাগরিতে কোনো সংবাদ নেই
+              </div>
+            )}
+
+            {paginatedNews.map((n, i) => (
+             <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+               <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>{n.source}</div>
+               <span style={{ fontSize: 10, color: "#006A4E", background: isDark ? "rgba(0,106,78,0.2)" : "rgba(0,106,78,0.1)", padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 8 }}>
+                 {n.category}
+          </span>
+        </div>
+        <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 8 }}>{n.title}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
+          <SocialShare title={n.title} />
+        </div>
+      </div>
+    ))}
+
+    {/* আরো লোড বাটন */}
+    {hasMore && (
+      <button onClick={() => setNewsPage(prev => prev + 1)} style={{
+        width: "100%", background: "transparent",
+        border: `1px solid #006A4E`, borderRadius: 8,
+        padding: "12px", cursor: "pointer",
+        color: "#4ecba0", fontSize: 14,
+        fontFamily: "sans-serif", marginTop: 4
+      }}>
+        আরো {Math.min(NEWS_PER_PAGE, filteredNews.length - paginatedNews.length)}টি সংবাদ দেখুন
+      </button>
+    )}
+
+    {!hasMore && filteredNews.length > 0 && (
+      <div style={{ textAlign: "center", fontSize: 12, color: T.textMuted, padding: "12px 0" }}>
+        সব {filteredNews.length}টি সংবাদ দেখানো হয়েছে
+      </div>
+    )}
+  </div>
+)}
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
                         <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>{n.source} · {n.category}</div>
                         <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 6 }}>{n.title}</div>
