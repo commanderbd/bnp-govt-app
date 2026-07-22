@@ -18,6 +18,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
   const [documents, setDocuments] = useState([]);
   const [newDecision, setNewDecision] = useState({ title: "", description: "", date: "", category: "সরকারি সিদ্ধান্ত" });
   const [newDocument, setNewDocument] = useState({ title: "", description: "", file_url: "", category: "সরকারি দলিল", date: "" });
+  const [feedbacks, setFeedbacks] = useState([]);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -77,6 +78,9 @@ export default function AdminPanel({ onLogout, isDark, T }) {
     fetchAll();
   }
 
+  const fb = await supabase.from("feedback").select("*").order("created_at", { ascending: false });
+setFeedbacks(fb.data || []);
+
   async function addProject() {
     if (!newProject.title || !newProject.ministry) return showMessage("শিরোনাম ও মন্ত্রণালয় আবশ্যক", "error");
     setSaving(true);
@@ -109,6 +113,7 @@ const sections = [
   { id: "projects", label: "🔨 প্রকল্প" },
   { id: "decisions", label: "⚖️ সিদ্ধান্ত" },
   { id: "documents", label: "📄 দলিল" },
+  { id: "feedback", label: "💬 ফিডব্যাক" },
 ];
 
   return (
@@ -371,7 +376,64 @@ const sections = [
         {saving ? "যোগ হচ্ছে..." : "✅ দলিল যোগ করুন"}
       </button>
     </div>
+{/* ফিডব্যাক মডারেশন */}
+{activeSection === "feedback" && (
+  <div>
+    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
+      💬 ফিডব্যাক মডারেশন ({feedbacks.length}টি)
+    </h2>
 
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+      {[
+        { label: "মোট", value: feedbacks.length, color: "#C9A84C" },
+        { label: "অনুমোদিত", value: feedbacks.filter(f => f.status === "approved").length, color: "#4ecba0" },
+        { label: "বিচারাধীন", value: feedbacks.filter(f => f.status === "pending").length, color: "#E8593C" },
+      ].map((s, i) => (
+        <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{s.value}</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
+        </div>
+      ))}
+    </div>
+
+    {feedbacks.map((f, i) => (
+      <div key={i} style={{ background: T.card, border: `1px solid ${f.status === "pending" ? "#E8593C" : T.border}`, borderLeft: `4px solid ${f.status === "approved" ? "#4ecba0" : "#E8593C"}`, borderRadius: 8, padding: 14, marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{f.name}</div>
+            <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 2 }}>{f.category} · {"★".repeat(f.rating)}</div>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {f.status === "pending" && (
+              <button onClick={async () => {
+                await supabase.from("feedback").update({ status: "approved" }).eq("id", f.id);
+                showMessage("অনুমোদন করা হয়েছে!");
+                fetchAll();
+              }} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>
+                ✅ অনুমোদন
+              </button>
+            )}
+            <button onClick={async () => {
+              if (!window.confirm("মুছবেন?")) return;
+              await supabase.from("feedback").delete().eq("id", f.id);
+              showMessage("মুছে ফেলা হয়েছে");
+              fetchAll();
+            }} style={deleteBtnStyle}>🗑️</button>
+          </div>
+        </div>
+        <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6, borderTop: `1px solid ${T.border}`, paddingTop: 8 }}>
+          "{f.message}"
+        </div>
+        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>
+          {new Date(f.created_at).toLocaleDateString("bn-BD")} ·
+          <span style={{ color: f.status === "approved" ? "#4ecba0" : "#E8593C", marginLeft: 4 }}>
+            {f.status === "approved" ? "✅ অনুমোদিত" : "⏳ বিচারাধীন"}
+          </span>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 12, fontSize: 15 }}>দলিল তালিকা ({documents.length}টি)</h2>
     {documents.map((d, i) => (
       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #3B8BD4", borderRadius: 8, padding: 12, marginBottom: 8 }}>

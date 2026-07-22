@@ -1,6 +1,10 @@
+import { registerServiceWorker, requestNotificationPermission, showLocalNotification } from "./notifications";
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 import AdminPanel from "./AdminPanel";
+import { translations } from "./translations";
+import FeedbackSection from "./FeedbackSection";
+
 
 const shimmerStyle = `
   @keyframes shimmer {
@@ -139,6 +143,19 @@ export default function App() {
     try { return localStorage.getItem("theme") !== "light"; }
     catch { return true; }
   });
+  const [notifPermission, setNotifPermission] = useState("default");
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [lang, setLang] = useState(() => {
+  try { return localStorage.getItem("lang") || "bn"; }
+  catch { return "bn"; }
+});
+const t = translations[lang];
+
+function toggleLang() {
+  const newLang = lang === "bn" ? "en" : "bn";
+  setLang(newLang);
+  try { localStorage.setItem("lang", newLang); } catch {}
+}
   const [showSearch, setShowSearch] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
   const [newsCategory, setNewsCategory] = useState("সব");
@@ -228,6 +245,20 @@ export default function App() {
   ];
 
   useEffect(() => {
+  registerServiceWorker();
+  if ("Notification" in window) {
+    setNotifPermission(Notification.permission);
+    setNotifEnabled(Notification.permission === "granted");
+  }
+}, []);
+<div style={{ fontSize: 13, fontWeight: "bold", color: "#C9A84C", marginBottom: 3 }}>
+  🔔 {t.notifEnable}
+</div>
+<div style={{ fontSize: 12, color: T.textMuted }}>{t.notifDesc}</div>
+<button ...>{t.enable}</button>
+<div style={{ fontSize: 13, color: "#4ecba0" }}>🔔 {t.notifEnabled}</div>
+
+  useEffect(() => {
     if (!selectedGovt) return;
     async function fetchGovtMps() {
       const { data } = await supabase.from("mps").select("*").eq("government_id", selectedGovt.id).order("id").limit(500);
@@ -261,6 +292,18 @@ export default function App() {
       setDocuments(doc.data || []);
       setLoading(false);
     }
+    if (notifEnabled && n.data && n.data.length > 0) {
+  const latest = n.data[0];
+  const stored = sessionStorage.getItem("lastNewsId");
+  if (stored && latest.id > Number(stored)) {
+    showLocalNotification(
+      "🇧🇩 নতুন সংবাদ",
+      latest.title,
+      "/"
+    );
+  }
+  sessionStorage.setItem("lastNewsId", latest.id);
+}
     fetchData();
     const channel = supabase.channel("realtime-updates")
       .on("postgres_changes", { event: "*", schema: "public", table: "ministers" }, fetchData)
@@ -311,6 +354,8 @@ export default function App() {
         {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 200 }} />}
 
         {/* Sidebar */}
+        <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>{t.sidebarTitle}</div>
+<div style={{ fontSize: 11, color: "#C9A84C", marginTop: 3 }}>{t.sidebarSubtitle}</div>
         <div style={{ position: "fixed", top: 0, left: sidebarOpen ? 0 : -320, width: 300, height: "100vh", background: T.sidebarBg, borderRight: "2px solid #C9A84C", zIndex: 300, transition: "left 0.3s ease", overflowY: "auto" }}>
           <div style={{ background: "#006A4E", padding: "16px 20px", borderBottom: "2px solid #C9A84C" }}>
             <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>🏛️ বিএনপি সরকার সমূহ</div>
@@ -332,13 +377,28 @@ export default function App() {
               style={{ background: !selectedGovt ? "rgba(0,106,78,0.2)" : "transparent", border: `1px solid ${!selectedGovt ? "#006A4E" : T.border}`, borderRadius: 8, padding: 12, marginTop: 8, cursor: "pointer", textAlign: "center", fontSize: 13, color: "#4ecba0" }}>
               {/* বিভাজক */}
 <div style={{ height: 1, background: T.border, margin: "8px 0" }} />
-
+{/* সিদ্ধান্ত মেনু */}
+<div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>
+  {t.decisions}
+</div>
+<div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>
+  {t.decisionsSubtitle}
+</div>
 {/* উল্লেখযোগ্য সিদ্ধান্ত */}
 <div onClick={() => { setShowDecisions(true); setShowDocuments(false); setSidebarOpen(false); setSelectedGovt(null); setActiveTab("home"); }}
   style={{ background: showDecisions ? "rgba(201,168,76,0.2)" : T.card, border: `1px solid ${showDecisions ? "#C9A84C" : T.border}`, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer" }}>
   <div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>⚖️ উল্লেখযোগ্য সিদ্ধান্ত</div>
   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>গুরুত্বপূর্ণ সরকারি সিদ্ধান্তসমূহ</div>
 </div>
+{/* দলিল মেনু */}
+<div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>
+  {t.documents}
+</div>
+<div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>
+  {t.documentsSubtitle}
+</div>
+
+<div>🏠 {t.backToDashboard}</div>
 
 {/* গুরুত্বপূর্ণ দলিল */}
 <div onClick={() => { setShowDocuments(true); setShowDecisions(false); setSidebarOpen(false); setSelectedGovt(null); setActiveTab("home"); }}
@@ -355,6 +415,40 @@ export default function App() {
         </div>
 
         {/* হেডার */}
+        {/* Notification বাটন */}
+<button onClick={async () => {
+  if (notifEnabled) {
+    setNotifEnabled(false);
+    return;
+  }
+  const result = await requestNotificationPermission();
+  setNotifPermission(result);
+  if (result === "granted") {
+    setNotifEnabled(true);
+    showLocalNotification(
+      "🇧🇩 বাংলাদেশ সরকার",
+      "Notification চালু হয়েছে! নতুন সংবাদে আপনাকে জানানো হবে।"
+    );
+  }
+  {/* ভাষা টগল বাটন */}
+<button onClick={toggleLang} style={{
+  background: "rgba(255,255,255,0.15)", border: "none",
+  borderRadius: 20, padding: "5px 10px",
+  cursor: "pointer", color: "#fff",
+  fontSize: 12, fontWeight: "bold", flexShrink: 0,
+  fontFamily: "sans-serif"
+}}>
+  {lang === "bn" ? "EN" : "বাং"}
+</button>
+}} style={{
+  background: notifEnabled ? "rgba(0,255,128,0.2)" : "rgba(255,255,255,0.15)",
+  border: `1px solid ${notifEnabled ? "#4ecba0" : "transparent"}`,
+  borderRadius: 20, padding: "5px 10px",
+  cursor: "pointer", color: "#fff",
+  fontSize: 15, flexShrink: 0
+}} title={notifEnabled ? "Notification বন্ধ করুন" : "Notification চালু করুন"}>
+  {notifEnabled ? "🔔" : "🔕"}
+</button>
         <div style={{ background: "#006A4E", borderBottom: "3px solid #C9A84C", padding: "12px 20px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 100 }}>
           <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "transparent", border: "none", cursor: "pointer", padding: 4, display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
             <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
@@ -376,6 +470,7 @@ export default function App() {
         </div>
 
         {/* গ্লোবাল সার্চ */}
+        <input placeholder={t.searchPlaceholder} .../></div>
         {showSearch && (
           <div style={{ background: isDark ? "#0a1520" : "#E8F0F8", borderBottom: "2px solid #C9A84C", padding: "12px 20px", position: "sticky", top: 56, zIndex: 90 }}>
             <div style={{ maxWidth: 700, margin: "0 auto", position: "relative" }}>
@@ -417,7 +512,19 @@ export default function App() {
             </button>
           ))}
         </div>
+const tabs = [
+  { id: "home", label: t.home },
+  { id: "news", label: t.news },
+  { id: "ministers", label: t.ministers },
+  { id: "mps", label: t.mps },
+  { id: "projects", label: t.projects },
+];
 
+const govtTabs = [
+  { id: "ministers", label: t.ministers },
+  { id: "mps", label: t.mps },
+  { id: "achievements", label: t.achievements },
+];
         {/* লগইন মডাল */}
         {showLogin && (
           <div onClick={() => setShowLogin(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -524,6 +631,12 @@ export default function App() {
 
             {/* মূল ড্যাশবোর্ড */}
             {/* উল্লেখযোগ্য সিদ্ধান্ত ভিউ */}
+            <h2 ...>{t.decisions}</h2>
+<h2 ...>{t.documents}</h2>
+<button ...>{t.close}</button>
+<a ...>{t.download}</a>
+<span ...>{t.fileSoon}</span>
+
 {showDecisions && (
   <div>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -599,7 +712,47 @@ export default function App() {
                       <div style={{ fontSize: 22, fontWeight: "bold", color: "#fff", marginBottom: 6 }}>🇧🇩 স্বাগতম</div>
                       <div style={{ fontSize: 13, color: "#C9A84C" }}>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — ত্রয়োদশ জাতীয় সংসদ</div>
                     </div>
+                    <div style={{ fontSize: 22, fontWeight: "bold", color: "#fff", marginBottom: 6 }}>
+  {t.welcome}
+</div>
+<div style={{ fontSize: 13, color: "#C9A84C" }}>{t.welcomeSubtitle}</div>
 
+{ label: t.totalMinisters, value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers" },
+{ label: t.mpCount, value: mps.filter(m => Number(m.government_id) === 1).length, icon: "🏅", color: "#C9A84C", tab: "mps" },
+{ label: t.projectCount, value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects" },
+{ label: t.newsCount, value: news.length, icon: "📰", color: "#9F5DCF", tab: "news" },
+<h2 ...>{t.ongoingProjects}</h2>
+<span style={{ color: "#4ecba0" }}>{p.progress}{t.progressBar}</span>
+<div onClick={() => setActiveTab("news")} ...>{t.seeAllNews}</div>
+<div onClick={() => setActiveTab("news")} ...>{t.seeAllNews}</div>
+<h2 ...>{t.govtList}</h2>
+
+{/* Notification Status */}
+{!notifEnabled && (
+  <div style={{ background: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.08)", border: "1px solid #C9A84C", borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+    <div>
+      <div style={{ fontSize: 13, fontWeight: "bold", color: "#C9A84C", marginBottom: 3 }}>🔔 Notification চালু করুন</div>
+      <div style={{ fontSize: 12, color: T.textMuted }}>নতুন সংবাদ ও আপডেটে সাথে সাথে জানুন</div>
+    </div>
+    <button onClick={async () => {
+      const result = await requestNotificationPermission();
+      setNotifPermission(result);
+      if (result === "granted") {
+        setNotifEnabled(true);
+        showLocalNotification("🇧🇩 বাংলাদেশ সরকার", "Notification চালু হয়েছে!");
+      }
+    }} style={{ background: "#C9A84C", color: "#0D1B2A", border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: "bold", whiteSpace: "nowrap", fontFamily: "sans-serif" }}>
+      চালু করুন
+    </button>
+  </div>
+)}
+
+{notifEnabled && (
+  <div style={{ background: isDark ? "rgba(0,106,78,0.15)" : "rgba(0,106,78,0.08)", border: "1px solid #006A4E", borderRadius: 10, padding: 12, marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+    <span style={{ fontSize: 16 }}>🔔</span>
+    <div style={{ fontSize: 13, color: "#4ecba0" }}>Notification চালু আছে — নতুন সংবাদে জানানো হবে</div>
+  </div>
+)}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
                         { label: "মোট মন্ত্রী", value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers" },
@@ -653,9 +806,10 @@ export default function App() {
                         </div>
                       </div>
                     ))}
-
+<h2 ...>{t.latestNews}</h2>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, margin: "20px 0 14px", fontSize: 15 }}>📰 সর্বশেষ সংবাদ</h2>
                     {news.slice(0, 3).map((n, i) => (
+                      
                       <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 14, marginBottom: 10 }}>
                         <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 4 }}>{n.source} · {n.category}</div>
                         <div style={{ fontSize: 13, color: T.text, lineHeight: 1.6, marginBottom: 4 }}>{n.title}</div>
@@ -768,6 +922,10 @@ export default function App() {
                 )}
 
                 {/* মন্ত্রিসভা ট্যাব */}
+                <h2 ...>{t.cabinet}</h2>
+                <input placeholder={t.ministerSearch} .../>
+                <button ...>{t.pdfDownload}</button>
+                <button ...>{t.pdfDownload}</button>
                 {activeTab === "ministers" && (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -796,6 +954,10 @@ export default function App() {
                 )}
 
                 {/* এমপি ট্যাব */}
+                <h2 ...>{t.mpList}</h2>
+                <input placeholder={t.mpSearch} .../>
+             
+
                 {activeTab === "mps" && (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -824,6 +986,7 @@ export default function App() {
                 )}
 
                 {/* প্রকল্প ট্যাব */}
+                <h2 ...>{t.devProjects}</h2>
                 {activeTab === "projects" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>উন্নয়ন প্রকল্প</h2>
@@ -865,7 +1028,10 @@ export default function App() {
                     ))}
                   </div>
                 )}
-              </div>
+              </div>{/* ফিডব্যাক ট্যাব */}
+{activeTab === "feedback" && (
+  <FeedbackSection T={T} isDark={isDark} t={t} />
+)}
             )}
           </div>
         )}
