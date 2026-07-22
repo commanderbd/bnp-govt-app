@@ -20,6 +20,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
   const [newDocument, setNewDocument] = useState({ title: "", description: "", file_url: "", category: "সরকারি দলিল", date: "" });
   const [feedbacks, setFeedbacks] = useState([]);
 
+  
   useEffect(() => { fetchAll(); }, []);
 
   async function fetchAll() {

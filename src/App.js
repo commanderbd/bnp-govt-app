@@ -243,6 +243,29 @@ function toggleLang() {
     ...news.filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch))).slice(0, 3).map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
     ...projects.filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch))).slice(0, 3).map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
   ];
+useEffect(() => {
+  function handleHash() {
+    const hash = window.location.hash;
+    if (hash.startsWith("#news-")) {
+      const newsId = Number(hash.replace("#news-", ""));
+      setActiveTab("news");
+      setSelectedGovt(null);
+      setTimeout(() => {
+        const el = document.getElementById(`news-${newsId}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 800);
+    } else if (hash.startsWith("#minister-")) {
+      setActiveTab("ministers");
+      setSelectedGovt(null);
+    } else if (hash.startsWith("#project-")) {
+      setActiveTab("projects");
+      setSelectedGovt(null);
+    }
+  }
+  handleHash();
+  window.addEventListener("hashchange", handleHash);
+  return () => window.removeEventListener("hashchange", handleHash);
+}, []);
 
   useEffect(() => {
   registerServiceWorker();
@@ -727,6 +750,17 @@ const govtTabs = [
 <div onClick={() => setActiveTab("news")} ...>{t.seeAllNews}</div>
 <h2 ...>{t.govtList}</h2>
 
+{news.slice(0, 3).map((n, i) => (
+  <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 14, marginBottom: 10 }}>
+    <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 4 }}>{n.source} · {n.category}</div>
+    <div style={{ fontSize: 13, color: T.text, lineHeight: 1.6, marginBottom: 4 }}>{n.title}</div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+      <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
+      <SocialShare title={n.title} newsId={n.id} />
+    </div>
+  </div>
+))}
+
 {/* Notification Status */}
 {!notifEnabled && (
   <div style={{ background: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.08)", border: "1px solid #C9A84C", borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
@@ -849,7 +883,21 @@ const govtTabs = [
                         {filteredNews.length}টি সংবাদ
                       </span>
                     </div>
-
+{paginatedNews.map((n, i) => (
+  <div key={i} id={`news-${n.id}`} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12, scrollMarginTop: 80 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+      <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>{n.source}</div>
+      <span style={{ fontSize: 10, color: "#006A4E", background: isDark ? "rgba(0,106,78,0.2)" : "rgba(0,106,78,0.1)", padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap", marginLeft: 8 }}>
+        {n.category}
+      </span>
+    </div>
+    <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 8 }}>{n.title}</div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+      <div style={{ fontSize: 11, color: T.textMuted }}>🕐 {formatBanglaDate(n.time)}</div>
+      <SocialShare title={n.title} newsId={n.id} />
+    </div>
+  </div>
+))}
                     {/* ক্যাটাগরি ফিল্টার */}
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
                       {newsCategories.map(cat => (
@@ -920,7 +968,107 @@ const govtTabs = [
                     ))}
                   </div>
                 )}
+function SocialShare({ title, newsId }) {
+  const baseUrl = window.location.origin + window.location.pathname;
+  const shareUrl = newsId ? `${baseUrl}#news-${newsId}` : baseUrl;
+  const url = encodeURIComponent(shareUrl);
+  const text = encodeURIComponent(title);
+  {/* Footer */}
+<div style={{
+  background: isDark ? "#070f18" : "#E0EAF4",
+  borderTop: "2px solid #C9A84C",
+  padding: "20px 20px",
+  marginTop: 40
+}}>
+  <div style={{ maxWidth: 700, margin: "0 auto" }}>
 
+    {/* লোগো ও শিরোনাম */}
+    <div style={{ textAlign: "center", marginBottom: 16 }}>
+      <div style={{ fontSize: 16, fontWeight: "bold", color: "#C9A84C", marginBottom: 4 }}>
+        🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার
+      </div>
+      <div style={{ fontSize: 12, color: T.textMuted }}>
+        ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬
+      </div>
+    </div>
+
+    {/* দ্রুত লিংক */}
+    <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+      {[
+        { label: "🏠 হোম", tab: "home" },
+        { label: "📰 সংবাদ", tab: "news" },
+        { label: "👥 মন্ত্রিসভা", tab: "ministers" },
+        { label: "🏅 এমপি তালিকা", tab: "mps" },
+        { label: "🔨 প্রকল্প", tab: "projects" },
+        { label: "💬 ফিডব্যাক", tab: "feedback" },
+      ].map((item, i) => (
+        <button key={i} onClick={() => { setActiveTab(item.tab); setSelectedGovt(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
+          {item.label}
+        </button>
+      ))}
+    </div>
+
+    {/* তথ্য উৎস */}
+    <div style={{ textAlign: "center", marginBottom: 12 }}>
+      <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 4 }}>📡 তথ্য উৎস</div>
+      <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.8 }}>
+        cabinet.gov.bd · parliament.gov.bd · bssnews.net · prothomalo.com · kalerkantho.com
+      </div>
+    </div>
+
+    {/* বিভাজক */}
+    <div style={{ height: 1, background: T.border, margin: "12px 0" }} />
+
+    {/* নিচের অংশ */}
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+      <div style={{ fontSize: 11, color: T.textMuted }}>
+        © ২০২৬ Commander Enterprise BD · সর্বস্বত্ব সংরক্ষিত
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={() => { setActiveTab("feedback"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: T.textMuted, fontFamily: "sans-serif" }}>
+          💬 ফিডব্যাক
+        </button>
+        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{ background: "#006A4E", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: "#fff", fontFamily: "sans-serif" }}>
+          ↑ উপরে যান
+        </button>
+      </div>
+    </div>
+
+    {/* disclaimer */}
+    <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>
+      এই অ্যাপটি সরকারিভাবে অনুমোদিত নয় — তথ্য সংকলনমূলক উদ্যোগ
+    </div>
+  </div>
+</div>
+  return (
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+      <a href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`}
+        target="_blank" rel="noreferrer"
+        style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>
+        Facebook
+      </a>
+      <a href={`https://twitter.com/intent/tweet?text=${text}&url=${url}`}
+        target="_blank" rel="noreferrer"
+        style={{ background: "#1DA1F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>
+        Twitter/X
+      </a>
+      <a href={`https://wa.me/?text=${text}%20${url}`}
+        target="_blank" rel="noreferrer"
+        style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>
+        WhatsApp
+      </a>
+      <button onClick={() => {
+        navigator.clipboard.writeText(`${title}\n${shareUrl}`)
+          .then(() => alert("লিংক কপি হয়েছে!"));
+      }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+        🔗 কপি
+      </button>
+    </div>
+  );
+}
                 {/* মন্ত্রিসভা ট্যাব */}
                 <h2 ...>{t.cabinet}</h2>
                 <input placeholder={t.ministerSearch} .../>
