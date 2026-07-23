@@ -4,7 +4,8 @@ import { supabase } from "./supabase";
 import AdminPanel from "./AdminPanel";
 import { translations } from "./translations";
 import FeedbackSection from "./FeedbackSection";
-
+import AuthModal from "./AuthModal";
+import CommentsSection from "./CommentsSection";
 
 const shimmerStyle = `
   @keyframes shimmer {
@@ -109,6 +110,33 @@ function DonutChart({ value, max, label, color }) {
 function HorizontalBar({ label, value, max, color }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
+{/* Person Detail Modal */}
+{selectedPerson && (
+  <PersonModal
+    person={selectedPerson}
+    type={personType}
+    onClose={() => { setSelectedPerson(null); setPersonType(null); }}
+    T={T}
+    isDark={isDark}
+  />
+)}
+{selectedNews && (
+  <NewsModal
+    news={selectedNews}
+    onClose={() => setSelectedNews(null)}
+    T={T}
+    isDark={isDark}
+    formatBanglaDate={formatBanglaDate}
+  />
+)}
+{selectedLeader && (
+  <LeaderModal
+    leader={selectedLeader}
+    onClose={() => setSelectedLeader(null)}
+    T={T}
+    isDark={isDark}
+  />
+)}
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
         <span style={{ color: "#e8f0f5" }}>{label}</span>
@@ -116,6 +144,226 @@ function HorizontalBar({ label, value, max, color }) {
       </div>
       <div style={{ height: 8, background: "#1e3348", borderRadius: 4, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${color || "#006A4E"}, #C9A84C)`, borderRadius: 4, transition: "width 0.8s ease" }} />
+      </div>
+    </div>
+  );
+}
+
+function PersonModal({ person, type, onClose, T, isDark }) {
+  if (!person) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: T.card, border: "2px solid #C9A84C", borderRadius: 16, padding: 0, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto" }}>
+
+        {/* Modal হেডার */}
+        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "20px 20px 16px", borderRadius: "14px 14px 0 0", position: "relative" }}>
+          <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", color: "#fff", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            {/* ছবি / আইকন */}
+            <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid #C9A84C", overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>
+              {person.photo_url
+                ? <img src={person.photo_url} alt={person.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
+                : type === "minister" ? (person.icon || "👤") : "🏅"
+              }
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: "bold", color: "#fff", marginBottom: 4 }}>{person.name}</div>
+              <div style={{ fontSize: 12, color: "#C9A84C" }}>
+                {type === "minister" ? person.role : `🏅 ${person.constituency}`}
+              </div>
+              {type === "minister" && person.ministry && (
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>📁 {person.ministry}</div>
+              )}
+              {type === "mp" && person.district && (
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>📍 {person.district}</div>
+              )}
+            </div>
+          </div>
+        </div>
+function NewsModal({ news, onClose, T, isDark, formatBanglaDate }) {
+  if (!news) return null;
+  return (
+    function NewsModal({ news, onClose, T, isDark, formatBanglaDate, currentUser, onLoginRequest }) {
+    <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: T.card, border: "2px solid #C9A84C", borderRadius: 16, width: "100%", maxWidth: 560, maxHeight: "88vh", overflowY: "auto" }}>
+
+        {/* হেডার */}
+        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "16px 20px", borderRadius: "14px 14px 0 0", position: "sticky", top: 0, zIndex: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>{news.source}</span>
+                <span style={{ fontSize: 10, background: "rgba(201,168,76,0.2)", color: "#C9A84C", padding: "2px 8px", borderRadius: 10 }}>{news.category}</span>
+              </div>
+              <div style={{ fontSize: 15, fontWeight: "bold", color: "#fff", lineHeight: 1.5 }}>{news.title}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>🕐 {formatBanglaDate(news.time)}</div>
+            </div>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", color: "#fff", fontSize: 16, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          </div>
+        </div>
+
+        {/* বডি */}
+        <div style={{ padding: 20 }}>
+          {news.content && news.content !== "সম্পূর্ণ সংবাদ শীঘ্রই যোগ করা হবে।" ? (
+            <div style={{ fontSize: 14, color: T.text, lineHeight: 1.9, whiteSpace: "pre-wrap" }}>
+              {news.content}
+            </div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{ fontSize: 32, marginBottom: 10 }}>📰</div>
+              <div style={{ fontSize: 14, color: T.textMuted, marginBottom: 6 }}>সম্পূর্ণ সংবাদ এখনো যোগ করা হয়নি</div>
+              {news.link && (
+                <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#006A4E", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, textDecoration: "none", marginTop: 8 }}>
+                  🔗 মূল সংবাদ পড়ুন
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* মূল সূত্র লিংক */}
+          {news.link && (
+            <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 16, paddingTop: 14 }}>
+              <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: "#4ecba0", fontSize: 13, textDecoration: "none" }}>
+                🔗 মূল সংবাদ পড়ুন — {news.source}
+              </a>
+            </div>
+          )}
+<div onClick={() => setSelectedNews(n)}
+  style={{ fontSize: 14, color: T.text, lineHeight: 1.6, marginBottom: 8, cursor: "pointer" }}
+  title="ক্লিক করে পড়ুন">
+  {n.title}
+</div>
+<button onClick={() => setSelectedNews(n)} style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 16, padding: "3px 10px", cursor: "pointer", fontSize: 11, color: T.textMuted, fontFamily: "sans-serif" }}>
+  পড়ুন →
+</button>
+          {/* শেয়ার */}
+          <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 14, paddingTop: 14 }}>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>শেয়ার করুন</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {[
+                { label: "Facebook", color: "#1877F2", url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + `/#news-${news.id}`)}&quote=${encodeURIComponent(news.title)}` },
+                { label: "WhatsApp", color: "#25D366", url: `https://wa.me/?text=${encodeURIComponent(`${news.title}\n${window.location.origin}/#news-${news.id}`)}` },
+              ].map((s, i) => (
+                <a key={i} href={s.url} target="_blank" rel="noreferrer"
+                  style={{ background: s.color, color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>
+                  {s.label}
+                </a>
+              ))}
+              <button onClick={() => { navigator.clipboard.writeText(`${news.title}\n${window.location.origin}/#news-${news.id}`); alert("কপি হয়েছে!"); }}
+                style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>
+                🔗 কপি
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+<CommentsSection
+  newsId={news.id}
+  user={currentUser}
+  onLoginRequest={() => { onClose(); setShowAuthModal(true); }}
+  T={T}
+  isDark={isDark}
+/>
+{selectedNews && (
+  <NewsModal
+    news={selectedNews}
+    onClose={() => setSelectedNews(null)}
+    T={T}
+    isDark={isDark}
+    formatBanglaDate={formatBanglaDate}
+    currentUser={currentUser}
+    onLoginRequest={() => { setSelectedNews(null); setShowAuthModal(true); }}
+  />
+)}
+        {/* Modal বডি */}
+        <div style={{ padding: 20 }}>
+
+          {/* দলীয় পরিচয় */}
+          <div style={{ background: isDark ? "rgba(0,106,78,0.15)" : "rgba(0,106,78,0.08)", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 8, padding: "8px 14px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 16 }}>🌾</span>
+            <span style={{ fontSize: 13, color: "#4ecba0" }}>{person.party || "বাংলাদেশ জাতীয়তাবাদী দল"}</span>
+          </div>
+
+          {/* বিস্তারিত তথ্য */}
+          {person.bio ? (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                📋 সংক্ষিপ্ত পরিচিতি
+              </div>
+              <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 12 }}>
+                {person.bio}
+              </div>
+            </div>
+          ) : (
+            <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 16, marginBottom: 16, textAlign: "center" }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>📝</div>
+              <div style={{ fontSize: 13, color: T.textMuted }}>বিস্তারিত তথ্য শীঘ্রই যোগ করা হবে</div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>অ্যাডমিন প্যানেল থেকে bio যোগ করুন</div>
+            </div>
+          )}
+
+          {/* যোগাযোগ তথ্য */}
+          {(person.phone || person.email || person.constituency) && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold", marginBottom: 8 }}>📞 যোগাযোগ</div>
+              <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 12 }}>
+                {person.constituency && (
+                  <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 8 }}>
+                    <span style={{ fontSize: 14 }}>📍</span>
+                    <div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>ঠিকানা</div>
+                      <div style={{ fontSize: 13, color: T.text }}>{person.constituency}</div>
+                    </div>
+                  </div>
+                )}
+                {person.phone && (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                    <span style={{ fontSize: 14 }}>📱</span>
+                    <div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>ফোন</div>
+                      <a href={`tel:${person.phone}`} style={{ fontSize: 13, color: "#4ecba0", textDecoration: "none" }}>{person.phone}</a>
+                    </div>
+                  </div>
+                )}
+                {person.email && (
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ fontSize: 14 }}>📧</span>
+                    <div>
+                      <div style={{ fontSize: 11, color: T.textMuted }}>ইমেইল</div>
+                      <a href={`mailto:${person.email}`} style={{ fontSize: 13, color: "#4ecba0", textDecoration: "none" }}>{person.email}</a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* শেয়ার বাটন */}
+          <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 14 }}>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>শেয়ার করুন</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {[
+                { label: "Facebook", color: "#1877F2", url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(person.name)}` },
+                { label: "WhatsApp", color: "#25D366", url: `https://wa.me/?text=${encodeURIComponent(`${person.name} - ${person.role || person.constituency}\n${window.location.href}`)}` },
+              ].map((s, i) => (
+                <a key={i} href={s.url} target="_blank" rel="noreferrer"
+                  style={{ background: s.color, color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>
+                  {s.label}
+                </a>
+              ))}
+              <button onClick={() => {
+                navigator.clipboard.writeText(`${person.name}\n${person.role || person.constituency || ""}\n${window.location.href}`);
+                alert("কপি হয়েছে!");
+              }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>
+                🔗 কপি
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -135,6 +383,10 @@ export default function App() {
   const [histMinisters, setHistMinisters] = useState([]);
   const [achievements, setAchievements] = useState([]);
   const [decisions, setDecisions] = useState([]);
+  const [leaders, setLeaders] = useState([]);
+  const [selectedLeader, setSelectedLeader] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [documents, setDocuments] = useState([]);
   const [showDecisions, setShowDecisions] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
@@ -145,6 +397,9 @@ export default function App() {
   });
   const [notifPermission, setNotifPermission] = useState("default");
   const [notifEnabled, setNotifEnabled] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState(null);
+  const [selectedNews, setSelectedNews] = useState(null);
+  const [personType, setPersonType] = useState(null);
   const [lang, setLang] = useState(() => {
   try { return localStorage.getItem("lang") || "bn"; }
   catch { return "bn"; }
@@ -243,6 +498,24 @@ function toggleLang() {
     ...news.filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch))).slice(0, 3).map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
     ...projects.filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch))).slice(0, 3).map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
   ];
+{filteredMinisters.map((m, i) => (
+  <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
+    <div style={{ width: 52, height: 52, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
+      onClick={() => { setSelectedPerson(m); setPersonType("minister"); }}>
+      {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : m.icon || "👤"}
+    </div>
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
+      <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
+      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>📁 {m.ministry}</div>
+      <button onClick={() => { setSelectedPerson(m); setPersonType("minister"); }}
+        style={{ marginTop: 8, background: "transparent", border: `1px solid #C9A84C`, borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>
+        বিস্তারিত দেখুন →
+      </button>
+    </div>
+  </div>
+))}
+
 useEffect(() => {
   function handleHash() {
     const hash = window.location.hash;
@@ -265,6 +538,14 @@ useEffect(() => {
   handleHash();
   window.addEventListener("hashchange", handleHash);
   return () => window.removeEventListener("hashchange", handleHash);
+}, []);
+
+useEffect(() => {
+  const hash = window.location.hash;
+  if (hash === "#admin-login") {
+    setShowLogin(true);
+    window.location.hash = "";
+  }
 }, []);
 
   useEffect(() => {
@@ -290,6 +571,16 @@ useEffect(() => {
     fetchGovtMps();
   }, [selectedGovt]);
 
+useEffect(() => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setCurrentUser(session?.user || null);
+  });
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    setCurrentUser(session?.user || null);
+  });
+  return () => subscription.unsubscribe();
+}, []);
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
@@ -303,6 +594,7 @@ useEffect(() => {
         supabase.from("achievements").select("*").order("id"),
         supabase.from("decisions").select("*").order("date", { ascending: false }),
         supabase.from("documents").select("*").order("created_at", { ascending: false }),
+        supabase.from("leaders").select("*").order("sort_order"),
 ]);
       setMinisters(m.data || []);
       setNews(n.data || []);
@@ -314,6 +606,7 @@ useEffect(() => {
       setDecisions(dec.data || []);
       setDocuments(doc.data || []);
       setLoading(false);
+      setLeaders(ld.data || []);
     }
     if (notifEnabled && n.data && n.data.length > 0) {
   const latest = n.data[0];
@@ -356,6 +649,7 @@ useEffect(() => {
     { id: "ministers", label: "👥 মন্ত্রিসভা" },
     { id: "mps", label: "🏅 এমপি তালিকা" },
     { id: "projects", label: "🔨 প্রকল্প" },
+    { id: "history", label: "🏛️ ইতিহাস" },
   ];
 
   const govtTabs = [
@@ -489,8 +783,7 @@ useEffect(() => {
           {!selectedGovt && <img src={BNP_LOGO} alt="বিএনপি লোগো" style={{ width: 34, height: 34, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2, flexShrink: 0 }} onError={e => e.target.style.display = "none"} />}
           <button onClick={() => { setShowSearch(!showSearch); setGlobalSearch(""); }} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 15, flexShrink: 0 }}>🔍</button>
           <button onClick={toggleTheme} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 15, flexShrink: 0 }}>{isDark ? "☀️" : "🌙"}</button>
-          <button onClick={() => setShowLogin(!showLogin)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 10px", cursor: "pointer", color: "#fff", fontSize: 13, flexShrink: 0 }}>🔐</button>
-        </div>
+          </div>
 
         {/* গ্লোবাল সার্চ */}
         <input placeholder={t.searchPlaceholder} .../></div>
@@ -642,9 +935,16 @@ const govtTabs = [
                       ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের সাফল্যের তথ্য এখনো যোগ করা হয়নি।</div>
                       : currentGovtAchievements.map((a, i) => (
                         <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 12 }}>
-                          <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 6 }}>🏆 {a.category}</div>
-                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text, marginBottom: 6 }}>{a.title}</div>
-                          <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>{a.description}</div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, flexWrap: "wrap", gap: 4 }}>
+  <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>🏆 {a.category}</div>
+  {(a.date || a.year) && (
+    <div style={{ fontSize: 10, color: T.textMuted, background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", padding: "2px 8px", borderRadius: 10 }}>
+      📅 {a.date || a.year}
+    </div>
+  )}
+</div>
+<div style={{ fontSize: 15, fontWeight: "bold", color: T.text, marginBottom: 6 }}>{a.title}</div>
+<div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>{a.description}</div>
                         </div>
                       ))}
                   </div>
@@ -1039,7 +1339,7 @@ function SocialShare({ title, newsId }) {
 
     {/* disclaimer */}
     <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>
-      এই অ্যাপটি সরকারিভাবে অনুমোদিত নয় — তথ্য সংকলনমূলক উদ্যোগ
+      এই অ্যাপটি তথ্য সংকলনমূলক, শিক্ষা এবং বিনোদনমূলক উদ্দেশ্যে তৈরি করা হয়েছে। সরকার বা কোনো সরকারি সংস্থার সঙ্গে এর কোনো আনুষ্ঠানিক সম্পর্ক নেই।
     </div>
   </div>
 </div>
@@ -1132,7 +1432,23 @@ function SocialShare({ title, newsId }) {
                     ))}
                   </div>
                 )}
-
+{filteredMps.map((m, i) => (
+  <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
+    <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
+      onClick={() => { setSelectedPerson(m); setPersonType("mp"); }}>
+      {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : "🏅"}
+    </div>
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
+      <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
+      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
+      <button onClick={() => { setSelectedPerson(m); setPersonType("mp"); }}
+        style={{ marginTop: 8, background: "transparent", border: `1px solid #C9A84C`, borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>
+        বিস্তারিত দেখুন →
+      </button>
+    </div>
+  </div>
+))}
                 {/* প্রকল্প ট্যাব */}
                 <h2 ...>{t.devProjects}</h2>
                 {activeTab === "projects" && (
@@ -1187,3 +1503,132 @@ function SocialShare({ title, newsId }) {
     </>
   );
 }
+{/* ইতিহাস ট্যাব */}
+{activeTab === "history" && (
+  <div>
+    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 20, fontSize: 16 }}>
+      🏛️ বিএনপির ইতিহাস ও নেতৃত্ব
+    </h2>
+
+    {/* নেতৃত্বের টাইমলাইন চার্ট */}
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 24 }}>
+      <h3 style={{ color: "#C9A84C", fontSize: 14, marginBottom: 16 }}>📊 নেতৃত্বের কালপঞ্জি</h3>
+      <div style={{ position: "relative", paddingLeft: 20 }}>
+        {/* টাইমলাইন লাইন */}
+        <div style={{ position: "absolute", left: 8, top: 0, bottom: 0, width: 2, background: "linear-gradient(180deg, #C9A84C, #006A4E, #C9A84C)" }} />
+
+        {[
+          { year: "১৯৭৮", event: "বিএনপি প্রতিষ্ঠা", leader: "জিয়াউর রহমান", color: "#C9A84C" },
+          { year: "১৯৭৯", event: "দ্বিতীয় জাতীয় সংসদ নির্বাচনে বিজয়", leader: "জিয়াউর রহমান", color: "#C9A84C" },
+          { year: "১৯৮১", event: "শাহাদত বরণ", leader: "জিয়াউর রহমান", color: "#E8593C" },
+          { year: "১৯৯১", event: "পঞ্চম জাতীয় সংসদ নির্বাচনে বিজয়", leader: "খালেদা জিয়া", color: "#006A4E" },
+          { year: "১৯৯৬", event: "তত্ত্বাবধায়ক সরকার ব্যবস্থা প্রবর্তন", leader: "খালেদা জিয়া", color: "#006A4E" },
+          { year: "২০০১", event: "অষ্টম জাতীয় সংসদ নির্বাচনে বিজয়", leader: "খালেদা জিয়া", color: "#006A4E" },
+          { year: "২০২৬", event: "ত্রয়োদশ জাতীয় সংসদ নির্বাচনে নিরঙ্কুশ বিজয়", leader: "তারেক রহমান", color: "#3B8BD4" },
+        ].map((item, i) => (
+          <div key={i} style={{ display: "flex", gap: 14, marginBottom: 14, position: "relative" }}>
+            <div style={{ position: "absolute", left: -16, top: 4, width: 12, height: 12, borderRadius: "50%", background: item.color, border: "2px solid " + T.card, zIndex: 1 }} />
+            <div style={{ flex: 1, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: "10px 12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+                <div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>{item.event}</div>
+                <div style={{ fontSize: 10, color: item.color, background: isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.06)", padding: "2px 8px", borderRadius: 10, whiteSpace: "nowrap" }}>{item.year}</div>
+              </div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>👤 {item.leader}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* শীর্ষ তিন নেতার জীবনী */}
+    <h3 style={{ color: "#C9A84C", fontSize: 14, marginBottom: 14 }}>👑 শীর্ষ নেতৃত্ব</h3>
+    {leaders.map((leader, i) => (
+      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 16, overflow: "hidden" }}>
+
+        {/* নেতার হেডার */}
+        <div style={{ background: `linear-gradient(135deg, ${["#8B6914", "#2D5A3D", "#1A3A5C"][i % 3]}, ${["#C9A84C", "#006A4E", "#3B8BD4"][i % 3]})`, padding: "16px 20px" }}>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <div style={{ width: 60, height: 60, borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)", overflow: "hidden", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>
+              {leader.photo_url
+                ? <img src={leader.photo_url} alt={leader.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
+                : ["🎖️", "👩‍💼", "🏛️"][i % 3]
+              }
+            </div>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: "bold", color: "#fff" }}>{leader.name}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", marginTop: 3 }}>{leader.title}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>
+                📅 {leader.born}{leader.died ? ` — ${leader.died}` : " — বর্তমান"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* সংক্ষিপ্ত পরিচিতি */}
+        <div style={{ padding: "14px 20px" }}>
+          <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, marginBottom: 14 }}>
+            {leader.short_bio}
+          </div>
+
+          {/* সাফল্যসমূহ */}
+          {leader.achievements && leader.achievements.length > 0 && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold", marginBottom: 8 }}>🏆 উল্লেখযোগ্য অবদান</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {leader.achievements.map((ach, j) => (
+                  <span key={j} style={{ fontSize: 11, background: isDark ? "rgba(0,106,78,0.2)" : "rgba(0,106,78,0.08)", color: "#4ecba0", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 16, padding: "3px 10px" }}>
+                    ✓ {ach}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* বিস্তারিত পড়ুন বাটন */}
+          <button onClick={() => setSelectedLeader(leader)}
+            style={{ background: "transparent", border: `1px solid #C9A84C`, borderRadius: 20, padding: "6px 16px", cursor: "pointer", fontSize: 12, color: "#C9A84C", fontFamily: "sans-serif" }}>
+            বিস্তারিত জীবনী পড়ুন →
+          </button>
+        </div>
+      </div>
+    ))}
+
+    {/* বিএনপির সরকার সারসংক্ষেপ */}
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 16 }}>
+      <h3 style={{ color: "#C9A84C", fontSize: 14, marginBottom: 14 }}>🏛️ বিএনপির সরকারসমূহ</h3>
+      {governments.map((g, i) => (
+        <div key={i} onClick={() => { setSelectedGovt(g); setGovtTab("ministers"); }}
+          style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", border: `1px solid ${g.is_current ? "#006A4E" : T.border}`, borderLeft: `4px solid ${g.is_current ? "#006A4E" : "#C9A84C"}`, borderRadius: 8, padding: 12, marginBottom: 8, cursor: "pointer" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>
+                {g.is_current && <span style={{ background: "#006A4E", color: "#fff", fontSize: 9, padding: "1px 6px", borderRadius: 4, marginRight: 6 }}>বর্তমান</span>}
+                {g.name}
+              </div>
+              <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>📅 {g.period} · 👤 {g.prime_minister}</div>
+            </div>
+            <span style={{ color: T.textMuted, fontSize: 16 }}>›</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+{/* User Profile বাটন */}
+{currentUser ? (
+  <button onClick={async () => {
+    if (window.confirm("লগআউট করবেন?")) {
+      await supabase.auth.signOut();
+      setCurrentUser(null);
+    }
+  }} style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 10px", cursor: "pointer", color: "#fff", fontSize: 12, flexShrink: 0, fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
+    <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#C9A84C", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: "bold", color: "#0D1B2A" }}>
+      {(currentUser.user_metadata?.full_name || currentUser.email || "U")[0].toUpperCase()}
+    </span>
+    <span>{currentUser.user_metadata?.full_name || currentUser.email?.split("@")[0]}</span>
+  </button>
+) : (
+  <button onClick={() => setShowAuthModal(true)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 20, padding: "5px 12px", cursor: "pointer", color: "#fff", fontSize: 12, flexShrink: 0, fontFamily: "sans-serif" }}>
+    👤 লগইন
+  </button>
+)}

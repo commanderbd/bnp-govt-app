@@ -199,7 +199,52 @@ const sections = [
                 <input placeholder="আইকন (ইমোজি, যেমন: 🏛️)" value={newMinister.icon} onChange={e => setNewMinister({ ...newMinister, icon: e.target.value })} style={{ ...inputStyle, marginBottom: 14 }} />
                 <button onClick={addMinister} disabled={saving} style={btnStyle}>{saving ? "যোগ হচ্ছে..." : "✅ মন্ত্রী যোগ করুন"}</button>
               </div>
-
+{ministers.map((m, i) => (
+  <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, marginBottom: 8 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{m.icon} {m.name}</div>
+        <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role} · {m.ministry}</div>
+      </div>
+      <button onClick={() => deleteMinister(m.id)} style={deleteBtnStyle}>🗑️ মুছুন</button>
+    </div>
+    {/* Bio সম্পাদনা */}
+    <textarea
+      placeholder="সংক্ষিপ্ত পরিচিতি (bio) লিখুন..."
+      defaultValue={m.bio || ""}
+      onBlur={async e => {
+        const bio = e.target.value.trim();
+        if (bio !== (m.bio || "")) {
+          await supabase.from("ministers").update({ bio }).eq("id", m.id);
+          showMessage(`${m.name}-এর bio আপডেট হয়েছে`);
+          fetchAll();
+        }
+      }}
+      rows={2}
+      style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, resize: "vertical", fontFamily: "sans-serif", marginTop: 6, boxSizing: "border-box" }}
+    />
+    <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+      <input placeholder="ফোন নম্বর" defaultValue={m.phone || ""}
+        onBlur={async e => {
+          const phone = e.target.value.trim();
+          if (phone !== (m.phone || "")) {
+            await supabase.from("ministers").update({ phone }).eq("id", m.id);
+          }
+        }}
+        style={{ flex: 1, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
+      />
+      <input placeholder="ইমেইল" defaultValue={m.email || ""}
+        onBlur={async e => {
+          const email = e.target.value.trim();
+          if (email !== (m.email || "")) {
+            await supabase.from("ministers").update({ email }).eq("id", m.id);
+          }
+        }}
+        style={{ flex: 1, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
+      />
+    </div>
+  </div>
+))}
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 12, fontSize: 15 }}>বর্তমান মন্ত্রিসভা ({ministers.length} জন)</h2>
               {ministers.map((m, i) => (
                 <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -248,7 +293,38 @@ const sections = [
               ))}
             </div>
           )}
-
+{news.map((n, i) => (
+  <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 12, marginBottom: 8 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 11, color: "#C9A84C", marginBottom: 4 }}>{n.source} · {n.category}</div>
+        <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{n.title}</div>
+        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>🕐 {n.time}</div>
+      </div>
+      <button onClick={() => deleteNews(n.id)} style={deleteBtnStyle}>🗑️</button>
+    </div>
+    <textarea placeholder="সম্পূর্ণ সংবাদ লিখুন..." defaultValue={n.content || ""}
+      onBlur={async e => {
+        const content = e.target.value.trim();
+        if (content !== (n.content || "")) {
+          await supabase.from("news").update({ content }).eq("id", n.id);
+          showMessage("সংবাদ আপডেট হয়েছে");
+        }
+      }}
+      rows={3} style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, resize: "vertical", fontFamily: "sans-serif", marginBottom: 6, boxSizing: "border-box" }}
+    />
+    <input placeholder="মূল সংবাদের লিংক (URL)" defaultValue={n.link || ""}
+      onBlur={async e => {
+        const link = e.target.value.trim();
+        if (link !== (n.link || "")) {
+          await supabase.from("news").update({ link }).eq("id", n.id);
+          showMessage("লিংক আপডেট হয়েছে");
+        }
+      }}
+      style={{ width: "100%", background: T.bg, border: `1px solid ${T.border}`, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, fontFamily: "sans-serif", boxSizing: "border-box" }}
+    />
+  </div>
+))}
           {/* প্রকল্প সেকশন */}
           {activeSection === "projects" && (
             <div>
