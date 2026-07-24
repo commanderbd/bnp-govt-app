@@ -8,7 +8,16 @@ export default function CommentsSection({ newsId, user, onLoginRequest, T, isDar
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => { if (newsId) fetchComments(); }, [newsId]);
+  useEffect(() => {
+  async function load() {
+    if (!newsId) return;
+    setLoading(true);
+    const { data } = await supabase.from("comments").select("*").eq("news_id", newsId).eq("status", "approved").order("created_at", { ascending: true });
+    setComments(data || []);
+    setLoading(false);
+  }
+  load();
+}, [newsId]);
 
   async function fetchComments() {
     setLoading(true);
