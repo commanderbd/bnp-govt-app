@@ -17,6 +17,37 @@ const shimmerStyle = `
     to { opacity: 1; transform: translateY(0); }
   }
   .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+  .card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    border-color: #C9A84C !important;
+    cursor: pointer;
+  }
+
+  .btn-hover {
+    transition: all 0.2s ease !important;
+  }
+  .btn-hover:hover {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+  .btn-hover:active {
+    transform: scale(0.95);
+  }
+
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: 2px solid #C9A84C !important;
+    outline-offset: 2px !important;
+  }
+
+  @media (max-width: 480px) {
+    .grid-2col { grid-template-columns: 1fr !important; }
+    .hide-mobile { display: none !important; }
+  }
 `;
 
 const THEMES = {
@@ -51,7 +82,7 @@ function SkeletonCard() {
     </div>
   );
 }
-
+ 
 function SkeletonStat() {
   return (
     <div style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, textAlign: "center", position: "relative", overflow: "hidden" }}>
@@ -553,7 +584,7 @@ export default function App() {
               {selectedGovt ? `📅 ${selectedGovt.period}` : "ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬"}
             </div>
           </div>
-          {!selectedGovt && <img src={BNP_LOGO} alt="লোগো" style={{ width: 32, height: 32, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2, flexShrink: 0 }} onError={e => e.target.style.display = "none"} />}
+          {!selectedGovt && <img src={BNP_LOGO} alt="বাংলাদেশ জাতীয়তাবাদী দল (বিএনপি) লোগো" style={{ width: 32, height: 32, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2, flexShrink: 0 }} onError={e => e.target.style.display = "none"} />}
           {currentUser ? (
             <button onClick={async () => { if (window.confirm("লগআউট করবেন?")) { await supabase.auth.signOut(); setCurrentUser(null); } }} style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 10px", cursor: "pointer", color: "#fff", fontSize: 12, flexShrink: 0, fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#C9A84C", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: "bold", color: "#0D1B2A" }}>{(currentUser.user_metadata?.full_name || currentUser.email || "U")[0].toUpperCase()}</span>
@@ -645,7 +676,7 @@ export default function App() {
 
         {/* মূল কন্টেন্ট */}
         {!loading && (
-          <div className="fade-in" style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
+          <div className="fade-in" style={{ padding: 20, maxWidth: 700, margin: "0 auto", paddingBottom: 80 }}>
 
             {/* পূর্ববর্তী সরকার ভিউ */}
             {selectedGovt && (
@@ -763,6 +794,7 @@ export default function App() {
                 {/* হোম ট্যাব */}
                 {!showDecisions && !showDocuments && activeTab === "home" && (
                   <div>
+                    <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}></div>
                     <div style={{ background: "#006A4E", border: "1px solid #C9A84C", borderRadius: 12, padding: 20, marginBottom: 20, textAlign: "center" }}>
                       <div style={{ fontSize: 22, fontWeight: "bold", color: "#fff", marginBottom: 6 }}>🇧🇩 স্বাগতম</div>
                       <div style={{ fontSize: 13, color: "#C9A84C" }}>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — ত্রয়োদশ জাতীয় সংসদ</div>
@@ -780,17 +812,19 @@ export default function App() {
 
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
-                        { label: "মোট মন্ত্রী", value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers" },
-                        { label: "সংসদ সদস্য", value: mps.filter(m => Number(m.government_id) === 1).length, icon: "🏅", color: "#C9A84C", tab: "mps" },
-                        { label: "উন্নয়ন প্রকল্প", value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects" },
-                        { label: "সর্বশেষ সংবাদ", value: news.length, icon: "📰", color: "#9F5DCF", tab: "news" },
-                      ].map((stat, i) => (
-                        <div key={i} onClick={() => setActiveTab(stat.tab)} style={{ background: T.card, border: `1px solid ${stat.color}`, borderRadius: 10, padding: 16, cursor: "pointer", textAlign: "center" }}>
-                          <div style={{ fontSize: 28 }}>{stat.icon}</div>
-                          <div style={{ fontSize: 26, fontWeight: "bold", color: stat.color, margin: "6px 0" }}>{stat.value}</div>
-                          <div style={{ fontSize: 12, color: T.textMuted }}>{stat.label}</div>
-                        </div>
-                      ))}
+                      { label: "মোট মন্ত্রী", value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers", bg: "linear-gradient(135deg, #006A4E22, #006A4E11)" },
+                      { label: "সংসদ সদস্য", value: mps.filter(m => Number(m.government_id) === 1).length, icon: "🏅", color: "#C9A84C", tab: "mps", bg: "linear-gradient(135deg, #C9A84C22, #C9A84C11)" },
+                      { label: "উন্নয়ন প্রকল্প", value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects", bg: "linear-gradient(135deg, #3B8BD422, #3B8BD411)" },
+                      { label: "সর্বশেষ সংবাদ", value: news.length, icon: "📰", color: "#9F5DCF", tab: "news", bg: "linear-gradient(135deg, #9F5DCF22, #9F5DCF11)" },
+                    ].map((stat, i) => (
+                      <div key={i} className="card-hover" onClick={() => setActiveTab(stat.tab)}
+                      style={{ background: stat.bg, border: `2px solid ${stat.color}33`, borderRadius: 12, padding: "20px 16px", cursor: "pointer", textAlign: "center", position: "relative", overflow: "hidden" }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>{stat.icon}</div>
+                      <div style={{ fontSize: 36, fontWeight: "700", color: stat.color, lineHeight: 1, marginBottom: 6 }}>{stat.value}</div>
+                      <div style={{ fontSize: 13, color: T.textMuted, fontWeight: "500" }}>{stat.label}</div>
+                      <div style={{ position: "absolute", bottom: 8, right: 10, fontSize: 10, color: stat.color, opacity: 0.7 }}>দেখুন →</div>
+                    </div>
+                    ))}
                     </div>
 
                     {ministers.length > 0 && (
@@ -862,6 +896,7 @@ export default function App() {
                 {/* সংবাদ ট্যাব */}
                 {!showDecisions && !showDocuments && activeTab === "news" && (
                   <div>
+                    <div className="card-hover" style={{ background: T.card, border: `1px solid ${T.border}`, ... }}></div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সর্বশেষ সংবাদ</h2>
                       <span style={{ fontSize: 12, color: T.textMuted }}>{filteredNews.length}টি সংবাদ</span>
@@ -898,6 +933,7 @@ export default function App() {
                 {/* মন্ত্রিসভা ট্যাব */}
                 {!showDecisions && !showDocuments && activeTab === "ministers" && (
                   <div>
+                    <div className="card-hover" style={{ background: T.card, border: `1px solid ${T.border}`, ... }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>মন্ত্রিসভা</h2>
                       <button onClick={() => downloadPDF("মন্ত্রিসভা তালিকা", ministers, [{ key: "name", label: "নাম" }, { key: "role", label: "পদবি" }, { key: "ministry", label: "মন্ত্রণালয়" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>📥 PDF</button>
@@ -922,6 +958,7 @@ export default function App() {
                 {/* এমপি ট্যাব */}
                 {!showDecisions && !showDocuments && activeTab === "mps" && (
                   <div>
+                    <div className="card-hover" style={{ background: T.card, border: `1px solid ${T.border}`, ... }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সংসদ সদস্য তালিকা</h2>
                       <button onClick={() => downloadPDF("সংসদ সদস্য তালিকা", filteredMps, [{ key: "name", label: "নাম" }, { key: "constituency", label: "আসন" }, { key: "district", label: "জেলা" }, { key: "party", label: "দল" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>📥 PDF</button>
@@ -946,6 +983,7 @@ export default function App() {
                 {/* প্রকল্প ট্যাব */}
                 {!showDecisions && !showDocuments && activeTab === "projects" && (
                   <div>
+                    <div className="card-hover" style={{ background: T.card, border: `1px solid ${T.border}`, ... }}>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>উন্নয়ন প্রকল্প</h2>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
                       {[
@@ -1080,6 +1118,47 @@ export default function App() {
           </div>
         )}
 
+    {/* মোবাইল বটম নেভিগেশন */}
+  <div style={{
+    position: "fixed", bottom: 0, left: 0, right: 0,
+    background: isDark ? "#0a1520" : "#E0EAF4",
+    borderTop: `2px solid #C9A84C`,
+    display: "flex", justifyContent: "space-around",
+    padding: "8px 0 12px", zIndex: 150,
+    boxShadow: "0 -4px 20px rgba(0,0,0,0.3)"
+  }}>
+    {[
+      { id: "home", icon: "🏠", label: "হোম" },
+      { id: "news", icon: "📰", label: "সংবাদ" },
+      { id: "ministers", icon: "👥", label: "মন্ত্রিসভা" },
+      { id: "feedback", icon: "💬", label: "মতামত" },
+      { id: "search", icon: "🔍", label: "সার্চ" },
+      { id: "privacy", label: "🔒 গোপনীয়তা" },
+    ].map(item => (
+      <button key={item.id} onClick={() => {
+        if (item.id === "search") { setShowSearch(true); setGlobalSearch(""); }
+        else { setActiveTab(item.id); setSelectedGovt(null); setShowDecisions(false); setShowDocuments(false); window.scrollTo({ top: 0, behavior: "smooth" }); }
+      }} style={{
+        background: "transparent", border: "none",
+        cursor: "pointer", display: "flex",
+        flexDirection: "column", alignItems: "center", gap: 3,
+        padding: "4px 12px",
+        opacity: activeTab === item.id ? 1 : 0.6,
+        transition: "opacity 0.2s"
+      }}>
+        <span style={{ fontSize: 20 }}>{item.icon}</span>
+        <span style={{
+          fontSize: 10, fontFamily: "sans-serif",
+          color: activeTab === item.id ? "#C9A84C" : T.textMuted,
+          fontWeight: activeTab === item.id ? "bold" : "normal"
+        }}>{item.label}</span>
+        {activeTab === item.id && (
+          <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#C9A84C", marginTop: 1 }} />
+        )}
+      </button>
+    ))}
+  </div>
+
         {/* Footer */}
         <div style={{ background: isDark ? "#070f18" : "#E0EAF4", borderTop: "2px solid #C9A84C", padding: "20px", marginTop: 40 }}>
           <div style={{ maxWidth: 700, margin: "0 auto" }}>
@@ -1106,16 +1185,37 @@ export default function App() {
             </div>
             <div style={{ height: 1, background: T.border, margin: "12px 0" }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-              <div style={{ fontSize: 11, color: T.textMuted }}>© ২০২৬ Commander Enterprise BD · সর্বস্বত্ব সংরক্ষিত</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>© ২০২৬ রাকিব হোসাইন · সর্বস্বত্ব সংরক্ষিত</div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => { setActiveTab("feedback"); window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: T.textMuted, fontFamily: "sans-serif" }}>💬 ফিডব্যাক</button>
                 <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ background: "#006A4E", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: "#fff", fontFamily: "sans-serif" }}>↑ উপরে যান</button>
               </div>
             </div>
-            <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>এই অ্যাপটি সরকারিভাবে অনুমোদিত নয় — তথ্য সংকলনমূলক উদ্যোগ</div>
+            <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>এই অ্যাপটি শিক্ষা তথ্য ও ইতিহাস সংকলনমূলক উদ্যোগ</div>
+          <button onClick={() => { setActiveTab("privacy"); window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{ background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: T.textMuted, fontFamily: "sans-serif" }}>🔒 গোপনীয়তা নীতি</button>
+          {!showDecisions && !showDocuments && activeTab === "privacy" && (
+  <div>
+    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 20, fontSize: 16 }}>🔒 গোপনীয়তা নীতি</h2>
+    {[
+      { title: "তথ্য সংগ্রহ", content: "আমরা শুধুমাত্র আপনার নাম ও ইমেইল ঐচ্ছিকভাবে সংগ্রহ করি। মন্তব্য ও ফিডব্যাক জমা দিতে এই তথ্য ব্যবহৃত হয়।" },
+      { title: "তথ্য ব্যবহার", content: "সংগৃহীত তথ্য শুধুমাত্র অ্যাপের সেবা উন্নয়নে ব্যবহার করা হয়। কোনো তৃতীয় পক্ষের সাথে শেয়ার করা হয় না।" },
+      { title: "তথ্য সুরক্ষা", content: "Supabase-এর নিরাপদ অবকাঠামোতে সকল তথ্য সংরক্ষিত। SSL এনক্রিপশন ব্যবহার করা হয়।" },
+      { title: "কুকি", content: "আমরা শুধুমাত্র ব্যবহারকারীর থিম ও ভাষা পছন্দ সংরক্ষণে localStorage ব্যবহার করি।" },
+      { title: "তথ্য মুছে ফেলা", content: "আপনার অ্যাকাউন্ট ও তথ্য মুছে ফেলতে admin@commanderbd.com এ যোগাযোগ করুন।" },
+      { title: "যোগাযোগ", content: "গোপনীয়তা সংক্রান্ত যেকোনো প্রশ্নে Commander Enterprise BD, Agrabad, Chittagong এ যোগাযোগ করুন।" },
+    ].map((item, i) => (
+      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+        <div style={{ fontSize: 14, fontWeight: "bold", color: "#C9A84C", marginBottom: 8 }}>🔹 {item.title}</div>
+        <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8 }}>{item.content}</div>
+      </div>
+    ))}
+    <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 14, marginTop: 16, textAlign: "center" }}>
+      <div style={{ fontSize: 12, color: T.textMuted }}>সর্বশেষ আপডেট: জুলাই ২০২৬ · Commander Enterprise BD</div>
+    </div>
+  </div>
+)}
           </div>
         </div>
-
       </div>
     </>
   );
