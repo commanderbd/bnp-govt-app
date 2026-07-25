@@ -19,6 +19,8 @@ export default function AdminPanel({ onLogout, isDark, T }) {
   const [newProject, setNewProject] = useState({ title: "", ministry: "", budget: "", progress: 0, status: "চলমান" });
   const [newDecision, setNewDecision] = useState({ title: "", description: "", date: "", category: "সরকারি সিদ্ধান্ত" });
   const [newDocument, setNewDocument] = useState({ title: "", description: "", file_url: "", category: "সরকারি দলিল", date: "" });
+  const [activistPosts, setActivistPosts] = useState([]);
+  const [newPost, setNewPost] = useState({ author_name: "", author_fb_url: "", author_photo: "", content: "", fb_post_url: "", image_url: "" });
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -32,7 +34,9 @@ export default function AdminPanel({ onLogout, isDark, T }) {
       supabase.from("decisions").select("*").order("created_at", { ascending: false }),
       supabase.from("documents").select("*").order("created_at", { ascending: false }),
       supabase.from("feedback").select("*").order("created_at", { ascending: false }),
+      const ap = await supabase.from("activist_posts").select("*").order("created_at", { ascending: false });
     ]);
+
     setMinisters(m.data || []);
     setNews(n.data || []);
     setMps(mp.data || []);
@@ -41,6 +45,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
     setDocuments(doc.data || []);
     setFeedbacks(fb.data || []);
     setLoading(false);
+    setActivistPosts(ap.data || []);
   }
 
   function showMessage(text, type = "success") {
@@ -73,6 +78,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
     { id: "decisions", label: "⚖️ সিদ্ধান্ত" },
     { id: "documents", label: "📄 দলিল" },
     { id: "feedback", label: "💬 ফিডব্যাক" },
+    { id: "activists", label: "📣 অ্যাক্টিভিস্ট" },
   ];
 
   return (
@@ -353,6 +359,47 @@ export default function AdminPanel({ onLogout, isDark, T }) {
               ))}
             </div>
           )}
+
+          {/* অ্যাক্টিভিস্ট পোস্ট */}
+          {activeSection === "activists" && (
+  <div>
+    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>📣 নতুন পোস্ট যোগ করুন</h2>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 16, marginBottom: 20 }}>
+      <input placeholder="অ্যাক্টিভিস্টের নাম *" value={newPost.author_name} onChange={e => setNewPost({ ...newPost, author_name: e.target.value })} style={inputStyle} />
+      <input placeholder="Facebook প্রোফাইল URL" value={newPost.author_fb_url} onChange={e => setNewPost({ ...newPost, author_fb_url: e.target.value })} style={inputStyle} />
+      <input placeholder="প্রোফাইল ছবির URL" value={newPost.author_photo} onChange={e => setNewPost({ ...newPost, author_photo: e.target.value })} style={inputStyle} />
+      <textarea placeholder="পোস্টের বিষয়বস্তু *" value={newPost.content} onChange={e => setNewPost({ ...newPost, content: e.target.value })} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+      <input placeholder="মূল Facebook পোস্টের লিংক" value={newPost.fb_post_url} onChange={e => setNewPost({ ...newPost, fb_post_url: e.target.value })} style={inputStyle} />
+      <input placeholder="পোস্টের ছবির URL (ঐচ্ছিক)" value={newPost.image_url} onChange={e => setNewPost({ ...newPost, image_url: e.target.value })} style={{ ...inputStyle, marginBottom: 14 }} />
+      <button onClick={async () => {
+        if (!newPost.author_name || !newPost.content) return showMessage("নাম ও পোস্ট আবশ্যক", "error");
+        setSaving(true);
+        const { error } = await supabase.from("activist_posts").insert({ ...newPost, status: "approved" });
+        if (error) showMessage("সমস্যা হয়েছে", "error");
+        else { showMessage("পোস্ট যোগ হয়েছে!"); setNewPost({ author_name: "", author_fb_url: "", author_photo: "", content: "", fb_post_url: "", image_url: "" }); fetchAll(); }
+        setSaving(false);
+      }} disabled={saving} style={btnStyle}>{saving ? "যোগ হচ্ছে..." : "✅ পোস্ট যোগ করুন"}</button>
+    </div>
+
+    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 12, fontSize: 15 }}>পোস্ট তালিকা ({activistPosts.length}টি)</h2>
+    {activistPosts.map((post, i) => (
+      <div key={i} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, marginBottom: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>{post.author_name}</div>
+            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4, lineHeight: 1.6 }}>{post.content.slice(0, 100)}...</div>
+          </div>
+          <button onClick={async () => {
+            if (!window.confirm("পোস্ট মুছবেন?")) return;
+            await supabase.from("activist_posts").delete().eq("id", post.id);
+            showMessage("মুছে ফেলা হয়েছে");
+            fetchAll();
+          }} style={deleteBtnStyle}>🗑️</button>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
 
           {/* ফিডব্যাক */}
           {activeSection === "feedback" && (

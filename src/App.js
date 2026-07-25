@@ -342,6 +342,7 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDecisions, setShowDecisions] = useState(false);
   const [showDocuments, setShowDocuments] = useState(false);
+  const [activistPosts, setActivistPosts] = useState([]);
 
   const NEWS_PER_PAGE = 10;
   const T = isDark ? THEMES.dark : THEMES.light;
@@ -420,6 +421,7 @@ export default function App() {
     { id: "projects", label: "🔨 প্রকল্প" },
     { id: "history", label: "🏛️ ইতিহাস" },
     { id: "feedback", label: "💬 ফিডব্যাক" },
+    { id: "activists", label: "📣 অ্যাক্টিভিস্ট" },
   ];
 
   const govtTabs = [
@@ -481,6 +483,7 @@ export default function App() {
         supabase.from("decisions").select("*").order("created_at", { ascending: false }),
         supabase.from("documents").select("*").order("created_at", { ascending: false }),
         supabase.from("leaders").select("*").order("sort_order"),
+        supabase.from("activist_posts").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(50),
       ]);
       setMinisters(m.data || []);
       setNews(n.data || []);
@@ -493,6 +496,7 @@ export default function App() {
       setDocuments(doc.data || []);
       setLeaders(ld.data || []);
       setLoading(false);
+      setActivistPosts(ap.data || []);
 
       if (notifEnabled && n.data && n.data.length > 0) {
         const latest = n.data[0];
@@ -1117,6 +1121,71 @@ export default function App() {
             )}
           </div>
         )}
+
+          {/* অ্যাক্টিভিস্ট ট্যাব */}
+            {!showDecisions && !showDocuments && activeTab === "activists" && (
+  <div>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>
+        📣 অ্যাক্টিভিস্ট ভয়েস
+      </h2>
+      <span style={{ fontSize: 12, color: T.textMuted }}>{activistPosts.length}টি পোস্ট</span>
+    </div>
+
+    <div style={{ background: isDark ? "rgba(0,106,78,0.1)" : "rgba(0,106,78,0.06)", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 10, padding: 14, marginBottom: 16 }}>
+      <div style={{ fontSize: 13, color: T.textMuted }}>
+        🇧🇩 বিএনপিপন্থী অনলাইন অ্যাক্টিভিস্টদের পোস্ট ও মতামত
+      </div>
+    </div>
+
+    {activistPosts.length === 0 && (
+      <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>কোনো পোস্ট নেই</div>
+    )}
+
+    {activistPosts.map((post, i) => (
+      <div key={i} className="card-hover" style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+        {/* লেখক তথ্য */}
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#006A4E", border: "2px solid #C9A84C", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>
+            {post.author_photo
+              ? <img src={post.author_photo} alt={post.author_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
+              : "👤"
+            }
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{post.author_name}</div>
+            <div style={{ fontSize: 11, color: T.textMuted }}>{new Date(post.created_at).toLocaleDateString("bn-BD")}</div>
+          </div>
+          {post.author_fb_url && (
+            <a href={post.author_fb_url} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, textDecoration: "none" }}>
+              Facebook
+            </a>
+          )}
+        </div>
+
+        {/* পোস্ট কন্টেন্ট */}
+        <div style={{ fontSize: 14, color: T.text, lineHeight: 1.8, marginBottom: 12 }}>{post.content}</div>
+
+        {/* ছবি */}
+        {post.image_url && (
+          <img src={post.image_url} alt="পোস্ট ছবি" style={{ width: "100%", borderRadius: 8, marginBottom: 12, maxHeight: 300, objectFit: "cover" }} onError={e => e.target.style.display = "none"} />
+        )}
+
+        {/* ফুটার */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${T.border}`, paddingTop: 10 }}>
+          <div style={{ fontSize: 12, color: T.textMuted }}>❤️ {post.likes} জন পছন্দ করেছেন</div>
+          {post.fb_post_url && (
+            <a href={post.fb_post_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "#1877F2", textDecoration: "none" }}>
+              মূল পোস্ট দেখুন →
+            </a>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
+
 
     {/* মোবাইল বটম নেভিগেশন */}
   <div style={{

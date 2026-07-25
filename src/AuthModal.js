@@ -16,7 +16,14 @@ export default function AuthModal({ onClose, onSuccess, T, isDark }) {
     if (!email.includes("@")) return setError("সঠিক ইমেইল লিখুন");
     setLoading(true); setError("");
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email, options: { data: { full_name: name } } });
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          data: { full_name: name },
+          emailRedirectTo: undefined
+        }
+        });
       if (error) throw error;
       setStep("otp");
     } catch (err) { setError(err.message || "সমস্যা হয়েছে"); }
