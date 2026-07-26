@@ -34,8 +34,8 @@ export default function AdminPanel({ onLogout, isDark, T }) {
       supabase.from("decisions").select("*").order("created_at", { ascending: false }),
       supabase.from("documents").select("*").order("created_at", { ascending: false }),
       supabase.from("feedback").select("*").order("created_at", { ascending: false }),
-      const ap = await supabase.from("activist_posts").select("*").order("created_at", { ascending: false });
-    ]);
+  const ap = await supabase.from("activist_posts").select("*").order("created_at", { ascending: false });   // ❌ can't declare `const` inside an array literal
+]);
 
     setMinisters(m.data || []);
     setNews(n.data || []);
