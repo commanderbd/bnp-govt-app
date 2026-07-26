@@ -896,11 +896,9 @@ export default function App() {
                     ))}
                   </div>
                 )}
-
-                {/* সংবাদ ট্যাব */}
+                
                 {!showDecisions && !showDocuments && activeTab === "news" && (
                   <div>
-                    <div className="card-hover" style={{ background: T.card, border: `1px solid ${T.border}`, ... }}></div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সর্বশেষ সংবাদ</h2>
                       <span style={{ fontSize: 12, color: T.textMuted }}>{filteredNews.length}টি সংবাদ</span>
@@ -937,7 +935,6 @@ export default function App() {
                 {/* মন্ত্রিসভা ট্যাব */}
                 {!showDecisions && !showDocuments && activeTab === "ministers" && (
                   <div>
-                    <div className="card-hover" style={{ background: T.card, border: `1px solid ${T.border}`, ... }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>মন্ত্রিসভা</h2>
                       <button onClick={() => downloadPDF("মন্ত্রিসভা তালিকা", ministers, [{ key: "name", label: "নাম" }, { key: "role", label: "পদবি" }, { key: "ministry", label: "মন্ত্রণালয়" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>📥 PDF</button>
