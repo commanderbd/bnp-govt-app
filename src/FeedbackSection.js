@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 
 function StarRating({ value, onChange, readOnly = false }) {
@@ -45,8 +45,13 @@ export default function FeedbackSection({ T, isDark }) {
     return Object.keys(e).length === 0;
   }
 
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef(null);
+
   async function handleSubmit() {
     if (!validate()) return;
+    const token = document.querySelector("[name=cf-turnstile-response]")?.value;
+    if (!token) return setErrors({ message: "মানব যাচাই করুন" });
     setSubmitting(true);
     const { error } = await supabase.from("feedback").insert({
       name: form.name.trim() || "নাম প্রকাশে অনিচ্ছুক",
@@ -121,6 +126,16 @@ export default function FeedbackSection({ T, isDark }) {
           ))}
         </div>
       )}
+      
+      {/* Cloudflare Turnstile */}
+      <div
+      className="cf-turnstile"
+      data-sitekey="0x4AAAAAAD_hnmHRCLMqXa8z"
+      data-callback="onTurnstileSuccess"
+      data-theme={isDark ? "dark" : "light"}
+      ref={turnstileRef}
+      style={{ marginBottom: 12 }}
+      />
 
       {activeTab === "submit" && (
         <div>

@@ -350,13 +350,26 @@ export default function App() {
 
   function SocialShare({ title, newsId }) {
     const shareUrl = newsId ? window.location.origin + "/#news-" + newsId : window.location.href;
-    const url = encodeURIComponent(shareUrl);
-    const text = encodeURIComponent(title);
+    const waText = encodeURIComponent(title + "\n" + shareUrl);
+    const fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(shareUrl) + "&quote=" + encodeURIComponent(title);
     return (
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-        <a href={"https://www.facebook.com/sharer/sharer.php?u=" + url + "&quote=" + text} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>Facebook</a>
-        <a href={"https://wa.me/?text=" + text + "%20" + url} target="_blank" rel="noreferrer" style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 12, textDecoration: "none" }}>WhatsApp</a>
-        <button onClick={() => navigator.clipboard.writeText(title + "\n" + shareUrl).then(() => alert("কপি!"))} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>🔗 কপি</button>
+        <a href={fbUrl} target="_blank" rel="noreferrer"
+        style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "5px 12px", fontSize: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+        📘 Facebook
+        </a>
+        <a href={"whatsapp://send?text=" + waText}
+        style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "5px 12px", fontSize: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+        💬 WhatsApp
+        </a>
+        <a href={"https://wa.me/?text=" + waText} target="_blank" rel="noreferrer"
+        style={{ background: "#128C7E", color: "#fff", borderRadius: 6, padding: "5px 12px", fontSize: 12, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
+        🌐 WA Web
+        </a>
+        <button onClick={() => navigator.clipboard.writeText(title + "\n" + shareUrl).then(() => alert("কপি!"))}
+        style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "5px 12px", fontSize: 12, cursor: "pointer" }}>
+        🔗 {t.copyLink}
+        </button>
       </div>
     );
   }
@@ -378,21 +391,21 @@ export default function App() {
   const currentGovtAchievements = selectedGovt ? achievements.filter(a => Number(a.government_id) === Number(selectedGovt.id)) : [];
 
   const tabs = [
-    { id: "home", label: "🏠 হোম" },
-    { id: "news", label: "📰 সংবাদ" },
-    { id: "ministers", label: "👥 মন্ত্রিসভা" },
-    { id: "mps", label: "🏅 এমপি" },
-    { id: "projects", label: "🔨 প্রকল্প" },
-    { id: "activists", label: "📣 অ্যাক্টিভিস্ট" },
-    { id: "history", label: "🏛️ ইতিহাস" },
-    { id: "feedback", label: "💬 ফিডব্যাক" },
+    { id: "home", label: t.home },
+    { id: "news", label: t.news },
+    { id: "ministers", label: t.ministers },
+    { id: "mps", label: t.mps },
+    { id: "projects", label: t.projects },
+    { id: "activists", label: t.activists },
+    { id: "history", label: t.history },
+    { id: "feedback", label: t.feedback },
   ];
 
   const govtTabs = [
-    { id: "ministers", label: "👥 মন্ত্রিসভা" },
-    { id: "mps", label: "🏅 এমপি" },
-    { id: "achievements", label: "🏆 সাফল্য" },
-  ];
+    { id: "ministers", label: t.ministers },
+    { id: "mps", label: t.mps },
+    { id: "achievements", label: t.achievements },
+  ];  
 
   useEffect(() => {
     registerServiceWorker();
@@ -532,9 +545,11 @@ export default function App() {
             <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
           </button>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>{selectedGovt ? "🏛️ " + selectedGovt.name : "🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার"}</div>
-            <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 2 }}>{selectedGovt ? "📅 " + selectedGovt.period : "ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬"}</div>
+            <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>{selectedGovt ? "🏛️ " + selectedGovt.name : "🇧🇩 " + t.appTitle}
           </div>
+            <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 2 }}>{selectedGovt ? "📅 " + selectedGovt.period : t.appSubtitle}
+          </div>
+
           {!selectedGovt && <img src={BNP_LOGO} alt="বিএনপি লোগো" style={{ width: 32, height: 32, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2, flexShrink: 0 }} onError={e => e.target.style.display = "none"} />}
           {currentUser ? (
             <button onClick={async () => { if (window.confirm("লগআউট করবেন?")) { await supabase.auth.signOut(); setCurrentUser(null); } }} style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, padding: "4px 10px", cursor: "pointer", color: "#fff", fontSize: 12, flexShrink: 0, fontFamily: "sans-serif", display: "flex", alignItems: "center", gap: 6 }}>
@@ -588,7 +603,7 @@ export default function App() {
         <div style={{ display: "flex", background: T.navBg, borderBottom: "2px solid " + T.navBorder, overflowX: "auto" }}>
           {(selectedGovt ? govtTabs : tabs).map(tab => (
             <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); setShowDecisions(false); setShowDocuments(false); }}
-              style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "12px 14px", cursor: "pointer", fontSize: 12, whiteSpace: "nowrap", fontFamily: "sans-serif" }}>
+              style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "14px 18px", cursor: "pointer", fontSize: 14, whiteSpace: "nowrap", fontFamily: "'Hind Siliguri', sans-serif", fontWeight: (selectedGovt ? govtTab : activeTab) === tab.id ? "600" : "400" }}>
               {tab.label}
             </button>
           ))}
@@ -757,10 +772,10 @@ export default function App() {
 
                     <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
-                        { label: "মোট মন্ত্রী", value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers", bg: isDark ? "rgba(0,106,78,0.15)" : "rgba(0,106,78,0.08)" },
-                        { label: "সংসদ সদস্য", value: mps.filter(m => Number(m.government_id) === 1).length, icon: "🏅", color: "#C9A84C", tab: "mps", bg: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.06)" },
-                        { label: "উন্নয়ন প্রকল্প", value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects", bg: isDark ? "rgba(59,139,212,0.1)" : "rgba(59,139,212,0.06)" },
-                        { label: "সর্বশেষ সংবাদ", value: news.length, icon: "📰", color: "#9F5DCF", tab: "news", bg: isDark ? "rgba(159,93,207,0.1)" : "rgba(159,93,207,0.06)" },
+                        { label: t.totalMinisters, value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers", bg: isDark ? "rgba(0,106,78,0.15)" : "rgba(0,106,78,0.08)" },
+                        { label: t.mpCount, value: mps.filter(m => Number(m.government_id) === 1).length, icon: "🏅", color: "#C9A84C", tab: "mps", bg: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.06)" },
+                        { label: t.projectCount, value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects", bg: isDark ? "rgba(59,139,212,0.1)" : "rgba(59,139,212,0.06)" },
+                        { label: t.newsCount, value: news.length, icon: "📰", color: "#9F5DCF", tab: "news", bg: isDark ? "rgba(159,93,207,0.1)" : "rgba(159,93,207,0.06)" },
                       ].map((stat, i) => (
                         <div key={i} className="card-hover" onClick={() => setActiveTab(stat.tab)} style={{ background: stat.bg, border: "2px solid " + stat.color + "44", borderRadius: 12, padding: "20px 16px", cursor: "pointer", textAlign: "center", position: "relative", overflow: "hidden" }}>
                           <div style={{ fontSize: 32, marginBottom: 8 }}>{stat.icon}</div>
