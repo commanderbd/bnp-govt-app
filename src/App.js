@@ -273,6 +273,8 @@ function LeaderModal({ leader, onClose, T, isDark }) {
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [search, setSearch] = useState("");
+  const [mpDistrict, setMpDistrict] = useState("সব");
+  const [mpParty, setMpParty] = useState("সব");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedGovt, setSelectedGovt] = useState(null);
   const [govtTab, setGovtTab] = useState("ministers");
@@ -376,7 +378,12 @@ export default function App() {
 
   const searchResults = globalSearch.trim().length < 2 ? [] : [
     ...ministers.filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch)).slice(0, 3).map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
-    ...mps.filter(m => Number(m.government_id) === 1 && (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch)))).slice(0, 3).map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency, tab: "mps" })),
+    ...mps.filter(m => Number(m.government_id) === 1 && (
+      m.name.includes(globalSearch) ||
+      (m.constituency && m.constituency.includes(globalSearch)) ||
+      (m.district && m.district.includes(globalSearch)) ||
+      (m.party && m.party.includes(globalSearch))
+    )).slice(0, 5).map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency + " · " + m.district, tab: "mps" })),
     ...news.filter(n => n.title.includes(globalSearch) || (n.source && n.source.includes(globalSearch))).slice(0, 3).map(n => ({ type: "সংবাদ", icon: "📰", title: n.title, subtitle: n.source, tab: "news" })),
     ...projects.filter(p => p.title.includes(globalSearch) || (p.ministry && p.ministry.includes(globalSearch))).slice(0, 3).map(p => ({ type: "প্রকল্প", icon: "🔨", title: p.title, subtitle: p.ministry, tab: "projects" })),
   ];
@@ -386,7 +393,14 @@ export default function App() {
   const paginatedNews = filteredNews.slice(0, newsPage * NEWS_PER_PAGE);
   const hasMore = paginatedNews.length < filteredNews.length;
   const filteredMinisters = ministers.filter(m => m.name.includes(search) || m.ministry.includes(search));
-  const filteredMps = mps.filter(m => Number(m.government_id) === 1 && (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search))));
+  const districts = ["সব", ...new Set(mps.filter(m => Number(m.government_id) === 1).map(m => m.district).filter(Boolean).sort())];
+  const parties = ["সব", ...new Set(mps.filter(m => Number(m.government_id) === 1).map(m => m.party).filter(Boolean).sort())];
+  const filteredMps = mps.filter(m =>
+    Number(m.government_id) === 1 &&
+    (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search))) &&
+    (mpDistrict === "সব" || m.district === mpDistrict) &&
+    (mpParty === "সব" || m.party === mpParty)
+  );
   const currentGovtMinisters = selectedGovt ? histMinisters.filter(m => Number(m.government_id) === Number(selectedGovt.id)) : [];
   const currentGovtAchievements = selectedGovt ? achievements.filter(a => Number(a.government_id) === Number(selectedGovt.id)) : [];
 
@@ -916,6 +930,45 @@ export default function App() {
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সংসদ সদস্য তালিকা</h2>
                       <button onClick={() => downloadPDF("সংসদ সদস্য তালিকা", filteredMps, [{ key: "name", label: "নাম" }, { key: "constituency", label: "আসন" }, { key: "district", label: "জেলা" }, { key: "party", label: "দল" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>📥 PDF</button>
                     </div>
+                    {/* জেলা ও দল ফিল্টার */}
+                    <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+                      <select value={mpDistrict} onChange={e => setMpDistrict(e.target.value)}
+                        style={{ flex: 1, minWidth: 140, background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "8px 12px", color: T.text, fontSize: 13, fontFamily: "sans-serif", outline: "none" }}>
+                        {districts.map(d => <option key={d}>{d}</option>)}
+                      </select>
+                      <select value={mpParty} onChange={e => setMpParty(e.target.value)}
+                        style={{ flex: 1, minWidth: 140, background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "8px 12px", color: T.text, fontSize: 13, fontFamily: "sans-serif", outline: "none" }}>
+                        {parties.map(p => <option key={p}>{p}</option>)}
+                      </select>
+                    </div>
+
+                    {/* ফিল্টার ট্যাগ */}
+                    {(mpDistrict !== "সব" || mpParty !== "সব") && (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+                        {mpDistrict !== "সব" && (
+                          <span style={{ background: isDark ? "rgba(0,106,78,0.2)" : "rgba(0,106,78,0.1)", border: "1px solid #006A4E", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#4ecba0", display: "flex", alignItems: "center", gap: 6 }}>
+                            📍 {mpDistrict}
+                            <button onClick={() => setMpDistrict("সব")} style={{ background: "transparent", border: "none", color: "#4ecba0", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>✕</button>
+                          </span>
+                        )}
+                        {mpParty !== "সব" && (
+                          <span style={{ background: isDark ? "rgba(201,168,76,0.15)" : "rgba(201,168,76,0.1)", border: "1px solid #C9A84C", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#C9A84C", display: "flex", alignItems: "center", gap: 6 }}>
+                            🌾 {mpParty}
+                            <button onClick={() => setMpParty("সব")} style={{ background: "transparent", border: "none", color: "#C9A84C", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>✕</button>
+                          </span>
+                        )}
+                        <button onClick={() => { setMpDistrict("সব"); setMpParty("সব"); setSearch(""); }}
+                          style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "3px 10px", fontSize: 12, color: T.textMuted, cursor: "pointer", fontFamily: "sans-serif" }}>
+                          সব ফিল্টার সরান
+                        </button>
+                      </div>
+                    )}
+
+                    {/* ফলাফল সংখ্যা */}
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 12 }}>
+                      {filteredMps.length}জন সংসদ সদস্য পাওয়া গেছে
+                    </div>
+
                     <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMps.map((m, i) => (
                       <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
