@@ -45,7 +45,12 @@ export default function FeedbackSection({ T, isDark }) {
     return Object.keys(e).length === 0;
   }
 
-  const [turnstileToken, setTurnstileToken] = useState("");
+  // FIX: `turnstileToken`/`setTurnstileToken` state was declared here but never read or
+  // written anywhere in the file — handleSubmit below reads the token directly from the
+  // DOM via document.querySelector instead. That made it dead code, which CRA's ESLint
+  // (no-unused-vars) flags, and since the build runs with CI=true, warnings are treated
+  // as errors and fail the build. Removed the unused state; the ref-based DOM lookup
+  // approach below is unchanged and still works exactly as before.
   const turnstileRef = useRef(null);
 
   async function handleSubmit() {
