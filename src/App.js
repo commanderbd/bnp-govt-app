@@ -274,7 +274,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [search, setSearch] = useState("");
   const [mpDistrict, setMpDistrict] = useState("সব");
-  const [mpParty, setMpParty] = useState("সব");
+  const [mpDivision, setMpDivision] = useState("সব");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedGovt, setSelectedGovt] = useState(null);
   const [govtTab, setGovtTab] = useState("ministers");
@@ -393,14 +393,29 @@ export default function App() {
   const paginatedNews = filteredNews.slice(0, newsPage * NEWS_PER_PAGE);
   const hasMore = paginatedNews.length < filteredNews.length;
   const filteredMinisters = ministers.filter(m => m.name.includes(search) || m.ministry.includes(search));
-  const districts = ["সব", ...new Set(mps.filter(m => Number(m.government_id) === 1).map(m => m.district).filter(Boolean).sort())];
-  const parties = ["সব", ...new Set(mps.filter(m => Number(m.government_id) === 1).map(m => m.party).filter(Boolean).sort())];
-  const filteredMps = mps.filter(m =>
-    Number(m.government_id) === 1 &&
-    (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search))) &&
-    (mpDistrict === "সব" || m.district === mpDistrict) &&
-    (mpParty === "সব" || m.party === mpParty)
-  );
+  const divisions = ["সব", "ঢাকা", "চট্টগ্রাম", "রাজশাহী", "খুলনা", "বরিশাল", "সিলেট", "রংপুর", "ময়মনসিংহ"];
+
+  const districtsByDivision = {
+  "ঢাকা": ["ঢাকা", "গাজীপুর", "নারায়ণগঞ্জ", "মানিকগঞ্জ", "মুন্সীগঞ্জ", "নরসিংদী", "কিশোরগঞ্জ", "টাঙ্গাইল", "ফরিদপুর", "গোপালগঞ্জ", "মাদারীপুর", "রাজবাড়ী", "শরীয়তপুর"],
+  "চট্টগ্রাম": ["চট্টগ্রাম", "কক্সবাজার", "কুমিল্লা", "ব্রাহ্মণবাড়িয়া", "চাঁদপুর", "ফেনী", "লক্ষ্মীপুর", "নোয়াখালী", "খাগড়াছড়ি", "রাঙামাটি", "বান্দরবান"],
+  "রাজশাহী": ["রাজশাহী", "বগুড়া", "চাঁপাইনবাবগঞ্জ", "জয়পুরহাট", "নওগাঁ", "নাটোর", "পাবনা", "সিরাজগঞ্জ"],
+  "খুলনা": ["খুলনা", "বাগেরহাট", "চুয়াডাঙ্গা", "যশোর", "ঝিনাইদহ", "কুষ্টিয়া", "মাগুরা", "মেহেরপুর", "নড়াইল", "সাতক্ষীরা"],
+  "বরিশাল": ["বরিশাল", "ভোলা", "ঝালকাঠি", "পটুয়াখালী", "পিরোজপুর", "বরগুনা"],
+  "সিলেট": ["সিলেট", "হবিগঞ্জ", "মৌলভীবাজার", "সুনামগঞ্জ"],
+  "রংপুর": ["রংপুর", "দিনাজপুর", "গাইবান্ধা", "কুড়িগ্রাম", "লালমনিরহাট", "নীলফামারী", "পঞ্চগড়", "ঠাকুরগাঁও"],
+  "ময়মনসিংহ": ["ময়মনসিংহ", "জামালপুর", "নেত্রকোণা", "শেরপুর"],
+};
+
+const districts = mpDivision === "সব"
+  ? ["সব", ...new Set(mps.filter(m => Number(m.government_id) === 1).map(m => m.district).filter(Boolean).sort())]
+  : ["সব", ...(districtsByDivision[mpDivision] || [])];
+
+const filteredMps = mps.filter(m =>
+  Number(m.government_id) === 1 &&
+  (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search))) &&
+  (mpDistrict === "সব" || m.district === mpDistrict) &&
+  (mpDivision === "সব" || (districtsByDivision[mpDivision] || []).includes(m.district))
+);
   const currentGovtMinisters = selectedGovt ? histMinisters.filter(m => Number(m.government_id) === Number(selectedGovt.id)) : [];
   const currentGovtAchievements = selectedGovt ? achievements.filter(a => Number(a.government_id) === Number(selectedGovt.id)) : [];
 
@@ -934,41 +949,66 @@ export default function App() {
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সংসদ সদস্য তালিকা</h2>
                       <button onClick={() => downloadPDF("সংসদ সদস্য তালিকা", filteredMps, [{ key: "name", label: "নাম" }, { key: "constituency", label: "আসন" }, { key: "district", label: "জেলা" }, { key: "party", label: "দল" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>📥 PDF</button>
                     </div>
-                    <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-                      <select value={mpDistrict} onChange={e => setMpDistrict(e.target.value)}
-                        style={{ flex: 1, minWidth: 140, background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "8px 12px", color: T.text, fontSize: 13, fontFamily: "sans-serif", outline: "none" }}>
-                        {districts.map(d => <option key={d}>{d}</option>)}
-                      </select>
-                      <select value={mpParty} onChange={e => setMpParty(e.target.value)}
-                        style={{ flex: 1, minWidth: 140, background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "8px 12px", color: T.text, fontSize: 13, fontFamily: "sans-serif", outline: "none" }}>
-                        {parties.map(p => <option key={p}>{p}</option>)}
-                      </select>
+                    {/* বিভাগ ফিল্টার বাটন */}
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>🗺️ বিভাগ অনুযায়ী ফিল্টার</div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {divisions.map(div => (
+                          <button key={div} onClick={() => { setMpDivision(div); setMpDistrict("সব"); }}
+                            style={{ background: mpDivision === div ? "#006A4E" : "transparent", border: "1px solid " + (mpDivision === div ? "#006A4E" : T.border), borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontSize: 12, color: mpDivision === div ? "#fff" : T.textMuted, fontFamily: "sans-serif", transition: "all 0.2s" }}>
+                            {div === "সব" ? "🇧🇩 সব" : div}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    {(mpDistrict !== "সব" || mpParty !== "সব") && (
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+                    {/* জেলা ফিল্টার — বিভাগ নির্বাচিত হলে দেখাবে */}
+                    {mpDivision !== "সব" && (
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>📍 জেলা অনুযায়ী ফিল্টার ({mpDivision} বিভাগ)</div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {districts.map(dist => (
+                            <button key={dist} onClick={() => setMpDistrict(dist)}
+                              style={{ background: mpDistrict === dist ? "#C9A84C" : "transparent", border: "1px solid " + (mpDistrict === dist ? "#C9A84C" : T.border), borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: mpDistrict === dist ? "#0D1B2A" : T.textMuted, fontFamily: "sans-serif", transition: "all 0.2s" }}>
+                              {dist === "সব" ? "সব জেলা" : dist}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* সার্চ বক্স */}
+                    <input placeholder="নাম বা আসন দিয়ে খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)}
+                      style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 10, boxSizing: "border-box", outline: "none" }} />
+
+                    {/* Active ফিল্টার ট্যাগ */}
+                    {(mpDivision !== "সব" || mpDistrict !== "সব" || search) && (
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12, alignItems: "center" }}>
+                        <span style={{ fontSize: 12, color: T.textMuted }}>ফিল্টার:</span>
+                        {mpDivision !== "সব" && (
+                          <span style={{ background: "rgba(0,106,78,0.15)", border: "1px solid #006A4E", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#4ecba0", display: "flex", alignItems: "center", gap: 4 }}>
+                            🗺️ {mpDivision}
+                            <button onClick={() => { setMpDivision("সব"); setMpDistrict("সব"); }} style={{ background: "transparent", border: "none", color: "#4ecba0", cursor: "pointer", fontSize: 13, padding: 0 }}>✕</button>
+                          </span>
+                        )}
                         {mpDistrict !== "সব" && (
-                          <span style={{ background: isDark ? "rgba(0,106,78,0.2)" : "rgba(0,106,78,0.1)", border: "1px solid #006A4E", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#4ecba0", display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ background: "rgba(201,168,76,0.15)", border: "1px solid #C9A84C", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#C9A84C", display: "flex", alignItems: "center", gap: 4 }}>
                             📍 {mpDistrict}
-                            <button onClick={() => setMpDistrict("সব")} style={{ background: "transparent", border: "none", color: "#4ecba0", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>✕</button>
+                            <button onClick={() => setMpDistrict("সব")} style={{ background: "transparent", border: "none", color: "#C9A84C", cursor: "pointer", fontSize: 13, padding: 0 }}>✕</button>
                           </span>
                         )}
-                        {mpParty !== "সব" && (
-                          <span style={{ background: isDark ? "rgba(201,168,76,0.15)" : "rgba(201,168,76,0.1)", border: "1px solid #C9A84C", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#C9A84C", display: "flex", alignItems: "center", gap: 6 }}>
-                            🌾 {mpParty}
-                            <button onClick={() => setMpParty("সব")} style={{ background: "transparent", border: "none", color: "#C9A84C", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>✕</button>
-                          </span>
-                        )}
-                        <button onClick={() => { setMpDistrict("সব"); setMpParty("সব"); setSearch(""); }}
-                          style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "3px 10px", fontSize: 12, color: T.textMuted, cursor: "pointer", fontFamily: "sans-serif" }}>
-                          সব ফিল্টার সরান
+                        <button onClick={() => { setMpDivision("সব"); setMpDistrict("সব"); setSearch(""); }}
+                          style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "3px 10px", fontSize: 11, color: T.textMuted, cursor: "pointer", fontFamily: "sans-serif" }}>
+                          সব সরান
                         </button>
                       </div>
                     )}
 
-                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 12 }}>
-                      {filteredMps.length}জন সংসদ সদস্য পাওয়া গেছে
-                    </div>
+                    {/* ফলাফল সংখ্যা */}
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 12, display: "flex", justifyContent: "space-between" }}>
+                      <span>{filteredMps.length}জন সংসদ সদস্য</span>
+                      {mpDivision !== "সব" && <span style={{ color: "#C9A84C" }}>{mpDivision} বিভাগ</span>}
+                    </div>        
 
                     <input placeholder="নাম, আসন বা জেলা..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMps.map((m, i) => (
