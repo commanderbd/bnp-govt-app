@@ -679,7 +679,7 @@ const filteredMps = mps.filter(m =>
 
                 {govtTab === "ministers" && (
                   <div>
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>👥 মন্ত্রিসভা</h2>
+                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>👥 {t.cabinet}</h2>
                     {currentGovtMinisters.length === 0
                       ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।</div>
                       : currentGovtMinisters.map((m, i) => (
@@ -789,8 +789,8 @@ const filteredMps = mps.filter(m =>
                 {!showDecisions && !showDocuments && activeTab === "home" && (
                   <div>
                     <div style={{ background: "#006A4E", border: "1px solid #C9A84C", borderRadius: 12, padding: 20, marginBottom: 20, textAlign: "center" }}>
-                      <div style={{ fontSize: 22, fontWeight: "bold", color: "#fff", marginBottom: 6 }}>🇧🇩 স্বাগতম</div>
-                      <div style={{ fontSize: 13, color: "#C9A84C" }}>গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — ত্রয়োদশ জাতীয় সংসদ</div>
+                      <div style={{ fontSize: 22, fontWeight: "bold", color: "#fff", marginBottom: 6 }}>🇧🇩 {t.welcome}</div>
+                      <div style={{ fontSize: 13, color: "#C9A84C" }}>{t.welcomeSubtitle}</div>
                     </div>
 
                     {!notifEnabled && (
@@ -841,7 +841,7 @@ const filteredMps = mps.filter(m =>
                       </div>
                     )}
 
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 14, fontSize: 15 }}>🔨 চলমান প্রকল্প</h2>
+                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 14, fontSize: 15 }}>🔨{t.ongoingProjects}</h2>
                     {projects.filter(p => p.status === "চলমান").slice(0, 3).map((p, i) => (
                       <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: 14, marginBottom: 10 }}>
                         <div style={{ fontSize: 13, fontWeight: "bold", color: T.text, marginBottom: 6 }}>{p.title}</div>
@@ -855,7 +855,7 @@ const filteredMps = mps.filter(m =>
                       </div>
                     ))}
 
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, margin: "20px 0 14px", fontSize: 15 }}>📰 সর্বশেষ সংবাদ</h2>
+                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, margin: "20px 0 14px", fontSize: 15 }}>📰 t.newsCount</h2>
                     {news.slice(0, 3).map((n, i) => (
                       <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 14, marginBottom: 10 }}>
                         <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold", marginBottom: 4 }}>{n.source} · {n.category}</div>
@@ -868,7 +868,7 @@ const filteredMps = mps.filter(m =>
                     ))}
                     <div onClick={() => setActiveTab("news")} style={{ background: "transparent", border: "1px solid #006A4E", borderRadius: 8, padding: "10px 16px", textAlign: "center", cursor: "pointer", color: "#4ecba0", fontSize: 13, marginTop: 4 }}>সব সংবাদ দেখুন →</div>
 
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, margin: "20px 0 14px", fontSize: 15 }}>🏛️ বিএনপি সরকারসমূহ</h2>
+                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, margin: "20px 0 14px", fontSize: 15 }}>🏛️ {t.govtList}</h2>
                     {governments.map((g, i) => (
                       <div key={i} className="card-hover" onClick={() => { setSelectedGovt(g); setGovtTab("ministers"); }} style={{ background: T.card, border: "1px solid " + (g.is_current ? "#006A4E" : T.border), borderLeft: "4px solid " + (g.is_current ? "#006A4E" : "#C9A84C"), borderRadius: 8, padding: 14, marginBottom: 10, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
@@ -888,7 +888,7 @@ const filteredMps = mps.filter(m =>
                 {!showDecisions && !showDocuments && activeTab === "news" && (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সর্বশেষ সংবাদ</h2>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>t.newsCount</h2>
                       <span style={{ fontSize: 12, color: T.textMuted }}>{filteredNews.length}টি সংবাদ</span>
                     </div>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
@@ -923,7 +923,7 @@ const filteredMps = mps.filter(m =>
                 {!showDecisions && !showDocuments && activeTab === "ministers" && (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>মন্ত্রিসভা</h2>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>{t.cabinet}</h2>
                       <button onClick={() => downloadPDF("মন্ত্রিসভা তালিকা", ministers, [{ key: "name", label: "নাম" }, { key: "role", label: "পদবি" }, { key: "ministry", label: "মন্ত্রণালয়" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>📥 PDF</button>
                     </div>
                     <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
@@ -1029,7 +1029,7 @@ const filteredMps = mps.filter(m =>
 
                 {!showDecisions && !showDocuments && activeTab === "projects" && (
                   <div>
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>উন্নয়ন প্রকল্প</h2>
+                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>t.projectCount</h2>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
                       {[
                         { label: "চলমান", value: projects.filter(p => p.status === "চলমান").length, color: "#4ecba0" },
