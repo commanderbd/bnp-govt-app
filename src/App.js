@@ -1111,6 +1111,7 @@ export default function App() {
                     </div>
                   </div>
                 )}
+
               </div>
             )}
           </div>
@@ -1129,8 +1130,8 @@ export default function App() {
               if (item.id === "search") { setShowSearch(true); setGlobalSearch(""); }
               else { setActiveTab(item.id); setSelectedGovt(null); setShowDecisions(false); setShowDocuments(false); window.scrollTo({ top: 0, behavior: "smooth" }); }
             }} style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "4px 12px", opacity: activeTab === item.id ? 1 : 0.6, transition: "opacity 0.2s" }}>
-              <span style={{ fontSize: 20 }}>{item.icon}</span>
-              <span style={{ fontSize: 10, fontFamily: "sans-serif", color: activeTab === item.id ? "#C9A84C" : T.textMuted, fontWeight: activeTab === item.id ? "bold" : "normal" }}>{item.label}</span>
+              <span style={{ fontSize: 22 }}>{item.icon}</span>
+              <span style={{ fontSize: 11, fontFamily: "sans-serif", color: activeTab === item.id ? "#C9A84C" : T.textMuted, fontWeight: activeTab === item.id ? "bold" : "normal" }}>{item.label}</span>
               {activeTab === item.id && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#C9A84C" }} />}
             </button>
           ))}
@@ -1145,17 +1146,18 @@ export default function App() {
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
               {[
-                { label: "🏠 হোম", tab: "home" }, { label: "📰 সংবাদ", tab: "news" },
-                { label: "👥 মন্ত্রিসভা", tab: "ministers" }, { label: "🏅 এমপি", tab: "mps" },
-                { label: "💬 ফিডব্যাক", tab: "feedback" }, { label: "🔒 গোপনীয়তা", tab: "privacy" },
+                { label: "🏠 হোম", tab: "home" },
+                { label: "📰 সংবাদ", tab: "news" },
+                { label: "👥 মন্ত্রিসভা", tab: "ministers" },
+                { label: "🏅 এমপি", tab: "mps" },
+                { label: "💬 ফিডব্যাক", tab: "feedback" },
+                { label: "🔒 গোপনীয়তা", tab: "privacy" },
               ].map((item, i) => (
-                <button key={i} onClick={() => { setActiveTab(item.tab); setSelectedGovt(null); setShowDecisions(false); setShowDocuments(false); window.scrollTo({ top: 0, behavior: "smooth" }); }} style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
+                <button key={i} onClick={() => { setActiveTab(item.tab); setSelectedGovt(null); setShowDecisions(false); setShowDocuments(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
                   {item.label}
                 </button>
               ))}
-            </div>
-            <div style={{ textAlign: "center", marginBottom: 12 }}>
-              <div style={{ fontSize: 11, color: T.textMuted, lineHeight: 1.8 }}>cabinet.gov.bd · parliament.gov.bd · bssnews.net · prothomalo.com · kalerkantho.com</div>
             </div>
             <div style={{ height: 1, background: T.border, margin: "12px 0" }} />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
