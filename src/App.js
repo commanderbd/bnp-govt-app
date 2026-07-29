@@ -558,10 +558,14 @@ export default function App() {
             <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
             <span style={{ display: "block", width: 24, height: 2, background: "#fff", borderRadius: 2 }} />
           </button>
+          {/* FIX: this wrapper was never closed in the original file (missing `</div>` right
+              after the subtitle line). That left one JSX tag unterminated, which is exactly
+              what caused the build's "Unterminated JSX contents." error. Added the closing
+              tag below so the title/subtitle are grouped and the wrapper properly closes
+              before the logo/buttons that follow as siblings. */}
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>{selectedGovt ? "🏛️ " + selectedGovt.name : "🇧🇩 " + t.appTitle}
-          </div>
-            <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 2 }}>{selectedGovt ? "📅 " + selectedGovt.period : t.appSubtitle}
+            <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>{selectedGovt ? "🏛️ " + selectedGovt.name : "🇧🇩 " + t.appTitle}</div>
+            <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 2 }}>{selectedGovt ? "📅 " + selectedGovt.period : t.appSubtitle}</div>
           </div>
 
           {!selectedGovt && <img src={BNP_LOGO} alt="বিএনপি লোগো" style={{ width: 32, height: 32, borderRadius: 4, objectFit: "contain", background: "#fff", padding: 2, flexShrink: 0 }} onError={e => e.target.style.display = "none"} />}
@@ -930,7 +934,6 @@ export default function App() {
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>সংসদ সদস্য তালিকা</h2>
                       <button onClick={() => downloadPDF("সংসদ সদস্য তালিকা", filteredMps, [{ key: "name", label: "নাম" }, { key: "constituency", label: "আসন" }, { key: "district", label: "জেলা" }, { key: "party", label: "দল" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>📥 PDF</button>
                     </div>
-                    {/* জেলা ও দল ফিল্টার */}
                     <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
                       <select value={mpDistrict} onChange={e => setMpDistrict(e.target.value)}
                         style={{ flex: 1, minWidth: 140, background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "8px 12px", color: T.text, fontSize: 13, fontFamily: "sans-serif", outline: "none" }}>
@@ -942,7 +945,6 @@ export default function App() {
                       </select>
                     </div>
 
-                    {/* ফিল্টার ট্যাগ */}
                     {(mpDistrict !== "সব" || mpParty !== "সব") && (
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
                         {mpDistrict !== "সব" && (
@@ -964,7 +966,6 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* ফলাফল সংখ্যা */}
                     <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 12 }}>
                       {filteredMps.length}জন সংসদ সদস্য পাওয়া গেছে
                     </div>
