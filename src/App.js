@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 import AdminPanel from "./AdminPanel";
 import { translations } from "./translations";
-import FeedbackSection from "./FeedbackSection";
 import AuthModal from "./AuthModal";
 import CommentsSection from "./CommentsSection";
 import { registerServiceWorker, requestNotificationPermission, showLocalNotification } from "./notifications";
@@ -279,7 +278,6 @@ export default function App() {
   const [governments, setGovernments] = useState([]);
   const [histMinisters, setHistMinisters] = useState([]);
   const [achievements, setAchievements] = useState([]);
-  const [decisions, setDecisions] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [leaders, setLeaders] = useState([]);
   const [activistPosts, setActivistPosts] = useState([]);
@@ -455,7 +453,7 @@ export default function App() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [m, n, mp, p, g, hm, a, dec, doc, ld, ap] = await Promise.all([
+      const [m, n, mp, p, g, hm, a, doc, ld, ap] = await Promise.all([
         supabase.from("ministers").select("*").order("id"),
         supabase.from("news").select("*").order("created_at", { ascending: false }).limit(50),
         supabase.from("mps").select("*").order("id").limit(5000),
@@ -463,7 +461,6 @@ export default function App() {
         supabase.from("governments").select("*").order("id"),
         supabase.from("historical_ministers").select("*").order("id"),
         supabase.from("achievements").select("*").order("id"),
-        supabase.from("decisions").select("*").order("created_at", { ascending: false }),
         supabase.from("documents").select("*").order("created_at", { ascending: false }),
         supabase.from("leaders").select("*").order("sort_order"),
         supabase.from("activist_posts").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(50),
@@ -475,7 +472,6 @@ export default function App() {
       setGovernments(g.data || []);
       setHistMinisters(hm.data || []);
       setAchievements(a.data || []);
-      setDecisions(dec.data || []);
       setDocuments(doc.data || []);
       setLeaders(ld.data || []);
       setActivistPosts(ap.data || []);
