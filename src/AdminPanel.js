@@ -140,7 +140,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                   <div>✅ অ্যাডমিন প্যানেলে স্বাগতম</div>
                   <div>📝 উপরের মেনু থেকে যেকোনো বিভাগ ম্যানেজ করুন</div>
                   <div>🔄 যেকোনো পরিবর্তন সাথে সাথে অ্যাপে দেখা যাবে</div>
-                  <div>🔗 গোপন লিংক: yoursite.vercel.app/#admin-secret-2026</div>
+                  <div>🔗 গোপন লিংক: https://bnp-govt-app.vercel.app/#admin-login-2026</div>
                 </div>
               </div>
             </div>
@@ -157,6 +157,12 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                 </select>
                 <input placeholder="মন্ত্রণালয় *" value={newMinister.ministry} onChange={e => setNewMinister({ ...newMinister, ministry: e.target.value })} style={inputStyle} />
                 <input placeholder="আইকন (ইমোজি)" value={newMinister.icon} onChange={e => setNewMinister({ ...newMinister, icon: e.target.value })} style={{ ...inputStyle, marginBottom: 14 }} />
+                <input placeholder="Name (English)" defaultValue={m.name_en || ""}
+                  onBlur={async e => { const v = e.target.value.trim(); if (v !== (m.name_en || "")) await supabase.from("ministers").update({ name_en: v }).eq("id", m.id); }}
+                  style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
+                <input placeholder="Role (English)" defaultValue={m.role_en || ""}
+                  onBlur={async e => { const v = e.target.value.trim(); if (v !== (m.role_en || "")) await supabase.from("ministers").update({ role_en: v }).eq("id", m.id); }}
+                  style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
                 <button onClick={async () => {
                   if (!newMinister.name || !newMinister.ministry) return showMessage("নাম ও মন্ত্রণালয় আবশ্যক", "error");
                   setSaving(true);

@@ -16,8 +16,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Dependencies ইনস্টল
-        run: pip install feedparser requests
+      - name: Install dependencies
+        run: pip install feedparser supabase requests beautifulsoup4
 
       - name: সংবাদ আপডেট
         env:

@@ -186,18 +186,21 @@ function NewsModal({ news, onClose, T, isDark, currentUser, onLoginRequest }) {
           </div>
         </div>
         <div style={{ padding: 20 }}>
+          
           {/* সংবাদের content */}
-          {news.content && news.content !== "সম্পূর্ণ সংবাদ শীঘ্রই যোগ করা হবে।" ? (
-            <div style={{ fontSize: 14, color: T.text, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 16 }}>{news.content}</div>
-          ) : (
-            <div style={{ textAlign: "center", padding: "20px 0", marginBottom: 16 }}>
-              <div style={{ fontSize: 32, marginBottom: 10 }}>📰</div>
-              <div style={{ fontSize: 14, color: T.textMuted, marginBottom: 12 }}>সম্পূর্ণ সংবাদ এখনো যোগ করা হয়নি</div>
-              <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8 }}>
-                অ্যাডমিন প্যানেল থেকে এই সংবাদের Content ও মূল লিংক যোগ করুন।
-              </div>
-            </div>
-          )}
+         {news.content && news.content !== "সম্পূর্ণ সংবাদ শীঘ্রই যোগ করা হবে।" ? (
+          <div style={{ fontSize: 14, color: T.text, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 16 }}>{news.content}</div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "20px 0", marginBottom: 16 }}>
+            <div style={{ fontSize: 32, marginBottom: 10 }}>📰</div>
+            <div style={{ fontSize: 14, color: T.textMuted, marginBottom: 8 }}>সম্পূর্ণ সংবাদ শীঘ্রই যোগ করা হবে</div>
+            {news.link && (
+              <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#006A4E", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, textDecoration: "none" }}>
+                🔗 মূল সংবাদ পড়ুন
+              </a>
+            )}
+          </div>
+        )}
           {news.link && (
             <div style={{ borderTop: "1px solid " + T.border, marginBottom: 16, paddingTop: 14 }}>
               <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: "#4ecba0", fontSize: 13, textDecoration: "none" }}>🔗 মূল সংবাদ পড়ুন — {news.source}</a>
@@ -402,7 +405,7 @@ export default function App() {
     { id: "mps", label: t.mps },
     { id: "projects", label: t.projects },
     { id: "activists", label: t.activists },
-    { id: "history", label: t.history },
+    { id: "history", label: lang === "en" ? "🏛️ BNP History" : "🏛️ বিএনপি'র ইতিহাস" },
   ];
 
   const govtTabs = [
@@ -449,6 +452,15 @@ export default function App() {
     }
     fetchGovtMps();
   }, [selectedGovt]);
+
+  useEffect(() => {
+    // Session storage থেকে redirect চেক
+    const redirect = sessionStorage.getItem("redirect");
+    if (redirect) {
+      sessionStorage.removeItem("redirect");
+      window.location.hash = redirect;
+    }
+  }, []);g
 
   useEffect(() => {
     async function fetchData() {
@@ -681,7 +693,7 @@ export default function App() {
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>👥 {t.cabinet}</h2>
                     {currentGovtMinisters.length === 0
                       ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।</div>
-                      : currentGovtMinisters.map((m, i) => (
+                      :currentGovtMinisters.map((m, i) => (
                         <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
                           <div style={{ width: 52, height: 52, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
                             onClick={() => { setSelectedPerson(m); setPersonType("minister"); }}>
@@ -691,6 +703,7 @@ export default function App() {
                             <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
                             <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
                             <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>📁 {m.ministry}</div>
+                            {/* বিস্তারিত বাটন যোগ */}
                             <button onClick={() => { setSelectedPerson(m); setPersonType("minister"); }}
                               style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>
                               {t.details}
@@ -716,6 +729,12 @@ export default function App() {
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
                             <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
+                            <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
+                              {lang === "en" ? (m.name_en || m.name) : m.name}
+                            </div>
+                            <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>
+                              🏅 {lang === "en" ? (m.constituency_en || m.constituency) : m.constituency} · {lang === "en" ? (m.district_en || m.district) : m.district}
+                            </div>
                             <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
                             <button onClick={() => { setSelectedPerson(m); setPersonType("mp"); }} style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>{t.details}</button>
                           </div>
@@ -927,6 +946,15 @@ export default function App() {
                           <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
                           <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
                           <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>📁 {m.ministry}</div>
+                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
+                            {lang === "en" ? (m.name_en || m.name) : m.name}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>
+                            {lang === "en" ? (m.role_en || m.role) : m.role}
+                          </div>
+                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>
+                            📁 {lang === "en" ? (m.ministry_en || m.ministry) : m.ministry}
+                          </div>
                           <button onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>{t.details}</button>
                         </div>
                       </div>
@@ -989,6 +1017,18 @@ export default function App() {
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
                           <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
+                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
+                            {lang === "en" ? (m.name_en || m.name) : m.name}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>
+                            🏅 {lang === "en" ? (m.constituency_en || m.constituency) : m.constituency} · {lang === "en" ? (m.district_en || m.district) : m.district}
+                          </div>
+                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
+                            {lang === "en" ? (m.name_en || m.name) : m.name}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>
+                            🏅 {lang === "en" ? (m.constituency_en || m.constituency) : m.constituency} · {lang === "en" ? (m.district_en || m.district) : m.district}
+                          </div>
                           <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
                           <button onClick={() => { setSelectedPerson(m); setPersonType("mp"); }} style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>{t.details}</button>
                         </div>
@@ -1194,36 +1234,34 @@ export default function App() {
         </div>
 
         {/* Footer */}
-        <div style={{ background: isDark ? "#070f18" : "#E0EAF4", borderTop: "2px solid #C9A84C", padding: "20px", marginTop: 40 }}>
+        <div style={{ background: isDark ? "#070f18" : "#E0EAF4", borderTop: "2px solid #C9A84C", padding: "16px 20px", marginTop: 40 }}>
           <div style={{ maxWidth: 700, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 16, fontWeight: "bold", color: "#C9A84C", marginBottom: 4 }}>🇧🇩 {t.appTitle}</div>
-              <div style={{ fontSize: 12, color: T.textMuted }}>{t.appSubtitle}</div>
-            </div>
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-              {[
-                { label: t.home, tab: "home" }, { label: t.news, tab: "news" },
-                { label: t.ministers, tab: "ministers" }, { label: t.mps, tab: "mps" },
-                { label: t.history, tab: "history" }, { label: t.privacy, tab: "privacy" },
-              ].map((item, i) => (
-                <button key={i} onClick={() => { setActiveTab(item.tab); setSelectedGovt(null); setShowDocuments(false); setShowHistory(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => { setActiveTab("history"); setSelectedGovt(null); setShowDocuments(false); setShowHistory(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
-                  {item.label}
+                  🏛️ বিএনপি'র ইতিহাস
                 </button>
-              ))}
-            </div>
-            <div style={{ height: 1, background: T.border, margin: "12px 0" }} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-              <div style={{ fontSize: 11, color: T.textMuted }}>{t.footerCopyright}</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} style={{ background: "#006A4E", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: "#fff", fontFamily: "sans-serif" }}>{t.scrollTop}</button>
+                <button onClick={() => { setActiveTab("about"); setSelectedGovt(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
+                  ℹ️ আমাদের সম্পর্কে
+                </button>
+                <button onClick={() => { setActiveTab("privacy"); setSelectedGovt(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                  style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
+                  🔒 গোপনীয়তা
+                </button>
               </div>
+              <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                style={{ background: "#006A4E", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: "#fff", fontFamily: "sans-serif" }}>
+                ↑ উপরে যান
+              </button>
             </div>
-            <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>{t.footerDisclaimer}</div>
+            <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>
+              {t.footerCopyright} · {t.footerDisclaimer}
+            </div>
           </div>
         </div>
-
       </div>
-    </>
+      </>
   );
 }

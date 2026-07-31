@@ -1,94 +1,68 @@
+import os
 import feedparser
 import requests
-import os
-from datetime import datetime
+from bs4 import BeautifulSoup
+from supabase import create_client
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
-SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
-
-HEADERS = {
-    "apikey": SUPABASE_SERVICE_KEY,
-    "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-    "Content-Type": "application/json",
-    "Prefer": "return=minimal"
-}
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 RSS_FEEDS = [
-    {"url": "https://news.google.com/rss/search?q=বাংলাদেশ+সরকার+বিএনপি&hl=bn&gl=BD&ceid=BD:bn", "category": "সরকারি"},
-    {"url": "https://news.google.com/rss/search?q=প্রধানমন্ত্রী+তারেক+রহমান&hl=bn&gl=BD&ceid=BD:bn", "category": "সরকারি"},
-    {"url": "https://news.google.com/rss/search?q=বাংলাদেশ+জাতীয়+সংসদ&hl=bn&gl=BD&ceid=BD:bn", "category": "সংসদ"},
-    {"url": "https://news.google.com/rss/search?q=বাংলাদেশ+মন্ত্রিসভা&hl=bn&gl=BD&ceid=BD:bn", "category": "মন্ত্রিসভা"},
+    "https://news.google.com/rss/search?q=বাংলাদেশ+বিএনপি+সরকার&hl=bn&gl=BD&ceid=BD:bn",
+    "https://news.google.com/rss/search?q=তারেক+রহমান&hl=bn&gl=BD&ceid=BD:bn",
+    "https://news.google.com/rss/search?q=বাংলাদেশ+মন্ত্রিসভা&hl=bn&gl=BD&ceid=BD:bn",
 ]
 
-def get_existing_titles():
-    res = requests.get(
-        f"{SUPABASE_URL}/rest/v1/news?select=title&limit=500",
-        headers=HEADERS
-    )
-    if res.status_code == 200:
-        return {item["title"] for item in res.json()}
-    print(f"❌ Existing titles error: {res.status_code} - {res.text}")
-    return set()
+def fetch_article_content(url):
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        res = requests.get(url, headers=headers, timeout=8)
+        soup = BeautifulSoup(res.content, "html.parser")
+        # মূল content খোঁজা
+        for tag in ["article", "main", ".article-body", ".content"]:
+            el = soup.select_one(tag)
+            if el:
+                text = el.get_text(separator="\n", strip=True)
+                return text[:2000] if len(text) > 2000 else text
+        # fallback — paragraph থেকে
+        paragraphs = soup.find_all("p")
+        text = "\n".join(p.get_text(strip=True) for p in paragraphs[:10])
+        return text[:2000] if text else None
+    except:
+        return None
 
-def insert_news(item):
-    res = requests.post(
-        f"{SUPABASE_URL}/rest/v1/news",
-        headers=HEADERS,
-        json=item
-    )
-    if res.status_code not in [200, 201]:
-        print(f"❌ Insert error: {res.status_code} - {res.text[:200]}")
-        return False
-    return True
-
-def main():
-    existing = get_existing_titles()
-    print(f"বিদ্যমান সংবাদ: {len(existing)}টি")
-    total_added = 0
-
-    for feed_info in RSS_FEEDS:
-        try:
-            feed = feedparser.parse(feed_info["url"])
-            print(f"Feed থেকে {len(feed.entries)}টি সংবাদ পাওয়া গেছে")
-
-            for entry in feed.entries[:10]:
-                title = entry.get("title", "").strip()
-                source = entry.get("source", {}).get("title", "Google News")
-
-                try:
-                    pub = entry.get("published_parsed")
-                    if pub:
-                        dt = datetime(*pub[:6])
-                        time_str = dt.strftime("%d %b %Y")
-                    else:
-                        time_str = datetime.now().strftime("%d %b %Y")
-                except Exception:
-                    time_str = datetime.now().strftime("%d %b %Y")
-
-                if not title:
-                    continue
-
-                if title in existing:
-                    continue
-
-                item = {
-                    "title": title,
-                    "source": source,
-                    "time": time_str,
-                    "category": feed_info["category"]
-                }
-
-                print(f"📤 Insert করছি: {title[:60]}")
-                if insert_news(item):
-                    existing.add(title)
-                    total_added += 1
-                    print(f"✅ যোগ হয়েছে: {title[:60]}")
-
-        except Exception as e:
-            print(f"❌ Feed error: {e}")
-
-    print(f"\nমোট {total_added}টি নতুন সংবাদ যোগ হয়েছে")
+def fetch_and_save():
+    existing = supabase.from_("news").select("title").execute()
+    existing_titles = {item["title"] for item in (existing.data or [])}
+    
+    new_count = 0
+    for feed_url in RSS_FEEDS:
+        feed = feedparser.parse(feed_url)
+        for entry in feed.entries[:5]:
+            title = entry.get("title", "").strip()
+            if not title or title in existing_titles:
+                continue
+            
+            link = entry.get("link", "")
+            content = fetch_article_content(link)
+            
+            news_item = {
+                "title": title,
+                "source": entry.get("source", {}).get("title", "Google News"),
+                "time": entry.get("published", ""),
+                "category": "সরকারি",
+                "link": link,
+                "content": content or "",
+            }
+            
+            result = supabase.from_("news").insert(news_item).execute()
+            if result.data:
+                existing_titles.add(title)
+                new_count += 1
+                print(f"যোগ করা হয়েছে: {title[:50]}")
+    
+    print(f"মোট {new_count}টি নতুন সংবাদ যোগ হয়েছে")
 
 if __name__ == "__main__":
-    main()
+    fetch_and_save()
