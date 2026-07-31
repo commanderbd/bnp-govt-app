@@ -86,6 +86,17 @@ export default function AdminPanel({ onLogout, isDark, T }) {
     { id: "activists", label: "📣 অ্যাক্টিভিস্ট" },
   ];
 
+  async function deleteItem(table, id, label) {
+    if (!window.confirm(label + " মুছবেন?")) return;
+    const { error } = await supabase.from(table).delete().eq("id", id);
+    if (error) showMessage("মুছতে সমস্যা: " + error.message, "error");
+    else { showMessage("মুছে ফেলা হয়েছে"); fetchAll(); }
+  }
+
+  async function updateField(table, id, field, value) {
+    await supabase.from(table).update({ [field]: value }).eq("id", id);
+  }
+
   return (
     <div style={{ fontFamily: "sans-serif", background: T.bg, minHeight: "100vh", color: T.text }}>
 
@@ -116,6 +127,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
       {!loading && (
         <div style={{ padding: 20, maxWidth: 800, margin: "0 auto" }}>
 
+          {/* ড্যাশবোর্ড */}
           {activeSection === "dashboard" && (
             <div>
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>📊 সারসংক্ষেপ</h2>
@@ -140,12 +152,13 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                   <div>✅ অ্যাডমিন প্যানেলে স্বাগতম</div>
                   <div>📝 উপরের মেনু থেকে যেকোনো বিভাগ ম্যানেজ করুন</div>
                   <div>🔄 যেকোনো পরিবর্তন সাথে সাথে অ্যাপে দেখা যাবে</div>
-                  <div>🔗 গোপন লিংক: https://bnp-govt-app.vercel.app/#admin-login-2026</div>
+                  <div>🔗 গোপন লিংক: yoursite.vercel.app/#admin-secret-2026</div>
                 </div>
               </div>
             </div>
           )}
 
+          {/* মন্ত্রিসভা */}
           {activeSection === "ministers" && (
             <div>
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>👥 নতুন মন্ত্রী যোগ করুন</h2>
@@ -157,53 +170,94 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                 </select>
                 <input placeholder="মন্ত্রণালয় *" value={newMinister.ministry} onChange={e => setNewMinister({ ...newMinister, ministry: e.target.value })} style={inputStyle} />
                 <input placeholder="আইকন (ইমোজি)" value={newMinister.icon} onChange={e => setNewMinister({ ...newMinister, icon: e.target.value })} style={{ ...inputStyle, marginBottom: 14 }} />
-                <input placeholder="Name (English)" defaultValue={m.name_en || ""} onBlur={async e => { const v = e.target.value.trim(); if (v !== (m.name_en || "")) await supabase.from("ministers").update({ name_en: v }).eq("id", m.id); }} style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
-                <input placeholder="Role (English)" defaultValue={m.role_en || ""} onBlur={async e => { const v = e.target.value.trim(); if (v !== (m.role_en || "")) await supabase.from("ministers").update({ role_en: v }).eq("id", m.id); }} style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
-                <button onClick={async () => { if (!newMinister.name || !newMinister.ministry) return showMessage("নাম ও মন্ত্রণালয় আবশ্যক", "error"); setSaving(true);
+                <button onClick={async () => {
+                  if (!newMinister.name || !newMinister.ministry) return showMessage("নাম ও মন্ত্রণালয় আবশ্যক", "error");
+                  setSaving(true);
                   const { error } = await supabase.from("ministers").insert(newMinister);
-                  if (error) showMessage("সমস্যা হয়েছে: " + error.message, "error");
+                  if (error) showMessage("সমস্যা: " + error.message, "error");
                   else { showMessage("মন্ত্রী যোগ হয়েছে!"); setNewMinister({ name: "", role: "মন্ত্রী", ministry: "", icon: "👤" }); fetchAll(); }
                   setSaving(false);
                 }} disabled={saving} style={btnStyle}>{saving ? "যোগ হচ্ছে..." : "✅ মন্ত্রী যোগ করুন"}</button>
               </div>
 
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 12, fontSize: 15 }}>বর্তমান মন্ত্রিসভা ({ministers.length} জন)</h2>
-              {ministers.map((m, i) => (
+              {ministers.map((minister, i) => (
                 <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: 12, marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{m.icon} {m.name}</div>
-                      <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role} · {m.ministry}</div>
+                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{minister.icon} {minister.name}</div>
+                      <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{minister.role} · {minister.ministry}</div>
                     </div>
-                    <button onClick={async () => {
-                      if (!window.confirm("এই মন্ত্রীর তথ্য মুছবেন?")) return;
-                      const { error } = await supabase.from("ministers").delete().eq("id", m.id);
-                      if (error) showMessage("মুছতে সমস্যা: " + error.message, "error");
-                      else { showMessage("মুছে ফেলা হয়েছে"); fetchAll(); }
-                    }} style={deleteBtnStyle}>🗑️ মুছুন</button>
+                    <button onClick={() => deleteItem("ministers", minister.id, "এই মন্ত্রী")} style={deleteBtnStyle}>🗑️ মুছুন</button>
                   </div>
-                  <textarea placeholder="সংক্ষিপ্ত পরিচিতি (bio)" defaultValue={m.bio || ""}
+                  <textarea
+                    placeholder="সংক্ষিপ্ত পরিচিতি (bio)"
+                    defaultValue={minister.bio || ""}
                     onBlur={async e => {
                       const bio = e.target.value.trim();
-                      if (bio !== (m.bio || "")) {
-                        await supabase.from("ministers").update({ bio }).eq("id", m.id);
-                        showMessage(m.name + "-এর bio আপডেট হয়েছে");
+                      if (bio !== (minister.bio || "")) {
+                        await updateField("ministers", minister.id, "bio", bio);
+                        showMessage(minister.name + "-এর bio আপডেট হয়েছে");
                       }
                     }}
-                    rows={2} style={{ width: "100%", background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, resize: "vertical", fontFamily: "sans-serif", marginTop: 6, boxSizing: "border-box" }} />
+                    rows={2}
+                    style={{ width: "100%", background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, resize: "vertical", fontFamily: "sans-serif", marginTop: 6, boxSizing: "border-box" }}
+                  />
                   <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                    <input placeholder="ফোন" defaultValue={m.phone || ""}
-                      onBlur={async e => { const phone = e.target.value.trim(); if (phone !== (m.phone || "")) await supabase.from("ministers").update({ phone }).eq("id", m.id); }}
-                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
-                    <input placeholder="ইমেইল" defaultValue={m.email || ""}
-                      onBlur={async e => { const email = e.target.value.trim(); if (email !== (m.email || "")) await supabase.from("ministers").update({ email }).eq("id", m.id); }}
-                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
+                    <input
+                      placeholder="ফোন"
+                      defaultValue={minister.phone || ""}
+                      onBlur={async e => {
+                        const phone = e.target.value.trim();
+                        if (phone !== (minister.phone || "")) await updateField("ministers", minister.id, "phone", phone);
+                      }}
+                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
+                    />
+                    <input
+                      placeholder="ইমেইল"
+                      defaultValue={minister.email || ""}
+                      onBlur={async e => {
+                        const email = e.target.value.trim();
+                        if (email !== (minister.email || "")) await updateField("ministers", minister.id, "email", email);
+                      }}
+                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
+                    />
+                  </div>
+                  <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                    <input
+                      placeholder="Name (English)"
+                      defaultValue={minister.name_en || ""}
+                      onBlur={async e => {
+                        const val = e.target.value.trim();
+                        if (val !== (minister.name_en || "")) await updateField("ministers", minister.id, "name_en", val);
+                      }}
+                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
+                    />
+                    <input
+                      placeholder="Role (English)"
+                      defaultValue={minister.role_en || ""}
+                      onBlur={async e => {
+                        const val = e.target.value.trim();
+                        if (val !== (minister.role_en || "")) await updateField("ministers", minister.id, "role_en", val);
+                      }}
+                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
+                    />
+                    <input
+                      placeholder="Ministry (English)"
+                      defaultValue={minister.ministry_en || ""}
+                      onBlur={async e => {
+                        const val = e.target.value.trim();
+                        if (val !== (minister.ministry_en || "")) await updateField("ministers", minister.id, "ministry_en", val);
+                      }}
+                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
+                    />
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* সংবাদ */}
           {activeSection === "news" && (
             <div>
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>📰 নতুন সংবাদ যোগ করুন</h2>
@@ -216,57 +270,60 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                   <option>পররাষ্ট্র</option><option>মন্ত্রিসভা</option>
                 </select>
                 <input placeholder="তারিখ" value={newNews.time} onChange={e => setNewNews({ ...newNews, time: e.target.value })} style={inputStyle} />
-                <textarea placeholder="সম্পূর্ণ সংবাদ (ঐচ্ছিক)" value={newNews.content} onChange={e => setNewNews({ ...newNews, content: e.target.value })} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+                <textarea placeholder="সম্পূর্ণ সংবাদ (ঐচ্ছিক)" value={newNews.content} onChange={e => setNewNews({ ...newNews, content: e.target.value })} rows={5} style={{ ...inputStyle, resize: "vertical" }} />
                 <input placeholder="মূল সংবাদের লিংক" value={newNews.link} onChange={e => setNewNews({ ...newNews, link: e.target.value })} style={{ ...inputStyle, marginBottom: 14 }} />
                 <button onClick={async () => {
                   if (!newNews.title || !newNews.source) return showMessage("শিরোনাম ও সূত্র আবশ্যক", "error");
                   setSaving(true);
                   const { error } = await supabase.from("news").insert({ ...newNews, time: newNews.time || new Date().toLocaleDateString("bn-BD") });
-                  if (error) showMessage("সমস্যা হয়েছে: " + error.message, "error");
+                  if (error) showMessage("সমস্যা: " + error.message, "error");
                   else { showMessage("সংবাদ যোগ হয়েছে!"); setNewNews({ title: "", source: "", category: "সরকারি", time: "", content: "", link: "" }); fetchAll(); }
                   setSaving(false);
                 }} disabled={saving} style={btnStyle}>{saving ? "যোগ হচ্ছে..." : "✅ সংবাদ যোগ করুন"}</button>
               </div>
 
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 12, fontSize: 15 }}>সর্বশেষ সংবাদ ({news.length}টি)</h2>
-              {news.map((n, i) => (
+              {news.map((newsItem, i) => (
                 <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 12, marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 11, color: "#C9A84C", marginBottom: 4 }}>{n.source} · {n.category}</div>
-                      <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{n.title}</div>
-                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>🕐 {n.time}</div>
+                      <div style={{ fontSize: 11, color: "#C9A84C", marginBottom: 4 }}>{newsItem.source} · {newsItem.category}</div>
+                      <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{newsItem.title}</div>
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>🕐 {newsItem.time}</div>
                     </div>
-                    <button onClick={async () => {
-                      if (!window.confirm("এই সংবাদ মুছবেন?")) return;
-                      const { error } = await supabase.from("news").delete().eq("id", n.id);
-                      if (error) showMessage("মুছতে সমস্যা: " + error.message, "error");
-                      else { showMessage("মুছে ফেলা হয়েছে"); fetchAll(); }
-                    }} style={deleteBtnStyle}>🗑️</button>
+                    <button onClick={() => deleteItem("news", newsItem.id, "এই সংবাদ")} style={deleteBtnStyle}>🗑️</button>
                   </div>
-                  <textarea placeholder="সম্পূর্ণ সংবাদ লিখুন..." defaultValue={n.content || ""}
+                  <textarea
+                    placeholder="সম্পূর্ণ সংবাদ লিখুন..."
+                    defaultValue={newsItem.content || ""}
                     onBlur={async e => {
                       const content = e.target.value.trim();
-                      if (content !== (n.content || "")) {
-                        await supabase.from("news").update({ content }).eq("id", n.id);
+                      if (content !== (newsItem.content || "")) {
+                        await updateField("news", newsItem.id, "content", content);
                         showMessage("সংবাদ আপডেট হয়েছে");
                       }
                     }}
-                    rows={3} style={{ width: "100%", background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, resize: "vertical", fontFamily: "sans-serif", marginBottom: 6, boxSizing: "border-box" }} />
-                  <input placeholder="মূল সংবাদের লিংক" defaultValue={n.link || ""}
+                    rows={3}
+                    style={{ width: "100%", background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, resize: "vertical", fontFamily: "sans-serif", marginBottom: 6, boxSizing: "border-box" }}
+                  />
+                  <input
+                    placeholder="মূল সংবাদের লিংক"
+                    defaultValue={newsItem.link || ""}
                     onBlur={async e => {
                       const link = e.target.value.trim();
-                      if (link !== (n.link || "")) {
-                        await supabase.from("news").update({ link }).eq("id", n.id);
+                      if (link !== (newsItem.link || "")) {
+                        await updateField("news", newsItem.id, "link", link);
                         showMessage("লিংক আপডেট হয়েছে");
                       }
                     }}
-                    style={{ width: "100%", background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, fontFamily: "sans-serif", boxSizing: "border-box" }} />
+                    style={{ width: "100%", background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "6px 10px", color: T.text, fontSize: 12, fontFamily: "sans-serif", boxSizing: "border-box" }}
+                  />
                 </div>
               ))}
             </div>
           )}
 
+          {/* প্রকল্প */}
           {activeSection === "projects" && (
             <div>
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>🔨 নতুন প্রকল্প যোগ করুন</h2>
@@ -285,42 +342,39 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                   if (!newProject.title || !newProject.ministry) return showMessage("শিরোনাম ও মন্ত্রণালয় আবশ্যক", "error");
                   setSaving(true);
                   const { error } = await supabase.from("projects").insert(newProject);
-                  if (error) showMessage("সমস্যা হয়েছে: " + error.message, "error");
+                  if (error) showMessage("সমস্যা: " + error.message, "error");
                   else { showMessage("প্রকল্প যোগ হয়েছে!"); setNewProject({ title: "", ministry: "", budget: "", progress: 0, status: "চলমান" }); fetchAll(); }
                   setSaving(false);
                 }} disabled={saving} style={btnStyle}>{saving ? "যোগ হচ্ছে..." : "✅ প্রকল্প যোগ করুন"}</button>
               </div>
 
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 12, fontSize: 15 }}>বর্তমান প্রকল্প ({projects.length}টি)</h2>
-              {projects.map((p, i) => (
+              {projects.map((project, i) => (
                 <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: 14, marginBottom: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{p.title}</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>📁 {p.ministry} · 💰 {p.budget}</div>
+                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{project.title}</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>📁 {project.ministry} · 💰 {project.budget}</div>
                     </div>
-                    <button onClick={async () => {
-                      if (!window.confirm("এই প্রকল্প মুছবেন?")) return;
-                      const { error } = await supabase.from("projects").delete().eq("id", p.id);
-                      if (error) showMessage("মুছতে সমস্যা: " + error.message, "error");
-                      else { showMessage("মুছে ফেলা হয়েছে"); fetchAll(); }
-                    }} style={deleteBtnStyle}>🗑️</button>
+                    <button onClick={() => deleteItem("projects", project.id, "এই প্রকল্প")} style={deleteBtnStyle}>🗑️</button>
                   </div>
-                  <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>অগ্রগতি: {p.progress}%</div>
-                  <input type="range" min="0" max="100" value={p.progress}
+                  <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 4 }}>অগ্রগতি: {project.progress}%</div>
+                  <input type="range" min="0" max="100" value={project.progress}
                     onChange={async e => {
-                      await supabase.from("projects").update({ progress: Number(e.target.value) }).eq("id", p.id);
+                      await updateField("projects", project.id, "progress", Number(e.target.value));
                       fetchAll();
                     }}
-                    style={{ width: "100%", marginBottom: 6 }} />
+                    style={{ width: "100%", marginBottom: 6 }}
+                  />
                   <div style={{ height: 6, background: T.border, borderRadius: 3, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: p.progress + "%", background: "linear-gradient(90deg, #006A4E, #C9A84C)", borderRadius: 3 }} />
+                    <div style={{ height: "100%", width: project.progress + "%", background: "linear-gradient(90deg, #006A4E, #C9A84C)", borderRadius: 3 }} />
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* সিদ্ধান্ত */}
           {activeSection === "decisions" && (
             <div>
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>⚖️ নতুন সিদ্ধান্ত যোগ করুন</h2>
@@ -336,33 +390,29 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                   if (!newDecision.title) return showMessage("শিরোনাম আবশ্যক", "error");
                   setSaving(true);
                   const { error } = await supabase.from("decisions").insert(newDecision);
-                  if (error) showMessage("সমস্যা হয়েছে: " + error.message, "error");
+                  if (error) showMessage("সমস্যা: " + error.message, "error");
                   else { showMessage("সিদ্ধান্ত যোগ হয়েছে!"); setNewDecision({ title: "", description: "", date: "", category: "সরকারি সিদ্ধান্ত" }); fetchAll(); }
                   setSaving(false);
                 }} disabled={saving} style={btnStyle}>{saving ? "যোগ হচ্ছে..." : "✅ সিদ্ধান্ত যোগ করুন"}</button>
               </div>
 
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 12, fontSize: 15 }}>সিদ্ধান্ত তালিকা ({decisions.length}টি)</h2>
-              {decisions.map((d, i) => (
+              {decisions.map((decision, i) => (
                 <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 12, marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 11, color: "#C9A84C", marginBottom: 4 }}>{d.category} · {d.date}</div>
-                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{d.title}</div>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{d.description}</div>
+                      <div style={{ fontSize: 11, color: "#C9A84C", marginBottom: 4 }}>{decision.category} · {decision.date}</div>
+                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{decision.title}</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4 }}>{decision.description}</div>
                     </div>
-                    <button onClick={async () => {
-                      if (!window.confirm("এই সিদ্ধান্ত মুছবেন?")) return;
-                      const { error } = await supabase.from("decisions").delete().eq("id", d.id);
-                      if (error) showMessage("মুছতে সমস্যা: " + error.message, "error");
-                      else { showMessage("মুছে ফেলা হয়েছে"); fetchAll(); }
-                    }} style={deleteBtnStyle}>🗑️</button>
+                    <button onClick={() => deleteItem("decisions", decision.id, "এই সিদ্ধান্ত")} style={deleteBtnStyle}>🗑️</button>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* দলিল */}
           {activeSection === "documents" && (
             <div>
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>📄 নতুন দলিল যোগ করুন</h2>
@@ -379,33 +429,29 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                   if (!newDocument.title) return showMessage("শিরোনাম আবশ্যক", "error");
                   setSaving(true);
                   const { error } = await supabase.from("documents").insert(newDocument);
-                  if (error) showMessage("সমস্যা হয়েছে: " + error.message, "error");
+                  if (error) showMessage("সমস্যা: " + error.message, "error");
                   else { showMessage("দলিল যোগ হয়েছে!"); setNewDocument({ title: "", description: "", file_url: "", category: "সরকারি দলিল", date: "" }); fetchAll(); }
                   setSaving(false);
                 }} disabled={saving} style={btnStyle}>{saving ? "যোগ হচ্ছে..." : "✅ দলিল যোগ করুন"}</button>
               </div>
 
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 12, fontSize: 15 }}>দলিল তালিকা ({documents.length}টি)</h2>
-              {documents.map((d, i) => (
+              {documents.map((doc, i) => (
                 <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #3B8BD4", borderRadius: 8, padding: 12, marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 11, color: "#3B8BD4", marginBottom: 4 }}>{d.category} · {d.date}</div>
-                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{d.title}</div>
-                      {d.file_url && <div style={{ fontSize: 11, color: "#4ecba0", marginTop: 4 }}>🔗 ফাইল লিংক আছে</div>}
+                      <div style={{ fontSize: 11, color: "#3B8BD4", marginBottom: 4 }}>{doc.category} · {doc.date}</div>
+                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{doc.title}</div>
+                      {doc.file_url && <div style={{ fontSize: 11, color: "#4ecba0", marginTop: 4 }}>🔗 ফাইল লিংক আছে</div>}
                     </div>
-                    <button onClick={async () => {
-                      if (!window.confirm("এই দলিল মুছবেন?")) return;
-                      const { error } = await supabase.from("documents").delete().eq("id", d.id);
-                      if (error) showMessage("মুছতে সমস্যা: " + error.message, "error");
-                      else { showMessage("মুছে ফেলা হয়েছে"); fetchAll(); }
-                    }} style={deleteBtnStyle}>🗑️</button>
+                    <button onClick={() => deleteItem("documents", doc.id, "এই দলিল")} style={deleteBtnStyle}>🗑️</button>
                   </div>
                 </div>
               ))}
             </div>
           )}
 
+          {/* ফিডব্যাক */}
           {activeSection === "feedback" && (
             <div>
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>💬 ফিডব্যাক মডারেশন ({feedbacks.length}টি)</h2>
@@ -421,34 +467,29 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                   </div>
                 ))}
               </div>
-              {feedbacks.map((f, i) => (
-                <div key={i} style={{ background: T.card, border: "1px solid " + (f.status === "pending" ? "#E8593C" : T.border), borderLeft: "4px solid " + (f.status === "approved" ? "#4ecba0" : "#E8593C"), borderRadius: 8, padding: 14, marginBottom: 10 }}>
+              {feedbacks.map((fb, i) => (
+                <div key={i} style={{ background: T.card, border: "1px solid " + (fb.status === "pending" ? "#E8593C" : T.border), borderLeft: "4px solid " + (fb.status === "approved" ? "#4ecba0" : "#E8593C"), borderRadius: 8, padding: 14, marginBottom: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{f.name}</div>
-                      <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 2 }}>{f.category} · {"★".repeat(f.rating)}</div>
+                      <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{fb.name}</div>
+                      <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 2 }}>{fb.category} · {"★".repeat(fb.rating)}</div>
                     </div>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {f.status === "pending" && (
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {fb.status === "pending" && (
                         <button onClick={async () => {
-                          await supabase.from("feedback").update({ status: "approved" }).eq("id", f.id);
-                          showMessage("অনুমোদন করা হয়েছে!");
+                          await supabase.from("feedback").update({ status: "approved" }).eq("id", fb.id);
+                          showMessage("অনুমোদন হয়েছে!");
                           fetchAll();
-                        }} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>✅ অনুমোদন</button>
+                        }} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>✅</button>
                       )}
-                      <button onClick={async () => {
-                        if (!window.confirm("এই ফিডব্যাক মুছবেন?")) return;
-                        const { error } = await supabase.from("feedback").delete().eq("id", f.id);
-                        if (error) showMessage("মুছতে সমস্যা: " + error.message, "error");
-                        else { showMessage("মুছে ফেলা হয়েছে"); fetchAll(); }
-                      }} style={deleteBtnStyle}>🗑️</button>
+                      <button onClick={() => deleteItem("feedback", fb.id, "এই ফিডব্যাক")} style={deleteBtnStyle}>🗑️</button>
                     </div>
                   </div>
-                  <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6, borderTop: "1px solid " + T.border, paddingTop: 8 }}>"{f.message}"</div>
+                  <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6, borderTop: "1px solid " + T.border, paddingTop: 8 }}>"{fb.message}"</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 6 }}>
-                    {new Date(f.created_at).toLocaleDateString("bn-BD")} ·
-                    <span style={{ color: f.status === "approved" ? "#4ecba0" : "#E8593C", marginLeft: 4 }}>
-                      {f.status === "approved" ? "✅ অনুমোদিত" : "⏳ বিচারাধীন"}
+                    {new Date(fb.created_at).toLocaleDateString("bn-BD")} ·
+                    <span style={{ color: fb.status === "approved" ? "#4ecba0" : "#E8593C", marginLeft: 4 }}>
+                      {fb.status === "approved" ? "✅ অনুমোদিত" : "⏳ বিচারাধীন"}
                     </span>
                   </div>
                 </div>
@@ -456,6 +497,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
             </div>
           )}
 
+          {/* অ্যাক্টিভিস্ট */}
           {activeSection === "activists" && (
             <div>
               <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #C0392B", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>📣 নতুন পোস্ট যোগ করুন</h2>
@@ -465,12 +507,12 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                 <input placeholder="প্রোফাইল ছবির URL" value={newPost.author_photo} onChange={e => setNewPost({ ...newPost, author_photo: e.target.value })} style={inputStyle} />
                 <textarea placeholder="পোস্টের বিষয়বস্তু *" value={newPost.content} onChange={e => setNewPost({ ...newPost, content: e.target.value })} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
                 <input placeholder="মূল Facebook পোস্টের লিংক" value={newPost.fb_post_url} onChange={e => setNewPost({ ...newPost, fb_post_url: e.target.value })} style={inputStyle} />
-                <input placeholder="পোস্টের ছবির URL (ঐচ্ছিক)" value={newPost.image_url} onChange={e => setNewPost({ ...newPost, image_url: e.target.value })} style={{ ...inputStyle, marginBottom: 14 }} />
+                <input placeholder="পোস্টের ছবির URL" value={newPost.image_url} onChange={e => setNewPost({ ...newPost, image_url: e.target.value })} style={{ ...inputStyle, marginBottom: 14 }} />
                 <button onClick={async () => {
                   if (!newPost.author_name || !newPost.content) return showMessage("নাম ও পোস্ট আবশ্যক", "error");
                   setSaving(true);
                   const { error } = await supabase.from("activist_posts").insert({ ...newPost, status: "approved" });
-                  if (error) showMessage("সমস্যা হয়েছে: " + error.message, "error");
+                  if (error) showMessage("সমস্যা: " + error.message, "error");
                   else { showMessage("পোস্ট যোগ হয়েছে!"); setNewPost({ author_name: "", author_fb_url: "", author_photo: "", content: "", fb_post_url: "", image_url: "" }); fetchAll(); }
                   setSaving(false);
                 }} disabled={saving} style={btnStyle}>{saving ? "যোগ হচ্ছে..." : "✅ পোস্ট যোগ করুন"}</button>
@@ -484,12 +526,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                       <div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>{post.author_name}</div>
                       <div style={{ fontSize: 12, color: T.textMuted, marginTop: 4, lineHeight: 1.6 }}>{post.content.slice(0, 120)}...</div>
                     </div>
-                    <button onClick={async () => {
-                      if (!window.confirm("এই পোস্ট মুছবেন?")) return;
-                      const { error } = await supabase.from("activist_posts").delete().eq("id", post.id);
-                      if (error) showMessage("মুছতে সমস্যা: " + error.message, "error");
-                      else { showMessage("মুছে ফেলা হয়েছে"); fetchAll(); }
-                    }} style={deleteBtnStyle}>🗑️</button>
+                    <button onClick={() => deleteItem("activist_posts", post.id, "এই পোস্ট")} style={deleteBtnStyle}>🗑️</button>
                   </div>
                 </div>
               ))}
