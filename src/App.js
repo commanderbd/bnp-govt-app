@@ -460,7 +460,7 @@ export default function App() {
       sessionStorage.removeItem("redirect");
       window.location.hash = redirect;
     }
-  }, []);g
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
