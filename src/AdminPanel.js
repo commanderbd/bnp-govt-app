@@ -157,15 +157,9 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                 </select>
                 <input placeholder="মন্ত্রণালয় *" value={newMinister.ministry} onChange={e => setNewMinister({ ...newMinister, ministry: e.target.value })} style={inputStyle} />
                 <input placeholder="আইকন (ইমোজি)" value={newMinister.icon} onChange={e => setNewMinister({ ...newMinister, icon: e.target.value })} style={{ ...inputStyle, marginBottom: 14 }} />
-                <input placeholder="Name (English)" defaultValue={m.name_en || ""}
-                  onBlur={async e => { const v = e.target.value.trim(); if (v !== (m.name_en || "")) await supabase.from("ministers").update({ name_en: v }).eq("id", m.id); }}
-                  style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
-                <input placeholder="Role (English)" defaultValue={m.role_en || ""}
-                  onBlur={async e => { const v = e.target.value.trim(); if (v !== (m.role_en || "")) await supabase.from("ministers").update({ role_en: v }).eq("id", m.id); }}
-                  style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
-                <button onClick={async () => {
-                  if (!newMinister.name || !newMinister.ministry) return showMessage("নাম ও মন্ত্রণালয় আবশ্যক", "error");
-                  setSaving(true);
+                <input placeholder="Name (English)" defaultValue={m.name_en || ""} onBlur={async e => { const v = e.target.value.trim(); if (v !== (m.name_en || "")) await supabase.from("ministers").update({ name_en: v }).eq("id", m.id); }} style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
+                <input placeholder="Role (English)" defaultValue={m.role_en || ""} onBlur={async e => { const v = e.target.value.trim(); if (v !== (m.role_en || "")) await supabase.from("ministers").update({ role_en: v }).eq("id", m.id); }} style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }} />
+                <button onClick={async () => { if (!newMinister.name || !newMinister.ministry) return showMessage("নাম ও মন্ত্রণালয় আবশ্যক", "error"); setSaving(true);
                   const { error } = await supabase.from("ministers").insert(newMinister);
                   if (error) showMessage("সমস্যা হয়েছে: " + error.message, "error");
                   else { showMessage("মন্ত্রী যোগ হয়েছে!"); setNewMinister({ name: "", role: "মন্ত্রী", ministry: "", icon: "👤" }); fetchAll(); }
