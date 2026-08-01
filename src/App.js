@@ -308,6 +308,10 @@ export default function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [mpDistrict, setMpDistrict] = useState("সব");
   const [mpDivision, setMpDivision] = useState("সব");
+  const [demands, setDemands] = useState([]);
+  const [demandsFilter, setDemandsFilter] = useState("সব");
+  const [videos, setVideos] = useState([]);
+  
 
   const NEWS_PER_PAGE = 10;
   const T = isDark ? THEMES.dark : THEMES.light;
@@ -372,6 +376,38 @@ export default function App() {
     );
   }
 
+  function DemandCard({ d, T, isDark }) {
+    const [open, setOpen] = useState(false);
+    const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
+    return (
+      <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
+        <div onClick={() => setOpen(!open)} style={{ padding: "14px 16px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
+              <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 7px", borderRadius: 10, fontWeight: "bold" }}>দফা {d.number}</span>
+              <span style={{ fontSize: 10, color: statusColor, background: isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.06)", padding: "2px 8px", borderRadius: 10 }}>● {d.status}</span>
+              <span style={{ fontSize: 10, color: T.textMuted }}>{d.category}</span>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{d.title}</div>
+            <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginTop: 8 }}>
+              <div style={{ height: "100%", width: d.progress + "%", background: "linear-gradient(90deg, " + statusColor + ", #C9A84C)", borderRadius: 2 }} />
+            </div>
+            <div style={{ fontSize: 11, color: statusColor, marginTop: 3 }}>{d.progress}% বাস্তবায়িত</div>
+          </div>
+          <span style={{ color: T.textMuted, fontSize: 16, marginLeft: 12 }}>{open ? "▲" : "▼"}</span>
+        </div>
+        {open && (
+          <div style={{ padding: "0 16px 14px", borderTop: "1px solid " + T.border }}>
+            <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, paddingTop: 12 }}>{d.description}</div>
+          </div>
+        )}
+      </div>
+    );
+  }
+  {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
+    <DemandCard key={i} d={d} T={T} isDark={isDark} />
+  ))}
+  
   const searchResults = globalSearch.trim().length < 2 ? [] : [
     ...ministers.filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch)).slice(0, 3).map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
     ...mps.filter(m => Number(m.government_id) === 1 && (m.name.includes(globalSearch) || (m.constituency && m.constituency.includes(globalSearch)) || (m.district && m.district.includes(globalSearch)))).slice(0, 3).map(m => ({ type: "এমপি", icon: "🏅", title: m.name, subtitle: m.constituency + " · " + m.district, tab: "mps" })),
@@ -384,18 +420,35 @@ export default function App() {
   const paginatedNews = filteredNews.slice(0, newsPage * NEWS_PER_PAGE);
   const hasMore = paginatedNews.length < filteredNews.length;
 
-  const filteredMinisters = ministers.filter(m => m.name.includes(search) || m.ministry.includes(search));
-  const filteredMps = mps.filter(m =>
-    Number(m.government_id) === 1 &&
-    (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search))) &&
-    (mpDistrict === "সব" || m.district === mpDistrict) &&
-    (mpDivision === "সব" || (districtsByDivision[mpDivision] || []).includes(m.district))
-  );
+  const uniqueMinisterIds = new Set();
+  const filteredMinisters = ministers.filter(m => {
+    if (uniqueMinisterIds.has(m.id)) return false;
+    uniqueMinisterIds.add(m.id);
+    return m.name.includes(search) || m.ministry.includes(search);
+  });
+  const uniqueMpIds = new Set();
+  const filteredMps = mps.filter(m => {
+    if (Number(m.government_id) !== 1) return false;
+    if (uniqueMpIds.has(m.id)) return false;
+    uniqueMpIds.add(m.id);
+    return (
+      (m.name.includes(search) || (m.constituency && m.constituency.includes(search)) || (m.district && m.district.includes(search))) &&
+      (mpDistrict === "সব" || m.district === mpDistrict) &&
+      (mpDivision === "সব" || (districtsByDivision[mpDivision] || []).includes(m.district))
+    );
+  });
   const districts = mpDivision === "সব"
     ? ["সব", ...new Set(mps.filter(m => Number(m.government_id) === 1).map(m => m.district).filter(Boolean).sort())]
     : ["সব", ...(districtsByDivision[mpDivision] || [])];
 
-  const currentGovtMinisters = selectedGovt ? histMinisters.filter(m => Number(m.government_id) === Number(selectedGovt.id)) : [];
+  const seenHistIds = new Set();
+  const currentGovtMinisters = selectedGovt
+    ? histMinisters.filter(m => {
+      if (Number(m.government_id) !== Number(selectedGovt.id)) return false;
+      if (seenHistIds.has(m.id)) return false;
+      seenHistIds.add(m.id);
+      return true;
+    }) : [];
   const currentGovtAchievements = selectedGovt ? achievements.filter(a => Number(a.government_id) === Number(selectedGovt.id)) : [];
 
   const tabs = [
@@ -406,6 +459,8 @@ export default function App() {
     { id: "projects", label: t.projects },
     { id: "activists", label: t.activists },
     { id: "history", label: lang === "en" ? "🏛️ BNP History" : "🏛️ বিএনপি'র ইতিহাস" },
+    { id: "demands", label: "📋 ৩১ দফা" },
+    { id: "media", label: "🎬 মিডিয়া" },
   ];
 
   const govtTabs = [
@@ -445,13 +500,17 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!selectedGovt) return;
-    async function fetchGovtMps() {
-      const { data } = await supabase.from("mps").select("*").eq("government_id", selectedGovt.id).order("id").limit(500);
-      if (data) setMps(prev => [...prev.filter(m => m.government_id !== selectedGovt.id), ...data]);
-    }
-    fetchGovtMps();
-  }, [selectedGovt]);
+  if (!selectedGovt) return;
+  async function fetchGovtMps() {
+    const { data } = await supabase.from("mps").select("*")
+      .eq("government_id", selectedGovt.id).order("id").limit(500);
+    if (data) setMps(prev => {
+      const filtered = prev.filter(m => Number(m.government_id) !== Number(selectedGovt.id));
+      return [...filtered, ...data];
+    });
+  }
+  fetchGovtMps();
+}, [selectedGovt]);
 
   useEffect(() => {
     // Session storage থেকে redirect চেক
@@ -468,7 +527,7 @@ export default function App() {
       const [m, n, mp, p, g, hm, a, doc, ld, ap] = await Promise.all([
         supabase.from("ministers").select("*").order("id"),
         supabase.from("news").select("*").order("created_at", { ascending: false }).limit(50),
-        supabase.from("mps").select("*").order("id").limit(5000),
+        supabase.from("mps").select("*").eq("government_id", 1).order("id").limit(5000),
         supabase.from("projects").select("*").order("id"),
         supabase.from("governments").select("*").order("id"),
         supabase.from("historical_ministers").select("*").order("id"),
@@ -476,6 +535,8 @@ export default function App() {
         supabase.from("documents").select("*").order("created_at", { ascending: false }),
         supabase.from("leaders").select("*").order("sort_order"),
         supabase.from("activist_posts").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(50),
+        supabase.from("demands").select("*").order("number"),
+        supabase.from("videos").select("*").order("created_at", { ascending: false }).limit(20),
       ]);
       setMinisters(m.data || []);
       setNews(n.data || []);
@@ -488,6 +549,7 @@ export default function App() {
       setLeaders(ld.data || []);
       setActivistPosts(ap.data || []);
       setLoading(false);
+      setVideos(vid.data || []);
     }
     fetchData();
     const channel = supabase.channel("realtime-updates")
@@ -1192,6 +1254,99 @@ export default function App() {
                     </div>
                   </div>
                 )}
+                {!showDocuments && !showHistory && activeTab === "demands" && (
+                  <div>
+                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 8, fontSize: 16 }}>
+                      📋 ৩১ দফা রূপরেখা ট্র্যাকার
+                    </h2>
+                    <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 16 }}>
+                      বিএনপি'র রাষ্ট্র সংস্কারের ৩১ দফা বাস্তবায়নের অগ্রগতি
+                    </div>
+
+                    {/* সামারি কার্ড */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 20 }}>
+                      {[
+                        { label: "সম্পন্ন", value: demands.filter(d => d.status === "সম্পন্ন").length, color: "#4ecba0" },
+                        { label: "চলমান", value: demands.filter(d => d.status === "চলমান").length, color: "#C9A84C" },
+                        { label: "প্রক্রিয়াধীন", value: demands.filter(d => d.status === "প্রক্রিয়াধীন").length, color: "#6a8a9a" },
+                      ].map((s, i) => (
+                        <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: 12, textAlign: "center" }}>
+                          <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{s.value}</div>
+                          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* ক্যাটাগরি ফিল্টার */}
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                      {["সব", "প্রশাসন", "আইন", "শিক্ষা", "স্বাস্থ্য", "কৃষি", "অর্থনীতি"].map(cat => (
+                        <button key={cat} onClick={() => setDemandsFilter(cat)}
+                          style={{ background: demandsFilter === cat ? "#006A4E" : "transparent", border: "1px solid " + (demandsFilter === cat ? "#006A4E" : T.border), borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontSize: 12, color: demandsFilter === cat ? "#fff" : T.textMuted, fontFamily: "sans-serif" }}>
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* দফা কার্ড */}
+                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => {
+                      const [open, setOpen] = useState(false);
+                      const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
+                      return (
+                        <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
+                          <div onClick={() => setOpen(!open)} style={{ padding: "14px 16px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
+                                <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 7px", borderRadius: 10, fontWeight: "bold" }}>দফা {d.number}</span>
+                                <span style={{ fontSize: 10, color: statusColor, background: isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.06)", padding: "2px 8px", borderRadius: 10 }}>● {d.status}</span>
+                                <span style={{ fontSize: 10, color: T.textMuted }}>{d.category}</span>
+                              </div>
+                              <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{d.title}</div>
+                              <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginTop: 8 }}>
+                                <div style={{ height: "100%", width: d.progress + "%", background: "linear-gradient(90deg, " + statusColor + ", #C9A84C)", borderRadius: 2, transition: "width 0.6s ease" }} />
+                              </div>
+                              <div style={{ fontSize: 11, color: statusColor, marginTop: 3 }}>{d.progress}% বাস্তবায়িত</div>
+                            </div>
+                            <span style={{ color: T.textMuted, fontSize: 18, marginLeft: 12 }}>{open ? "▲" : "▼"}</span>
+                          </div>
+                          {open && (
+                            <div style={{ padding: "0 16px 14px", borderTop: "1px solid " + T.border }}>
+                              <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, paddingTop: 12 }}>{d.description}</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {!showDocuments && !showHistory && activeTab === "media" && (
+                  <div>
+                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>
+                      🎬 অফিসিয়াল মিডিয়া হাব
+                    </h2>
+                    {videos.map((v, i) => (
+                      <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, marginBottom: 16, overflow: "hidden" }}>
+                        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
+                          <iframe
+                            src={"https://www.youtube.com/embed/" + v.youtube_id}
+                            title={v.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                          />
+                        </div>
+                        <div style={{ padding: 14 }}>
+                          <div style={{ fontSize: 14, fontWeight: "bold", color: T.text, marginBottom: 4 }}>{v.title}</div>
+                          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            <span style={{ fontSize: 11, color: "#C9A84C", background: "rgba(201,168,76,0.15)", padding: "2px 8px", borderRadius: 10 }}>{v.category}</span>
+                            <span style={{ fontSize: 11, color: T.textMuted }}>📅 {v.date}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* গোপনীয়তা */}
                 {!showDocuments && !showHistory && activeTab === "privacy" && (
@@ -1233,35 +1388,41 @@ export default function App() {
           ))}
         </div>
 
-        {/* Footer */}
-        <div style={{ background: isDark ? "#070f18" : "#E0EAF4", borderTop: "2px solid #C9A84C", padding: "16px 20px", marginTop: 40 }}>
+        {!loading && (
+          <div className="fade-in" style={{ padding: 20, maxWidth: 700, margin: "0 auto", paddingBottom: 90 }}>
+            {/* সব content */}
+          </div>
+        )}
+
+        {/* Footer — loading এর বাইরে */}
+        <div style={{ background: isDark ? "#070f18" : "#E0EAF4", borderTop: "2px solid #C9A84C", padding: "16px 20px", marginTop: 0, paddingBottom: 80 }}>
           <div style={{ maxWidth: 700, margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button onClick={() => { setActiveTab("history"); setSelectedGovt(null); setShowDocuments(false); setShowHistory(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                <button onClick={() => { setShowHistory(true); setActiveTab("history"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
                   🏛️ বিএনপি'র ইতিহাস
                 </button>
-                <button onClick={() => { setActiveTab("about"); setSelectedGovt(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                <button onClick={() => { setActiveTab("about"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
                   ℹ️ আমাদের সম্পর্কে
                 </button>
-                <button onClick={() => { setActiveTab("privacy"); setSelectedGovt(null); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                <button onClick={() => { setActiveTab("privacy"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
                   🔒 গোপনীয়তা
                 </button>
               </div>
               <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                style={{ background: "#006A4E", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: "#fff", fontFamily: "sans-serif" }}>
-                ↑ উপরে যান
+                style={{ background: "#006A4E", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12, color: "#fff", fontFamily: "sans-serif" }}>
+                ↑ উপরে
               </button>
             </div>
             <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>
-              {t.footerCopyright} · {t.footerDisclaimer}
+              © ২০২৬ Commander Enterprise BD · সরকারিভাবে অনুমোদিত নয়
             </div>
           </div>
         </div>
-      </div>
+        </div>
       </>
   );
 }
