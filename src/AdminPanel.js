@@ -152,7 +152,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                   <div>✅ অ্যাডমিন প্যানেলে স্বাগতম</div>
                   <div>📝 উপরের মেনু থেকে যেকোনো বিভাগ ম্যানেজ করুন</div>
                   <div>🔄 যেকোনো পরিবর্তন সাথে সাথে অ্যাপে দেখা যাবে</div>
-                  <div>🔗 গোপন লিংক: yoursite.vercel.app/#admin-secret-2026</div>
+                  <div>🔗 গোপন লিংক: https://bnp-govt-app.vercel.app/#admin-login-2026</div>
                 </div>
               </div>
             </div>
