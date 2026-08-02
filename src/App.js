@@ -1319,7 +1319,9 @@ export default function App() {
                     </div>
 
                     {/* দফা কার্ড */}
-                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => {
+                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
+                      <DemandCard key={i} d={d} T={T} isDark={isDark} />
+                    ))}
                       const [open, setOpen] = useState(false);
                       const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
                       return (
@@ -1346,7 +1348,6 @@ export default function App() {
                           )}
                         </div>
                       );
-                    })}
                   </div>
                 )}
 
