@@ -612,7 +612,7 @@ export default function App() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
   if (!selectedGovt) return;
 
   async function fetchGovtData() {
@@ -625,34 +625,6 @@ export default function App() {
         .order("id").limit(2000),
     ]);
 
-  useEffect(() => {
-    if (!selectedGovt) return;
-
-    async function fetchGovtData() {
-      const [mpRes, achRes] = await Promise.all([
-        supabase.from("mps").select("*")
-          .eq("government_id", selectedGovt.id)
-          .order("id").limit(500),
-        supabase.from("achievements").select("*")
-          .eq("government_id", selectedGovt.id)
-          .order("id").limit(2000),
-      ]);
-
-      if (mpRes.data) {
-        setMps(prev => {
-          const filtered = prev.filter(m => Number(m.government_id) !== Number(selectedGovt.id));
-          return [...filtered, ...mpRes.data];
-        });
-      }
-
-      if (achRes.data) {
-        setAchievements(achRes.data);
-      }
-    }
-
-    fetchGovtData();
-  }, [selectedGovt]);
-
     if (mpRes.data) {
       setMps(prev => {
         const filtered = prev.filter(m => Number(m.government_id) !== Number(selectedGovt.id));
@@ -660,9 +632,7 @@ export default function App() {
       });
     }
 
-    if (achRes.data) {
-      setAchievements(achRes.data);
-    }
+    if (achRes.data) setAchievements(achRes.data);
   }
 
   fetchGovtData();
@@ -1461,8 +1431,9 @@ export default function App() {
                     </div>
 
                     {/* দফা কার্ড */}
-                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => {
-                      const [open, setOpen] = useState(false);
+                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
+                      <DemandCard key={i} d={d} T={T} isDark={isDark} />
+                    ))}
                       const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
                       return (
                         <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
@@ -1488,7 +1459,6 @@ export default function App() {
                           )}
                         </div>
                       );
-                    })}
                   </div>
                 )}
 

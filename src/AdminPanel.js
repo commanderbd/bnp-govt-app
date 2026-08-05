@@ -1,6 +1,23 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
+async function translateToEnglish(text) {
+    if (!text) return "";
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 500,
+          messages: [{ role: "user", content: "Translate this Bengali text to English. Return ONLY the translation, nothing else:\n\n" + text }]
+        })
+      });
+      const data = await response.json();
+      return data.content?.[0]?.text || text;
+    } catch { return text; }
+  }
+
 export default function AdminPanel({ onLogout, isDark, T }) {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [ministers, setMinisters] = useState([]);
