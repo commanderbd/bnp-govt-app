@@ -288,6 +288,35 @@ function LeaderModal({ leader, onClose, T, isDark }) {
   );
 }
 
+function DemandCard({ d, T, isDark }) {
+  const [open, setOpen] = useState(false);
+  const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
+  return (
+    <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
+      <div onClick={() => setOpen(!open)} style={{ padding: "14px 16px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
+            <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 7px", borderRadius: 10, fontWeight: "bold" }}>দফা {d.number}</span>
+            <span style={{ fontSize: 10, color: statusColor, background: isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.06)", padding: "2px 8px", borderRadius: 10 }}>● {d.status}</span>
+            <span style={{ fontSize: 10, color: T.textMuted }}>{d.category}</span>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{d.title}</div>
+          <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginTop: 8 }}>
+            <div style={{ height: "100%", width: d.progress + "%", background: "linear-gradient(90deg, " + statusColor + ", #C9A84C)", borderRadius: 2 }} />
+          </div>
+          <div style={{ fontSize: 11, color: statusColor, marginTop: 3 }}>{d.progress}% বাস্তবায়িত</div>
+        </div>
+        <span style={{ color: T.textMuted, fontSize: 16, marginLeft: 12 }}>{open ? "▲" : "▼"}</span>
+      </div>
+      {open && (
+        <div style={{ padding: "0 16px 14px", borderTop: "1px solid " + T.border }}>
+          <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, paddingTop: 12 }}>{d.description}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [search, setSearch] = useState("");
@@ -615,19 +644,6 @@ useEffect(() => {
               )}
             </div>
           </div>
-          
-          // sidebar-এ সরকার click করার সময়
-          onClick={() => {
-            setSelectedGovt(g);
-            setSidebarOpen(false);
-            setGovtTab("ministers");
-            setSearch("");
-            setAchievementFilter("সব");
-            setAchievementSearch("");
-            setAchPage(1);
-            setShowDocuments(false);
-            setShowHistory(false);
-          }}
 
           <div style={{ padding: 12 }}>
             {/* সরকার তালিকা */}
@@ -1368,10 +1384,38 @@ useEffect(() => {
                         </button>
                       ))}
                     </div>
-                  
-                  {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
-                    <DemandCard key={i} d={d} T={T} isDark={isDark} />
-                  ))}
+
+                    {/* দফা কার্ড */}
+                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
+                      <DemandCard key={i} d={d} T={T} isDark={isDark} />
+                    ))}
+                      const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
+                      return (
+                        <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
+                          <div onClick={() => setOpen(!open)} style={{ padding: "14px 16px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
+                                <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 7px", borderRadius: 10, fontWeight: "bold" }}>দফা {d.number}</span>
+                                <span style={{ fontSize: 10, color: statusColor, background: isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.06)", padding: "2px 8px", borderRadius: 10 }}>● {d.status}</span>
+                                <span style={{ fontSize: 10, color: T.textMuted }}>{d.category}</span>
+                              </div>
+                              <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{d.title}</div>
+                              <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginTop: 8 }}>
+                                <div style={{ height: "100%", width: d.progress + "%", background: "linear-gradient(90deg, " + statusColor + ", #C9A84C)", borderRadius: 2, transition: "width 0.6s ease" }} />
+                              </div>
+                              <div style={{ fontSize: 11, color: statusColor, marginTop: 3 }}>{d.progress}% বাস্তবায়িত</div>
+                            </div>
+                            <span style={{ color: T.textMuted, fontSize: 18, marginLeft: 12 }}>{open ? "▲" : "▼"}</span>
+                          </div>
+                          {open && (
+                            <div style={{ padding: "0 16px 14px", borderTop: "1px solid " + T.border }}>
+                              <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, paddingTop: 12 }}>{d.description}</div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                  </div>
+                )}
 
                 {!showDocuments && !showHistory && activeTab === "media" && (
                   <div>
@@ -1442,12 +1486,6 @@ useEffect(() => {
           ))}
         </div>
 
-        {!loading && (
-          <div className="fade-in" style={{ padding: 20, maxWidth: 700, margin: "0 auto", paddingBottom: 90 }}>
-            {/* সব content */}
-          </div>
-        )}
-
         {/* Footer — loading এর বাইরে */}
         <div style={{ background: isDark ? "#070f18" : "#E0EAF4", borderTop: "2px solid #C9A84C", padding: "16px 20px", marginTop: 0, paddingBottom: 80 }}>
           <div style={{ maxWidth: 700, margin: "0 auto" }}>
@@ -1476,7 +1514,8 @@ useEffect(() => {
             </div>
           </div>
         </div>
-        </div>
-      </>
+
+      </div>
+    </>
   );
 }
