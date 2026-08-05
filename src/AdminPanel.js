@@ -257,6 +257,28 @@ export default function AdminPanel({ onLogout, isDark, T }) {
             </div>
           )}
 
+          <button onClick={async () => {
+            if (!newMinister.name || !newMinister.ministry) return showMessage("নাম ও মন্ত্রণালয় আবশ্যক", "error");
+            setSaving(true);
+            
+            // স্বয়ংক্রিয় ইংরেজি অনুবাদ
+            showMessage("অনুবাদ হচ্ছে...", "success");
+            const [name_en, role_en, ministry_en] = await Promise.all([
+              translateToEnglish(newMinister.name),
+              translateToEnglish(newMinister.role),
+              translateToEnglish(newMinister.ministry),
+            ]);
+            
+            const { error } = await supabase.from("ministers").insert({
+              ...newMinister, name_en, role_en, ministry_en
+            });
+            if (error) showMessage("সমস্যা: " + error.message, "error");
+            else { showMessage("মন্ত্রী যোগ ও অনুবাদ সম্পন্ন!"); setNewMinister({ name: "", role: "মন্ত্রী", ministry: "", icon: "👤" }); fetchAll(); }
+            setSaving(false);
+          }} disabled={saving} style={btnStyle}>
+            {saving ? "⏳ অনুবাদ ও সেভ হচ্ছে..." : "✅ মন্ত্রী যোগ করুন"}
+          </button>
+
           {/* সংবাদ */}
           {activeSection === "news" && (
             <div>
@@ -291,6 +313,28 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                       <div style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{newsItem.title}</div>
                       <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3 }}>🕐 {newsItem.time}</div>
                     </div>
+                    <button onClick={async () => {
+                      if (!newNews.title || !newNews.source) return showMessage("শিরোনাম ও সূত্র আবশ্যক", "error");
+                      setSaving(true);
+                      showMessage("অনুবাদ হচ্ছে...", "success");
+                      
+                      const [title_en, content_en] = await Promise.all([
+                        translateToEnglish(newNews.title),
+                        newNews.content ? translateToEnglish(newNews.content) : Promise.resolve(""),
+                      ]);
+                      
+                      const { error } = await supabase.from("news").insert({
+                        ...newNews,
+                        title_en,
+                        content_en,
+                        time: newNews.time || new Date().toLocaleDateString("bn-BD")
+                      });
+                      if (error) showMessage("সমস্যা: " + error.message, "error");
+                      else { showMessage("সংবাদ যোগ ও অনুবাদ সম্পন্ন!"); setNewNews({ title: "", source: "", category: "সরকারি", time: "", content: "", link: "" }); fetchAll(); }
+                      setSaving(false);
+                    }} disabled={saving} style={btnStyle}>
+                      {saving ? "⏳ অনুবাদ হচ্ছে..." : "✅ সংবাদ যোগ করুন"}
+                    </button>
                     <button onClick={() => deleteItem("news", newsItem.id, "এই সংবাদ")} style={deleteBtnStyle}>🗑️</button>
                   </div>
                   <textarea
@@ -322,6 +366,29 @@ export default function AdminPanel({ onLogout, isDark, T }) {
               ))}
             </div>
           )}
+
+<button onClick={async () => {
+  if (!newNews.title || !newNews.source) return showMessage("শিরোনাম ও সূত্র আবশ্যক", "error");
+  setSaving(true);
+  showMessage("অনুবাদ হচ্ছে...", "success");
+  
+  const [title_en, content_en] = await Promise.all([
+    translateToEnglish(newNews.title),
+    newNews.content ? translateToEnglish(newNews.content) : Promise.resolve(""),
+  ]);
+  
+  const { error } = await supabase.from("news").insert({
+    ...newNews,
+    title_en,
+    content_en,
+    time: newNews.time || new Date().toLocaleDateString("bn-BD")
+  });
+  if (error) showMessage("সমস্যা: " + error.message, "error");
+  else { showMessage("সংবাদ যোগ ও অনুবাদ সম্পন্ন!"); setNewNews({ title: "", source: "", category: "সরকারি", time: "", content: "", link: "" }); fetchAll(); }
+  setSaving(false);
+}} disabled={saving} style={btnStyle}>
+  {saving ? "⏳ অনুবাদ হচ্ছে..." : "✅ সংবাদ যোগ করুন"}
+</button>
 
           {/* প্রকল্প */}
           {activeSection === "projects" && (

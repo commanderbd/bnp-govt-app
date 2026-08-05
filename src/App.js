@@ -139,6 +139,26 @@ function DemandCard({ d, T, isDark }) {
   );
 }
 
+async function translateToEnglish(text) {
+  if (!text) return "";
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: "Translate this Bengali text to English. Return ONLY the translation, nothing else:\n\n" + text
+        }]
+      })
+    });
+    const data = await response.json();
+    return data.content?.[0]?.text || text;
+  } catch { return text; }
+}
+
 function PersonModal({ person, type, onClose, T, isDark }) {
   if (!person) return null;
   return (
@@ -340,7 +360,9 @@ export default function App() {
   const [demands, setDemands] = useState([]);
   const [demandsFilter, setDemandsFilter] = useState("সব");
   const [videos, setVideos] = useState([]);
-  
+  const [achievementFilter, setAchievementFilter] = useState("সব");
+  const [achievementSearch, setAchievementSearch] = useState("");
+  const [achPage, setAchPage] = useState(1);
 
   const NEWS_PER_PAGE = 10;
   const T = isDark ? THEMES.dark : THEMES.light;
@@ -405,6 +427,34 @@ export default function App() {
     );
   }
 
+  function DemandCard({ d, T, isDark }) {
+    const [open, setOpen] = useState(false);
+    const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
+    return (
+      <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
+        <div onClick={() => setOpen(!open)} style={{ padding: "14px 16px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
+              <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 7px", borderRadius: 10, fontWeight: "bold" }}>দফা {d.number}</span>
+              <span style={{ fontSize: 10, color: statusColor, background: isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.06)", padding: "2px 8px", borderRadius: 10 }}>● {d.status}</span>
+              <span style={{ fontSize: 10, color: T.textMuted }}>{d.category}</span>
+            </div>
+            <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{d.title}</div>
+            <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginTop: 8 }}>
+              <div style={{ height: "100%", width: d.progress + "%", background: "linear-gradient(90deg, " + statusColor + ", #C9A84C)", borderRadius: 2 }} />
+            </div>
+            <div style={{ fontSize: 11, color: statusColor, marginTop: 3 }}>{d.progress}% বাস্তবায়িত</div>
+          </div>
+          <span style={{ color: T.textMuted, fontSize: 16, marginLeft: 12 }}>{open ? "▲" : "▼"}</span>
+        </div>
+        {open && (
+          <div style={{ padding: "0 16px 14px", borderTop: "1px solid " + T.border }}>
+            <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, paddingTop: 12 }}>{d.description}</div>
+          </div>
+        )}
+      </div>
+    );
+  }
   {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
     <DemandCard key={i} d={d} T={T} isDark={isDark} />
   ))}
@@ -450,9 +500,11 @@ export default function App() {
       seenHistIds.add(m.id);
       return true;
     }) : [];
-  const currentGovtAchievements = selectedGovt
+
+    const currentGovtAchievements = selectedGovt
     ? achievements.filter(a => Number(a.government_id) === Number(selectedGovt.id))
     : [];
+    const currentGovtAchievements = achievements;
 
   const tabs = [
     { id: "home", label: t.home },
@@ -534,7 +586,7 @@ export default function App() {
         supabase.from("projects").select("*").order("id"),
         supabase.from("governments").select("*").order("id"),
         supabase.from("historical_ministers").select("*").order("id"),
-        supabase.from("achievements").select("*").order("id"),
+        supabase.from("achievements").select("*").order("government_id").limit(10000),
         supabase.from("documents").select("*").order("created_at", { ascending: false }),
         supabase.from("leaders").select("*").order("sort_order"),
         supabase.from("activist_posts").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(50),
@@ -562,6 +614,62 @@ export default function App() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  useEffect(() => {
+  if (!selectedGovt) return;
+
+  async function fetchGovtData() {
+    const [mpRes, achRes] = await Promise.all([
+      supabase.from("mps").select("*")
+        .eq("government_id", selectedGovt.id)
+        .order("id").limit(500),
+      supabase.from("achievements").select("*")
+        .eq("government_id", selectedGovt.id)
+        .order("id").limit(2000),
+    ]);
+
+  useEffect(() => {
+    if (!selectedGovt) return;
+
+    async function fetchGovtData() {
+      const [mpRes, achRes] = await Promise.all([
+        supabase.from("mps").select("*")
+          .eq("government_id", selectedGovt.id)
+          .order("id").limit(500),
+        supabase.from("achievements").select("*")
+          .eq("government_id", selectedGovt.id)
+          .order("id").limit(2000),
+      ]);
+
+      if (mpRes.data) {
+        setMps(prev => {
+          const filtered = prev.filter(m => Number(m.government_id) !== Number(selectedGovt.id));
+          return [...filtered, ...mpRes.data];
+        });
+      }
+
+      if (achRes.data) {
+        setAchievements(achRes.data);
+      }
+    }
+
+    fetchGovtData();
+  }, [selectedGovt]);
+
+    if (mpRes.data) {
+      setMps(prev => {
+        const filtered = prev.filter(m => Number(m.government_id) !== Number(selectedGovt.id));
+        return [...filtered, ...mpRes.data];
+      });
+    }
+
+    if (achRes.data) {
+      setAchievements(achRes.data);
+    }
+  }
+
+  fetchGovtData();
+}, [selectedGovt]);
 
   if (isAdmin) return <AdminPanel onLogout={handleLogout} isDark={isDark} T={T} />;
 
@@ -601,6 +709,19 @@ export default function App() {
               )}
             </div>
           </div>
+          
+          // sidebar-এ সরকার click করার সময়
+          onClick={() => {
+            setSelectedGovt(g);
+            setSidebarOpen(false);
+            setGovtTab("ministers");
+            setSearch("");
+            setAchievementFilter("সব");
+            setAchievementSearch("");
+            setAchPage(1);
+            setShowDocuments(false);
+            setShowHistory(false);
+          }}
 
           <div style={{ padding: 12 }}>
             {/* সরকার তালিকা */}
@@ -810,19 +931,71 @@ export default function App() {
 
                 {govtTab === "achievements" && (
                   <div>
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>🏆 {t.achievements}</h2>
-                    {currentGovtAchievements.length === 0
-                      ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের সাফল্যের তথ্য এখনো যোগ করা হয়নি।</div>
-                      : currentGovtAchievements.map((a, i) => (
+                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 12, fontSize: 16 }}>
+                      🏆 {t.achievements}
+                      <span style={{ fontSize: 12, color: T.textMuted, fontWeight: "normal", marginLeft: 8 }}>
+                        ({currentGovtAchievements.length}টি)
+                      </span>
+                    </h2>
+
+                    {/* Category filter */}
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                      {["সব", ...new Set(currentGovtAchievements.map(a => a.category).filter(Boolean))].map(cat => (
+                        <button key={cat} onClick={() => setAchievementFilter(cat)}
+                          style={{ background: achievementFilter === cat ? "#C9A84C" : "transparent", border: "1px solid " + (achievementFilter === cat ? "#C9A84C" : T.border), borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: achievementFilter === cat ? "#0D1B2A" : T.textMuted, fontFamily: "sans-serif" }}>
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search */}
+                    <input placeholder="সাফল্য খুঁজুন..." value={achievementSearch || ""}
+                      onChange={e => setAchievementSearch(e.target.value)}
+                      style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 12, boxSizing: "border-box", outline: "none" }} />
+
+                    {/* Result count */}
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 12 }}>
+                      {currentGovtAchievements
+                        .filter(a => achievementFilter === "সব" || a.category === achievementFilter)
+                        .filter(a => !achievementSearch || a.title.includes(achievementSearch))
+                        .length}টি সাফল্য দেখানো হচ্ছে
+                    </div>
+
+                    {currentGovtAchievements
+                      .filter(a => achievementFilter === "সব" || a.category === achievementFilter)
+                      .filter(a => !achievementSearch || a.title.includes(achievementSearch))
+                      .slice(0, achPage * 20)
+                      .map((a, i) => (
                         <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #C9A84C", borderRadius: 8, padding: 16, marginBottom: 12 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6, flexWrap: "wrap", gap: 4 }}>
                             <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>🏆 {a.category}</div>
                             {(a.date || a.year) && <div style={{ fontSize: 10, color: T.textMuted, background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)", padding: "2px 8px", borderRadius: 10 }}>📅 {a.date || a.year}</div>}
                           </div>
-                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text, marginBottom: 6 }}>{a.title}</div>
-                          <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>{a.description}</div>
+                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text, marginBottom: 6 }}>
+                            {lang === "en" ? (a.title_en || a.title) : a.title}
+                          </div>
+                          <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.6 }}>
+                            {lang === "en" ? (a.description_en || a.description) : a.description}
+                          </div>
                         </div>
                       ))}
+
+                    {/* Load more */}
+                    {currentGovtAchievements
+                      .filter(a => achievementFilter === "সব" || a.category === achievementFilter)
+                      .filter(a => !achievementSearch || a.title.includes(achievementSearch))
+                      .length > achPage * 20 && (
+                      <button onClick={() => setAchPage(prev => prev + 1)}
+                        style={{ width: "100%", background: "transparent", border: "1px solid #006A4E", borderRadius: 8, padding: "12px", cursor: "pointer", color: "#4ecba0", fontSize: 14, fontFamily: "sans-serif" }}>
+                        আরো {Math.min(20, currentGovtAchievements.filter(a => achievementFilter === "সব" || a.category === achievementFilter).length - achPage * 20)}টি দেখুন
+                      </button>
+                    )}
+
+                    {currentGovtAchievements.length === 0 && (
+                      <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>
+                        এই সরকারের সাফল্যের তথ্য লোড হচ্ছে...
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1291,9 +1464,7 @@ export default function App() {
                     </div>
 
                     {/* দফা কার্ড */}
-                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
-                      <DemandCard key={i} d={d} T={T} isDark={isDark} />
-                    ))}
+                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => {
                       const [open, setOpen] = useState(false);
                       const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
                       return (
@@ -1320,6 +1491,7 @@ export default function App() {
                           )}
                         </div>
                       );
+                    })}
                   </div>
                 )}
 
