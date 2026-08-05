@@ -500,11 +500,8 @@ export default function App() {
       seenHistIds.add(m.id);
       return true;
     }) : [];
-
-    const currentGovtAchievements = selectedGovt
-    ? achievements.filter(a => Number(a.government_id) === Number(selectedGovt.id))
-    : [];
-    const currentGovtAchievements = achievements;
+  
+  const currentGovtAchievements = achievements;
 
   const tabs = [
     { id: "home", label: t.home },
