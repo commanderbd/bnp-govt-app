@@ -110,6 +110,7 @@ function HorizontalBar({ label, value, max, color }) {
   );
 }
 
+// eslint-disable-next-line no-unused-vars
 async function translateToEnglish(text) {
   if (!text) return "";
   try {
@@ -544,7 +545,7 @@ export default function App() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [m, n, mp, p, g, hm, a, doc, ld, ap] = await Promise.all([
+      const [m, n, mp, p, g, hm, a, doc, ld, ap, dem, vid] = await Promise.all([
         supabase.from("ministers").select("*").order("id"),
         supabase.from("news").select("*").order("created_at", { ascending: false }).limit(50),
         supabase.from("mps").select("*").eq("government_id", 1).order("id").limit(5000),
@@ -568,8 +569,9 @@ export default function App() {
       setDocuments(doc.data || []);
       setLeaders(ld.data || []);
       setActivistPosts(ap.data || []);
+      setDemands(dem.data || []);
+      setVideos(vid.data || []);
       setLoading(false);
-      setVideos(videos.data || []);
     }
     fetchData();
     const channel = supabase.channel("realtime-updates")
