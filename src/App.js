@@ -1368,38 +1368,10 @@ useEffect(() => {
                         </button>
                       ))}
                     </div>
-
-                    {/* দফা কার্ড */}
-                    {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
-                      <DemandCard key={i} d={d} T={T} isDark={isDark} />
-                    ))}
-                      const statusColor = d.status === "সম্পন্ন" ? "#4ecba0" : d.status === "চলমান" ? "#C9A84C" : "#6a8a9a";
-                      return (
-                        <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, marginBottom: 10, overflow: "hidden" }}>
-                          <div onClick={() => setOpen(!open)} style={{ padding: "14px 16px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
-                                <span style={{ background: "#006A4E", color: "#fff", fontSize: 10, padding: "2px 7px", borderRadius: 10, fontWeight: "bold" }}>দফা {d.number}</span>
-                                <span style={{ fontSize: 10, color: statusColor, background: isDark ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.06)", padding: "2px 8px", borderRadius: 10 }}>● {d.status}</span>
-                                <span style={{ fontSize: 10, color: T.textMuted }}>{d.category}</span>
-                              </div>
-                              <div style={{ fontSize: 14, fontWeight: "bold", color: T.text }}>{d.title}</div>
-                              <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginTop: 8 }}>
-                                <div style={{ height: "100%", width: d.progress + "%", background: "linear-gradient(90deg, " + statusColor + ", #C9A84C)", borderRadius: 2, transition: "width 0.6s ease" }} />
-                              </div>
-                              <div style={{ fontSize: 11, color: statusColor, marginTop: 3 }}>{d.progress}% বাস্তবায়িত</div>
-                            </div>
-                            <span style={{ color: T.textMuted, fontSize: 18, marginLeft: 12 }}>{open ? "▲" : "▼"}</span>
-                          </div>
-                          {open && (
-                            <div style={{ padding: "0 16px 14px", borderTop: "1px solid " + T.border }}>
-                              <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8, paddingTop: 12 }}>{d.description}</div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                  </div>
-                )}
+                  
+                  {demands.filter(d => demandsFilter === "সব" || d.category === demandsFilter).map((d, i) => (
+                    <DemandCard key={i} d={d} T={T} isDark={isDark} />
+                  ))}
 
                 {!showDocuments && !showHistory && activeTab === "media" && (
                   <div>
