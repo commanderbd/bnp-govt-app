@@ -36,6 +36,10 @@ function formatBanglaDate(dateStr) {
   } catch { return dateStr; }
 }
 
+function toBanglaNum(n) {
+  return String(n).replace(/[0-9]/g, d => "০১২৩৪৫৬৭৮৯"[d]);
+}
+
 function SkeletonCard() {
   return (
     <div style={{ background: "#112233", border: "1px solid #1e3348", borderRadius: 10, padding: 16, marginBottom: 12, overflow: "hidden", position: "relative" }}>
@@ -415,10 +419,6 @@ export default function App() {
     printWindow.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>" + title + "</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{color:#006A4E}table{width:100%;border-collapse:collapse}@media print{button{display:none}}</style></head><body><h1>" + title + "</h1><button onclick='window.print()' style='background:#006A4E;color:#fff;border:none;padding:8px 16px;cursor:pointer;margin-bottom:16px'>প্রিন্ট / PDF</button><table><thead><tr>" + tableHeaders + "</tr></thead><tbody>" + tableRows + "</tbody></table></body></html>");
     printWindow.document.close();
   }, []);
-
-  function toBanglaNum(n) {
-    return String(n).replace(/[0-9]/g, d => "০১২৩৪৫৬৭৮৯"[d]);
-  }
 
   function SocialShare({ title, newsId }) {
     const shareUrl = newsId ? window.location.origin + "/#news-" + newsId : window.location.href;
@@ -1003,7 +1003,7 @@ useEffect(() => {
                   <div style={{ fontSize: 36, fontWeight: "700", color: stat.color }}>
                     {toBanglaNum(stat.value)}
                   </div>
-                  
+
                     {!notifEnabled && (
                       <div style={{ background: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.08)", border: "1px solid #C9A84C", borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                         <div>
