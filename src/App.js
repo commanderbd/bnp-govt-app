@@ -1008,10 +1008,6 @@ useEffect(() => {
                       </div>
                     </div>
 
-                  <div style={{ fontSize: 36, fontWeight: "700", color: stat.color }}>
-                    {toBanglaNum(stat.value)}
-                  </div>
-
                     {!notifEnabled && (
                       <div style={{ background: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.08)", border: "1px solid #C9A84C", borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                         <div>
@@ -1022,6 +1018,10 @@ useEffect(() => {
                       </div>
                     )}
 
+                  <div style={{ fontSize: 36, fontWeight: "700", color: stat.color }}>
+                    {toBanglaNum(stat.value)}
+                  </div>
+                  
                     <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
                         { label: t.totalMinisters, value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers" },
