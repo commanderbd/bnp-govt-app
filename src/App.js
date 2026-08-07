@@ -1467,7 +1467,7 @@ useEffect(() => {
                       { title: "তথ্য সংগ্রহ", content: "আমরা শুধুমাত্র আপনার নাম ও ইমেইল ঐচ্ছিকভাবে সংগ্রহ করি।" },
                       { title: "তথ্য ব্যবহার", content: "সংগৃহীত তথ্য শুধুমাত্র অ্যাপের সেবা উন্নয়নে ব্যবহার করা হয়।" },
                       { title: "তথ্য সুরক্ষা", content: "Supabase-এর নিরাপদ অবকাঠামোতে সকল তথ্য সংরক্ষিত।" },
-                      { title: "যোগাযোগ", content: "admin@commandertechbd.com — Commander Tech BD, Agrabad, Chittagong" },
+                      { title: "যোগাযোগ", content: "admin@commandertechbd.com — Commander Tech BD, Bangladesh" },
                     ].map((item, i) => (
                       <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
                         <div style={{ fontSize: 14, fontWeight: "bold", color: "#C9A84C", marginBottom: 8 }}>🔹 {item.title}</div>
@@ -1505,8 +1505,7 @@ useEffect(() => {
               </button>
             </div>
             <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>
-              © ২০২৬ Commander Enterprise BD · সরকারিভাবে অনুমোদিত নয়
-            </div>
+              এটি একটি শিক্ষামূলক ও তথ্যমূলক অ্যাপ্লিকেশন, যা শিক্ষামূলক এবং তথ্যমূলক উদ্দেশ্যে তৈরি - © ২০২৬ Commander Tech BD </div>
           </div>
         </div>
 
