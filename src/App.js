@@ -1486,10 +1486,6 @@ useEffect(() => {
           <div style={{ maxWidth: 700, margin: "0 auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button onClick={() => { setShowHistory(true); setActiveTab("history"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                  style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
-                  🏛️ বিএনপি'র ইতিহাস
-                </button>
                 <button onClick={() => { setActiveTab("about"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                   style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: T.textMuted, fontFamily: "sans-serif" }}>
                   ℹ️ আমাদের সম্পর্কে
@@ -1505,7 +1501,8 @@ useEffect(() => {
               </button>
             </div>
             <div style={{ fontSize: 10, color: T.textMuted, textAlign: "center", marginTop: 10, opacity: 0.7 }}>
-              এটি একটি শিক্ষামূলক ও তথ্যমূলক অ্যাপ্লিকেশন, যা শিক্ষামূলক এবং তথ্যমূলক উদ্দেশ্যে তৈরি - © ২০২৬ Commander Tech BD </div>
+              এটি একটি শিক্ষামূলক ও তথ্যমূলক অ্যাপ্লিকেশন, যা শিক্ষামূলক এবং তথ্যমূলক উদ্দেশ্যে তৈরি ।
+              © ২০২৬ Commander Tech BD </div>
           </div>
         </div>
 
