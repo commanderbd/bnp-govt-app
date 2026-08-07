@@ -1000,6 +1000,10 @@ useEffect(() => {
                       </div>
                     </div>
 
+                  <div style={{ fontSize: 36, fontWeight: "700", color: stat.color }}>
+                    {toBanglaNum(stat.value)}
+                  </div>
+                  
                     {!notifEnabled && (
                       <div style={{ background: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.08)", border: "1px solid #C9A84C", borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                         <div>
@@ -1009,10 +1013,6 @@ useEffect(() => {
                         <button onClick={async () => { const r = await requestNotificationPermission(); if (r === "granted") { setNotifEnabled(true); showLocalNotification("🇧🇩 বাংলাদেশ সরকার", "Notification চালু হয়েছে!"); } }} style={{ background: "#C9A84C", color: "#0D1B2A", border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: "bold", whiteSpace: "nowrap", fontFamily: "sans-serif" }}>{t.enable}</button>
                       </div>
                     )}
-
-                  <div style={{ fontSize: 36, fontWeight: "700", color: stat.color }}>
-                    {toBanglaNum(stat.value)}
-                  </div>
 
                     <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
