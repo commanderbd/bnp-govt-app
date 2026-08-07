@@ -655,19 +655,11 @@ useEffect(() => {
             </div>
           </div>
 
-          onClick={() => {
-            setSelectedGovt(g);
-            setSidebarOpen(false);
-            setGovtTab("ministers");
-            setSearch("");
-            window.scrollTo({ top: 0, behavior: "smooth" }); // ← এটা যোগ করুন
-          }}
-
           <div style={{ padding: 12 }}>
             {/* সরকার তালিকা */}
             <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 8, paddingLeft: 4, textTransform: "uppercase", letterSpacing: 1 }}>সরকারসমূহ</div>
             {governments.map((g, i) => (
-              <div key={i} onClick={() => { setSelectedGovt(g); setSidebarOpen(false); setGovtTab("ministers"); setSearch(""); setShowDocuments(false); setShowHistory(false); }}
+              <div key={i} onClick={() => { setSelectedGovt(g); setSidebarOpen(false); setGovtTab("ministers"); setSearch(""); setShowDocuments(false); setShowHistory(false); window.scrollTo({ top: 0, behavior: "smooth" });  }}
                 style={{ background: selectedGovt?.id === g.id ? "rgba(201,168,76,0.2)" : T.card, border: "1px solid " + (selectedGovt?.id === g.id ? "#C9A84C" : T.border), borderLeft: "4px solid " + (g.is_current ? "#006A4E" : "#C9A84C"), borderRadius: 8, padding: 12, marginBottom: 8, cursor: "pointer" }}>
                 <div style={{ fontSize: 13, fontWeight: "bold", color: T.text }}>
                   {g.is_current && <span style={{ background: "#006A4E", color: "#fff", fontSize: 9, padding: "2px 6px", borderRadius: 4, marginRight: 6 }}>{t.current}</span>}
@@ -1021,7 +1013,7 @@ useEffect(() => {
                   <div style={{ fontSize: 36, fontWeight: "700", color: stat.color }}>
                     {toBanglaNum(stat.value)}
                   </div>
-                  
+
                     <div className="grid-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 20 }}>
                       {[
                         { label: t.totalMinisters, value: ministers.length, icon: "👥", color: "#006A4E", tab: "ministers" },
