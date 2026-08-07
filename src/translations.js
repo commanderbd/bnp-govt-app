@@ -17,7 +17,7 @@ export const translations = {
     totalMinisters: "মোট মন্ত্রী", mpCount: "সংসদ সদস্য",
     projectCount: "উন্নয়ন প্রকল্প", newsCount: "সর্বশেষ সংবাদ",
     pdfDownload: "📥 PDF", current: "বর্তমান",
-    sidebarTitle: "🏛️ বিএনপি সরকার সমূহ", sidebarSubtitle: "ইতিহাস ও তথ্যভান্ডার",
+    sidebarTitle: "বিএনপি সরকার সমূহ", sidebarSubtitle: "ইতিহাস ও তথ্যভান্ডার",
     backToDashboard: "🏠 মূল ড্যাশবোর্ডে ফিরুন",
     decisions: "⚖️ উল্লেখযোগ্য সিদ্ধান্ত", decisionsSubtitle: "গুরুত্বপূর্ণ সরকারি সিদ্ধান্তসমূহ",
     documents: "📄 গুরুত্বপূর্ণ দলিল", documentsSubtitle: "সরকারি গেজেট ও দলিলসমূহ",

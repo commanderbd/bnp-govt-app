@@ -364,6 +364,7 @@ export default function App() {
   const [achievementFilter, setAchievementFilter] = useState("সব");
   const [achievementSearch, setAchievementSearch] = useState("");
   const [achPage, setAchPage] = useState(1);
+  const [achFilterOpen, setAchFilterOpen] = useState(false);
 
   const NEWS_PER_PAGE = 10;
   const T = isDark ? THEMES.dark : THEMES.light;
@@ -414,6 +415,10 @@ export default function App() {
     printWindow.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>" + title + "</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{color:#006A4E}table{width:100%;border-collapse:collapse}@media print{button{display:none}}</style></head><body><h1>" + title + "</h1><button onclick='window.print()' style='background:#006A4E;color:#fff;border:none;padding:8px 16px;cursor:pointer;margin-bottom:16px'>প্রিন্ট / PDF</button><table><thead><tr>" + tableHeaders + "</tr></thead><tbody>" + tableRows + "</tbody></table></body></html>");
     printWindow.document.close();
   }, []);
+
+  function toBanglaNum(n) {
+    return String(n).replace(/[0-9]/g, d => "০১২৩৪৫৬৭৮৯"[d]);
+  }
 
   function SocialShare({ title, newsId }) {
     const shareUrl = newsId ? window.location.origin + "/#news-" + newsId : window.location.href;
@@ -478,8 +483,8 @@ export default function App() {
     { id: "ministers", label: t.ministers },
     { id: "mps", label: t.mps },
     { id: "projects", label: t.projects },
+    { id: "history", label: "🏛️ বিএনপি'র ইতিহাস" },  // ← activists এর আগে
     { id: "activists", label: t.activists },
-    { id: "history", label: lang === "en" ? "🏛️ BNP History" : "🏛️ বিএনপি'র ইতিহাস" },
     { id: "demands", label: "📋 ৩১ দফা" },
     { id: "media", label: "🎬 মিডিয়া" },
   ];
@@ -505,8 +510,11 @@ export default function App() {
       const hash = window.location.hash;
       if (hash.startsWith("#news-")) {
         const newsId = Number(hash.replace("#news-", ""));
-        setActiveTab("news"); setSelectedGovt(null);
-        setTimeout(() => { const el = document.getElementById("news-" + newsId); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }, 800);
+        setActiveTab("news");
+        setTimeout(() => {
+          const el = document.getElementById("news-" + newsId);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 1000);
       }
     }
     handleHash();
@@ -631,7 +639,7 @@ useEffect(() => {
           <div style={{ background: "#006A4E", padding: "16px 20px", borderBottom: "2px solid #C9A84C" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>🏛️ {t.sidebarTitle}</div>
+                <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>{t.sidebarTitle}</div>
                 <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 3 }}>{t.sidebarSubtitle}</div>
               </div>
               {/* লগইন বাটন */}
@@ -646,6 +654,14 @@ useEffect(() => {
               )}
             </div>
           </div>
+
+          onClick={() => {
+            setSelectedGovt(g);
+            setSidebarOpen(false);
+            setGovtTab("ministers");
+            setSearch("");
+            window.scrollTo({ top: 0, behavior: "smooth" }); // ← এটা যোগ করুন
+          }}
 
           <div style={{ padding: 12 }}>
             {/* সরকার তালিকা */}
@@ -750,7 +766,15 @@ useEffect(() => {
         )}
 
         {/* ট্যাব মেনু */}
-        <div style={{ display: "flex", background: T.navBg, borderBottom: "2px solid " + T.navBorder, overflowX: "auto" }}>
+        <div style={{
+          display: "flex",
+          background: T.navBg,
+          borderBottom: "2px solid " + T.navBorder,
+          overflowX: "auto",
+          position: "sticky",   // ← এটা যোগ করুন
+          top: 56,              // ← header height
+          zIndex: 95,           // ← header এর নিচে
+        }}>
           {(selectedGovt ? govtTabs : tabs).map(tab => (
             <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); setShowDocuments(false); setShowHistory(false); setSelectedGovt(selectedGovt); }}
               style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "14px 18px", cursor: "pointer", fontSize: 14, whiteSpace: "nowrap", fontFamily: "sans-serif", fontWeight: (selectedGovt ? govtTab : activeTab) === tab.id ? "600" : "400" }}>
@@ -813,6 +837,7 @@ useEffect(() => {
                             <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
                             <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
                             <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>📁 {m.ministry}</div>
+                            
                             {/* বিস্তারিত বাটন যোগ */}
                             <button onClick={() => { setSelectedPerson(m); setPersonType("minister"); }}
                               style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>
@@ -861,7 +886,7 @@ useEffect(() => {
                         ({currentGovtAchievements.length}টি)
                       </span>
                     </h2>
-
+                    
                     {/* Category filter */}
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
                       {["সব", ...new Set(currentGovtAchievements.map(a => a.category).filter(Boolean))].map(cat => (
@@ -870,6 +895,25 @@ useEffect(() => {
                           {cat}
                         </button>
                       ))}
+                    </div>
+
+                    {/* Collapsible filter */}
+                    <div style={{ marginBottom: 16 }}>
+                      <button onClick={() => setAchFilterOpen(!achFilterOpen)}
+                        style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 16px", cursor: "pointer", width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", color: T.text, fontFamily: "sans-serif", fontSize: 13 }}>
+                        <span>🔽 ক্যাটাগরি ফিল্টার {achievementFilter !== "সব" ? "— " + achievementFilter : ""}</span>
+                        <span>{achFilterOpen ? "▲" : "▼"}</span>
+                      </button>
+                      {achFilterOpen && (
+                        <div style={{ background: T.card, border: "1px solid " + T.border, borderTop: "none", borderRadius: "0 0 8px 8px", padding: 12, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {["সব", ...new Set(currentGovtAchievements.map(a => a.category).filter(Boolean))].map(cat => (
+                            <button key={cat} onClick={() => { setAchievementFilter(cat); setAchFilterOpen(false); }}
+                              style={{ background: achievementFilter === cat ? "#C9A84C" : "transparent", border: "1px solid " + (achievementFilter === cat ? "#C9A84C" : T.border), borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: achievementFilter === cat ? "#0D1B2A" : T.textMuted, fontFamily: "sans-serif" }}>
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Search */}
@@ -963,6 +1007,10 @@ useEffect(() => {
                         <div style={{ fontSize: 13, color: "#C9A84C", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{t.welcomeSubtitle}</div>
                       </div>
                     </div>
+
+                  <div style={{ fontSize: 36, fontWeight: "700", color: stat.color }}>
+                    {toBanglaNum(stat.value)}
+                  </div>
 
                     {!notifEnabled && (
                       <div style={{ background: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.08)", border: "1px solid #C9A84C", borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
@@ -1444,24 +1492,6 @@ useEffect(() => {
             )}
           </div>
         )}
-
-        {/* মোবাইল বটম নেভিগেশন — সার্চ/মতামত সরিয়ে এমপি যোগ */}
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: isDark ? "#0a1520" : "#E0EAF4", borderTop: "2px solid #C9A84C", display: "flex", justifyContent: "space-around", padding: "8px 0 12px", zIndex: 150, boxShadow: "0 -4px 20px rgba(0,0,0,0.3)" }}>
-          {[
-            { id: "home", icon: "🏠", label: t.home.replace("🏠 ", "") },
-            { id: "news", icon: "📰", label: t.news.replace("📰 ", "") },
-            { id: "ministers", icon: "👥", label: "মন্ত্রী" },
-            { id: "mps", icon: "🏅", label: "এমপি" },
-            { id: "projects", icon: "🔨", label: "প্রকল্প" },
-          ].map(item => (
-            <button key={item.id} onClick={() => { setActiveTab(item.id); setSelectedGovt(null); setShowDocuments(false); setShowHistory(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-              style={{ background: "transparent", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "4px 8px", opacity: activeTab === item.id && !selectedGovt ? 1 : 0.55, transition: "opacity 0.2s" }}>
-              <span style={{ fontSize: 22 }}>{item.icon}</span>
-              <span style={{ fontSize: 10, fontFamily: "sans-serif", color: activeTab === item.id && !selectedGovt ? "#C9A84C" : T.textMuted, fontWeight: activeTab === item.id && !selectedGovt ? "bold" : "normal" }}>{item.label}</span>
-              {activeTab === item.id && !selectedGovt && <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#C9A84C" }} />}
-            </button>
-          ))}
-        </div>
 
         {/* Footer — loading এর বাইরে */}
         <div style={{ background: isDark ? "#070f18" : "#E0EAF4", borderTop: "2px solid #C9A84C", padding: "16px 20px", marginTop: 0, paddingBottom: 80 }}>
