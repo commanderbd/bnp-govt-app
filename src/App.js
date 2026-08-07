@@ -1000,12 +1000,6 @@ useEffect(() => {
                       </div>
                     </div>
 
-                    {/* closes the welcome banner */}
-
-                    <div style={{ fontSize: 36, fontWeight: "700", color: stat.color }}>
-                      {toBanglaNum(stat.value)}
-                    </div>
-
                     {!notifEnabled && (
                       <div style={{ background: isDark ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.08)", border: "1px solid #C9A84C", borderRadius: 10, padding: 14, marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                         <div>
@@ -1025,7 +1019,7 @@ useEffect(() => {
                       ].map((stat, i) => (
                         <div key={i} className="card-hover" onClick={() => setActiveTab(stat.tab)} style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", border: "2px solid " + stat.color + "44", borderRadius: 12, padding: "20px 16px", cursor: "pointer", textAlign: "center" }}>
                           <div style={{ fontSize: 32, marginBottom: 8 }}>{stat.icon}</div>
-                          <div style={{ fontSize: 36, fontWeight: "700", color: stat.color, lineHeight: 1, marginBottom: 6 }}>{stat.value}</div>
+                          <div style={{ fontSize: 36, fontWeight: "700", color: stat.color, lineHeight: 1, marginBottom: 6 }}>{toBanglaNum(stat.value)}</div>
                           <div style={{ fontSize: 13, color: T.textMuted }}>{stat.label}</div>
                         </div>
                       ))}
