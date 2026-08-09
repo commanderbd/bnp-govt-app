@@ -70,7 +70,7 @@ function BarChart({ data, title }) {
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120, padding: "0 4px" }}>
         {data.map((d, i) => (
           <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-            <div style={{ fontSize: 10, color: "#C9A84C", fontWeight: "bold" }}>{d.value}</div>
+            <div style={{ fontSize: 10, color: "#C9A84C", fontWeight: "bold" }}>{toBanglaNum(d.value)}</div>
             <div style={{ width: "100%", borderRadius: "4px 4px 0 0", height: `${(d.value / max) * 80}px`, background: `linear-gradient(180deg, ${d.color || "#006A4E"}, ${d.color ? d.color + "88" : "#004d38"})`, minHeight: 4 }} />
             <div style={{ fontSize: 9, color: "#8aaabb", textAlign: "center", lineHeight: 1.3 }}>{d.label}</div>
           </div>
@@ -91,7 +91,7 @@ function DonutChart({ value, max, label, color }) {
           <circle cx="44" cy="44" r={r} fill="none" stroke={color || "#006A4E"} strokeWidth="10" strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 44 44)" />
         </svg>
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", textAlign: "center" }}>
-          <div style={{ fontSize: 14, fontWeight: "bold", color: color || "#006A4E" }}>{Math.round(pct)}%</div>
+          <div style={{ fontSize: 14, fontWeight: "bold", color: color || "#006A4E" }}>{toBanglaNum(Math.round(pct))}%</div>
         </div>
       </div>
       <div style={{ fontSize: 11, color: "#8aaabb", textAlign: "center" }}>{label}</div>
@@ -105,7 +105,7 @@ function HorizontalBar({ label, value, max, color }) {
     <div style={{ marginBottom: 10 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
         <span style={{ color: "#e8f0f5" }}>{label}</span>
-        <span style={{ color: color || "#C9A84C", fontWeight: "bold" }}>{value}%</span>
+        <span style={{ color: color || "#C9A84C", fontWeight: "bold" }}>{toBanglaNum(value)}%</span>
       </div>
       <div style={{ height: 8, background: "#1e3348", borderRadius: 4, overflow: "hidden" }}>
         <div style={{ height: "100%", width: `${pct}%`, background: `linear-gradient(90deg, ${color || "#006A4E"}, #C9A84C)`, borderRadius: 4 }} />
@@ -309,7 +309,7 @@ function DemandCard({ d, T, isDark }) {
           <div style={{ height: 4, background: T.border, borderRadius: 2, overflow: "hidden", marginTop: 8 }}>
             <div style={{ height: "100%", width: d.progress + "%", background: "linear-gradient(90deg, " + statusColor + ", #C9A84C)", borderRadius: 2 }} />
           </div>
-          <div style={{ fontSize: 11, color: statusColor, marginTop: 3 }}>{d.progress}% বাস্তবায়িত</div>
+          <div style={{ fontSize: 11, color: statusColor, marginTop: 3 }}>{toBanglaNum(d.progress)}% বাস্তবায়িত</div>
         </div>
         <span style={{ color: T.textMuted, fontSize: 16, marginLeft: 12 }}>{open ? "▲" : "▼"}</span>
       </div>
@@ -854,8 +854,6 @@ useEffect(() => {
                             {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🏅"}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
-                            <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
                             <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
                               {lang === "en" ? (m.name_en || m.name) : m.name}
                             </div>
@@ -1056,7 +1054,7 @@ useEffect(() => {
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: T.textMuted }}>
                           <span>💰 {p.budget}</span>
-                          <span style={{ color: "#4ecba0" }}>{p.progress}{t.completed}</span>
+                          <span style={{ color: "#4ecba0" }}>{toBanglaNum(p.progress)}{t.completed}</span>
                         </div>
                       </div>
                     ))}
@@ -1096,7 +1094,7 @@ useEffect(() => {
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>{t.latestNews}</h2>
-                      <span style={{ fontSize: 12, color: T.textMuted }}>{filteredNews.length}টি</span>
+                      <span style={{ fontSize: 12, color: T.textMuted }}>{toBanglaNum(filteredNews.length)}টি</span>
                     </div>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
                       {newsCategories.map(cat => (
@@ -1123,7 +1121,7 @@ useEffect(() => {
                       </div>
                     ))}
                     {hasMore && <button onClick={() => setNewsPage(prev => prev + 1)} style={{ width: "100%", background: "transparent", border: "1px solid #006A4E", borderRadius: 8, padding: "12px", cursor: "pointer", color: "#4ecba0", fontSize: 14, fontFamily: "sans-serif", marginTop: 4 }}>আরো {Math.min(NEWS_PER_PAGE, filteredNews.length - paginatedNews.length)}টি সংবাদ দেখুন</button>}
-                    {!hasMore && filteredNews.length > 0 && <div style={{ textAlign: "center", fontSize: 12, color: T.textMuted, padding: "12px 0" }}>সব {filteredNews.length}টি সংবাদ দেখানো হয়েছে</div>}
+                    {!hasMore && filteredNews.length > 0 && <div style={{ textAlign: "center", fontSize: 12, color: T.textMuted, padding: "12px 0" }}>সব {toBanglaNum(filteredNews.length)}টি সংবাদ দেখানো হয়েছে</div>}
                   </div>
                 )}
 
@@ -1141,9 +1139,6 @@ useEffect(() => {
                           {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : m.icon || "👤"}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
-                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>📁 {m.ministry}</div>
                           <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
                             {lang === "en" ? (m.name_en || m.name) : m.name}
                           </div>
@@ -1205,7 +1200,7 @@ useEffect(() => {
                       </div>
                     )}
 
-                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 12 }}>{filteredMps.length} {t.mpFound}</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 12 }}>{toBanglaNum(filteredMps.length)} {t.mpFound}</div>
 
                     {filteredMps.map((m, i) => (
                       <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
@@ -1213,14 +1208,6 @@ useEffect(() => {
                           {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : "🏅"}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
-                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>🏅 {m.constituency} · {m.district}</div>
-                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
-                            {lang === "en" ? (m.name_en || m.name) : m.name}
-                          </div>
-                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>
-                            🏅 {lang === "en" ? (m.constituency_en || m.constituency) : m.constituency} · {lang === "en" ? (m.district_en || m.district) : m.district}
-                          </div>
                           <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
                             {lang === "en" ? (m.name_en || m.name) : m.name}
                           </div>
@@ -1246,7 +1233,7 @@ useEffect(() => {
                         { label: t.completedLabel, value: projects.filter(p => p.status === "সম্পন্ন").length, color: "#3B8BD4" },
                       ].map((s, i) => (
                         <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: 12, textAlign: "center" }}>
-                          <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{s.value}</div>
+                          <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{toBanglaNum(s.value)}</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
                         </div>
                       ))}
@@ -1266,7 +1253,7 @@ useEffect(() => {
                         </div>
                         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: T.textMuted }}>
                           <span>💰 {p.budget}</span>
-                          <span>{p.progress}%</span>
+                          <span>{toBanglaNum(p.progress)}%</span>
                           <span style={{ color: p.status === "নতুন" ? "#C9A84C" : "#4ecba0" }}>● {p.status}</span>
                         </div>
                       </div>
@@ -1407,7 +1394,7 @@ useEffect(() => {
                         { label: "প্রক্রিয়াধীন", value: demands.filter(d => d.status === "প্রক্রিয়াধীন").length, color: "#6a8a9a" },
                       ].map((s, i) => (
                         <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: 12, textAlign: "center" }}>
-                          <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{s.value}</div>
+                          <div style={{ fontSize: 22, fontWeight: "bold", color: s.color }}>{toBanglaNum(s.value)}</div>
                           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 4 }}>{s.label}</div>
                         </div>
                       ))}
