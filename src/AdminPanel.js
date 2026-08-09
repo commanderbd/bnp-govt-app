@@ -1,23 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "./supabase";
 
-async function translateToEnglish(text) {
-    if (!text) return "";
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6",
-          max_tokens: 500,
-          messages: [{ role: "user", content: "Translate this Bengali text to English. Return ONLY the translation, nothing else:\n\n" + text }]
-        })
-      });
-      const data = await response.json();
-      return data.content?.[0]?.text || text;
-    } catch { return text; }
-  }
-
 export default function AdminPanel({ onLogout, isDark, T }) {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [ministers, setMinisters] = useState([]);
@@ -241,34 +224,7 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                     />
                   </div>
                   <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
-                    <input
-                      placeholder="Name (English)"
-                      defaultValue={minister.name_en || ""}
-                      onBlur={async e => {
-                        const val = e.target.value.trim();
-                        if (val !== (minister.name_en || "")) await updateField("ministers", minister.id, "name_en", val);
-                      }}
-                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
-                    />
-                    <input
-                      placeholder="Role (English)"
-                      defaultValue={minister.role_en || ""}
-                      onBlur={async e => {
-                        const val = e.target.value.trim();
-                        if (val !== (minister.role_en || "")) await updateField("ministers", minister.id, "role_en", val);
-                      }}
-                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
-                    />
-                    <input
-                      placeholder="Ministry (English)"
-                      defaultValue={minister.ministry_en || ""}
-                      onBlur={async e => {
-                        const val = e.target.value.trim();
-                        if (val !== (minister.ministry_en || "")) await updateField("ministers", minister.id, "ministry_en", val);
-                      }}
-                      style={{ flex: 1, background: T.bg, border: "1px solid " + T.border, borderRadius: 6, padding: "5px 8px", color: T.text, fontSize: 11, fontFamily: "sans-serif" }}
-                    />
-                  </div>
+                    </div>
                 </div>
               ))}
             </div>
@@ -278,22 +234,16 @@ export default function AdminPanel({ onLogout, isDark, T }) {
             if (!newMinister.name || !newMinister.ministry) return showMessage("নাম ও মন্ত্রণালয় আবশ্যক", "error");
             setSaving(true);
             
-            // স্বয়ংক্রিয় ইংরেজি অনুবাদ
-            showMessage("অনুবাদ হচ্ছে...", "success");
-            const [name_en, role_en, ministry_en] = await Promise.all([
-              translateToEnglish(newMinister.name),
-              translateToEnglish(newMinister.role),
-              translateToEnglish(newMinister.ministry),
-            ]);
+            
             
             const { error } = await supabase.from("ministers").insert({
-              ...newMinister, name_en, role_en, ministry_en
+              ...newMinister
             });
             if (error) showMessage("সমস্যা: " + error.message, "error");
-            else { showMessage("মন্ত্রী যোগ ও অনুবাদ সম্পন্ন!"); setNewMinister({ name: "", role: "মন্ত্রী", ministry: "", icon: "👤" }); fetchAll(); }
+            else { showMessage("মন্ত্রী যোগ হয়েছে!"); setNewMinister({ name: "", role: "মন্ত্রী", ministry: "", icon: "👤" }); fetchAll(); }
             setSaving(false);
           }} disabled={saving} style={btnStyle}>
-            {saving ? "⏳ অনুবাদ ও সেভ হচ্ছে..." : "✅ মন্ত্রী যোগ করুন"}
+            {saving ? "⏳ যোগ হচ্ছে..." : "✅ মন্ত্রী যোগ করুন"}
           </button>
 
           {/* সংবাদ */}
@@ -333,24 +283,16 @@ export default function AdminPanel({ onLogout, isDark, T }) {
                     <button onClick={async () => {
                       if (!newNews.title || !newNews.source) return showMessage("শিরোনাম ও সূত্র আবশ্যক", "error");
                       setSaving(true);
-                      showMessage("অনুবাদ হচ্ছে...", "success");
-                      
-                      const [title_en, content_en] = await Promise.all([
-                        translateToEnglish(newNews.title),
-                        newNews.content ? translateToEnglish(newNews.content) : Promise.resolve(""),
-                      ]);
                       
                       const { error } = await supabase.from("news").insert({
                         ...newNews,
-                        title_en,
-                        content_en,
                         time: newNews.time || new Date().toLocaleDateString("bn-BD")
                       });
                       if (error) showMessage("সমস্যা: " + error.message, "error");
-                      else { showMessage("সংবাদ যোগ ও অনুবাদ সম্পন্ন!"); setNewNews({ title: "", source: "", category: "সরকারি", time: "", content: "", link: "" }); fetchAll(); }
+                      else { showMessage("সংবাদ যোগ হয়েছে!"); setNewNews({ title: "", source: "", category: "সরকারি", time: "", content: "", link: "" }); fetchAll(); }
                       setSaving(false);
                     }} disabled={saving} style={btnStyle}>
-                      {saving ? "⏳ অনুবাদ হচ্ছে..." : "✅ সংবাদ যোগ করুন"}
+                      {saving ? "⏳ যোগ হচ্ছে..." : "✅ সংবাদ যোগ করুন"}
                     </button>
                     <button onClick={() => deleteItem("news", newsItem.id, "এই সংবাদ")} style={deleteBtnStyle}>🗑️</button>
                   </div>
@@ -387,24 +329,16 @@ export default function AdminPanel({ onLogout, isDark, T }) {
 <button onClick={async () => {
   if (!newNews.title || !newNews.source) return showMessage("শিরোনাম ও সূত্র আবশ্যক", "error");
   setSaving(true);
-  showMessage("অনুবাদ হচ্ছে...", "success");
-  
-  const [title_en, content_en] = await Promise.all([
-    translateToEnglish(newNews.title),
-    newNews.content ? translateToEnglish(newNews.content) : Promise.resolve(""),
-  ]);
   
   const { error } = await supabase.from("news").insert({
     ...newNews,
-    title_en,
-    content_en,
     time: newNews.time || new Date().toLocaleDateString("bn-BD")
   });
   if (error) showMessage("সমস্যা: " + error.message, "error");
-  else { showMessage("সংবাদ যোগ ও অনুবাদ সম্পন্ন!"); setNewNews({ title: "", source: "", category: "সরকারি", time: "", content: "", link: "" }); fetchAll(); }
+  else { showMessage("সংবাদ যোগ হয়েছে!"); setNewNews({ title: "", source: "", category: "সরকারি", time: "", content: "", link: "" }); fetchAll(); }
   setSaving(false);
 }} disabled={saving} style={btnStyle}>
-  {saving ? "⏳ অনুবাদ হচ্ছে..." : "✅ সংবাদ যোগ করুন"}
+  {saving ? "⏳ যোগ হচ্ছে..." : "✅ সংবাদ যোগ করুন"}
 </button>
 
           {/* প্রকল্প */}
