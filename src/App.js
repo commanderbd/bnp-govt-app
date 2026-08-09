@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 import AdminPanel from "./AdminPanel";
-import { translations } from "./translations";
 import AuthModal from "./AuthModal";
 import CommentsSection from "./CommentsSection";
 import { registerServiceWorker, requestNotificationPermission, showLocalNotification } from "./notifications";
@@ -372,7 +371,6 @@ export default function App() {
 
   const NEWS_PER_PAGE = 10;
   const T = isDark ? THEMES.dark : THEMES.light;
-  const t = translations[lang];
 
   const divisions = ["সব", "ঢাকা", "চট্টগ্রাম", "রাজশাহী", "খুলনা", "বরিশাল", "সিলেট", "রংপুর", "ময়মনসিংহ"];
   const districtsByDivision = {
