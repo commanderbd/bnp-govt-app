@@ -705,7 +705,7 @@ useEffect(() => {
           </button>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: "bold", color: "#fff" }}>
-              {selectedGovt ? "🏛️ " + selectedGovt.name : "🇧🇩 " + "গণপ্রজাতন্ত্রী বাংলাদেশ সরকার"}
+              {selectedGovt ? "🏛️ " + selectedGovt.name : "🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার"}
             </div>
             <div style={{ fontSize: 11, color: "#C9A84C", marginTop: 2 }}>
               {selectedGovt ? "📅 " + selectedGovt.period : "ত্রয়োদশ জাতীয় সংসদ · বিএনপি সরকার ২০২৬"}
