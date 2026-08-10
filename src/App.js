@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabase";
 import AdminPanel from "./AdminPanel";
 import AuthModal from "./AuthModal";
 import CommentsSection from "./CommentsSection";
 import { registerServiceWorker, requestNotificationPermission, showLocalNotification } from "./notifications";
+import html2canvas from "html2canvas";
 
 const shimmerStyle = `
   @keyframes shimmer {
@@ -157,6 +158,7 @@ function PersonModal({ person, type, onClose, T, isDark }) {
           <div style={{ background: isDark ? "rgba(0,106,78,0.15)" : "rgba(0,106,78,0.08)", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 8, padding: "8px 14px", marginBottom: 16 }}>
             <span style={{ fontSize: 13, color: "#4ecba0" }}>🌾 {person.party || "বাংলাদেশ জাতীয়তাবাদী দল"}</span>
           </div>
+          <div ref={cardRef} style={{ background: T.card, border: "2px solid #C9A84C", borderRadius: 16, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto" }}></div>
           {person.bio ? (
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold", marginBottom: 8 }}>📋 সংক্ষিপ্ত পরিচিতি</div>
@@ -177,18 +179,48 @@ function PersonModal({ person, type, onClose, T, isDark }) {
               </div>
             </div>
           )}
+          {/* Watermark — শুধু download-এ দেখাবে */}
+          <div style={{ background: "#006A4E", padding: "10px 20px", borderRadius: "0 0 14px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 11, color: "#C9A84C" }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>bnp-govt-app.vercel.app</div>
+          </div>
+          {/* শেয়ার */}
+          <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontFamily: "sans-serif" }}>
+            📸 কার্ড ডাউনলোড
+          </button>
           <div style={{ borderTop: "1px solid " + T.border, paddingTop: 14 }}>
             <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>শেয়ার করুন</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.href) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>Facebook</a>
-              <a href={"https://wa.me/?text=" + encodeURIComponent(person.name + "\n" + window.location.href)} target="_blank" rel="noreferrer" style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>WhatsApp</a>
-              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.href); alert("কপি হয়েছে!"); }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>🔗 কপি</button>
+              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>📘 Facebook</a>
+              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>💬 WhatsApp</a>
+              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>🔗 কপি</button>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
+}
+function PersonModal({ person, type, onClose, T, isDark }) {
+  const cardRef = useRef(null);
+
+  async function downloadCard() {
+    if (!cardRef.current) return;
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: isDark ? "#112233" : "#ffffff",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+      });
+      const link = document.createElement("a");
+      link.download = person.name + "-বিএনপি-সরকার.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (err) {
+      alert("ডাউনলোড সমস্যা হয়েছে");
+    }
+  }
 }
 
 function NewsModal({ news, onClose, T, isDark, currentUser, onLoginRequest }) {
@@ -412,18 +444,24 @@ export default function App() {
     printWindow.document.close();
   }, []);
 
-  function SocialShare({ title, newsId }) {
-    const shareUrl = newsId ? window.location.origin + "/#news-" + newsId : window.location.href;
-    const waText = encodeURIComponent(title + "\n" + shareUrl);
-    return (
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-        <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(shareUrl) + "&quote=" + encodeURIComponent(title)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, textDecoration: "none" }}>📘 FB</a>
-        <a href={"whatsapp://send?text=" + waText} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, textDecoration: "none" }}>💬 WA</a>
-        <button onClick={() => navigator.clipboard.writeText(title + "\n" + shareUrl).then(() => alert("কপি!"))} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>🔗</button>
-        <button onClick={() => setSelectedNews({ title, id: newsId, time: "", source: "", category: "", content: null, link: null })} style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 6, padding: "4px 10px", fontSize: 11, color: T.textMuted, cursor: "pointer", fontFamily: "sans-serif" }}>💬 মন্তব্য</button>
-      </div>
-    );
+  function SocialShare({ title, newsId, personId, personType: pType }) {
+  let shareUrl;
+  if (newsId) {
+    shareUrl = window.location.origin + "/#news-" + newsId;
+  } else if (personId && pType) {
+    shareUrl = window.location.origin + "/#" + pType + "-" + personId;
+  } else {
+    shareUrl = window.location.href;
   }
+  const waText = encodeURIComponent(title + "\n" + shareUrl);
+  return (
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+      <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(shareUrl) + "&quote=" + encodeURIComponent(title)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, textDecoration: "none" }}>📘 FB</a>
+      <a href={"whatsapp://send?text=" + waText} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, textDecoration: "none" }}>💬 WA</a>
+      <button onClick={() => navigator.clipboard.writeText(title + "\n" + shareUrl).then(() => alert("কপি!"))} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>🔗</button>
+    </div>
+  );
+}
   
   const searchResults = globalSearch.trim().length < 2 ? [] : [
     ...ministers.filter(m => m.name.includes(globalSearch) || m.ministry.includes(globalSearch)).slice(0, 3).map(m => ({ type: "মন্ত্রী", icon: "👥", title: m.name, subtitle: m.ministry, tab: "ministers" })),
@@ -504,27 +542,37 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    function handleHash() {
-      const hash = window.location.hash;
-      if (hash.startsWith("#news-")) {
-        const newsId = Number(hash.replace("#news-", ""));
-        setActiveTab("news");
-        setTimeout(() => {
-          const el = document.getElementById("news-" + newsId);
-          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 1000);
-      }
+  function handleHash() {
+    const hash = window.location.hash;
+    if (hash.startsWith("#news-")) {
+      const newsId = Number(hash.replace("#news-", ""));
+      setActiveTab("news");
+      setTimeout(() => {
+        const el = document.getElementById("news-" + newsId);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 1000);
+    } else if (hash.startsWith("#minister-")) {
+      const id = Number(hash.replace("#minister-", ""));
+      setActiveTab("ministers");
+      setSelectedGovt(null);
+      setTimeout(() => {
+        const found = ministers.find(m => m.id === id);
+        if (found) { setSelectedPerson(found); setPersonType("minister"); }
+      }, 1200);
+    } else if (hash.startsWith("#mp-")) {
+      const id = Number(hash.replace("#mp-", ""));
+      setActiveTab("mps");
+      setSelectedGovt(null);
+      setTimeout(() => {
+        const found = mps.find(m => m.id === id);
+        if (found) { setSelectedPerson(found); setPersonType("mp"); }
+      }, 1200);
     }
-    handleHash();
-    window.addEventListener("hashchange", handleHash);
-    return () => window.removeEventListener("hashchange", handleHash);
-  }, []);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setCurrentUser(session?.user || null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => setCurrentUser(session?.user || null));
-    return () => subscription.unsubscribe();
-  }, []);
+  }
+  handleHash();
+  window.addEventListener("hashchange", handleHash);
+  return () => window.removeEventListener("hashchange", handleHash);
+}, [ministers, mps]);
 
   useEffect(() => {
   if (!selectedGovt) return;
