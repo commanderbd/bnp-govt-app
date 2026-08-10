@@ -760,12 +760,12 @@ useEffect(() => {
           background: T.navBg,
           borderBottom: "2px solid " + T.navBorder,
           overflowX: "auto",
-          position: "sticky",   // ← এটা যোগ করুন
-          top: 56,              // ← header height
-          zIndex: 95,           // ← header এর নিচে
+          position: "sticky", 
+          top: 56,             
+          zIndex: 95,          
         }}>
           {(selectedGovt ? govtTabs : tabs).map(tab => (
-            <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); setShowDocuments(false); setShowHistory(false); setSelectedGovt(selectedGovt); }}
+            <button key={tab.id} onClick={() => { selectedGovt ? setGovtTab(tab.id) : setActiveTab(tab.id); setSearch(""); setShowDocuments(false); setShowHistory(false); setSelectedGovt(selectedGovt);}}
               style={{ background: (selectedGovt ? govtTab : activeTab) === tab.id ? "rgba(201,168,76,0.15)" : "transparent", border: "none", borderBottom: (selectedGovt ? govtTab : activeTab) === tab.id ? "3px solid #C9A84C" : "3px solid transparent", color: (selectedGovt ? govtTab : activeTab) === tab.id ? "#C9A84C" : T.textMuted, padding: "14px 18px", cursor: "pointer", fontSize: 14, whiteSpace: "nowrap", fontFamily: "sans-serif", fontWeight: (selectedGovt ? govtTab : activeTab) === tab.id ? "600" : "400" }}>
               {tab.label}
             </button>
