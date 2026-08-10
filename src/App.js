@@ -410,7 +410,7 @@ export default function App() {
     const tableRows = rows.map(row => "<tr>" + columns.map(col => "<td style='padding:8px;border:1px solid #ddd;font-size:12px'>" + (row[col.key] || "-") + "</td>").join("") + "</tr>").join("");
     const tableHeaders = columns.map(col => "<th style='padding:8px;border:1px solid #ddd;background:#006A4E;color:#fff;font-size:12px'>" + col.label + "</th>").join("");
     printWindow.document.write("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>" + title + "</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{color:#006A4E}table{width:100%;border-collapse:collapse}@media print{button{display:none}}</style></head><body><h1>" + title + "</h1><button onclick='window.print()' style='background:#006A4E;color:#fff;border:none;padding:8px 16px;cursor:pointer;margin-bottom:16px'>প্রিন্ট / PDF</button><table><thead><tr>" + tableHeaders + "</tr></thead><tbody>" + tableRows + "</tbody></table></body></html>");
-    printWindow.documen"✕ বন্ধ"();
+    printWindow.document.close();
   }, []);
 
   function SocialShare({ title, newsId }) {
@@ -491,6 +491,12 @@ export default function App() {
   useEffect(() => {
     registerServiceWorker();
     if ("Notification" in window) setNotifEnabled(Notification.permission === "granted");
+    // PWA cache clear — মোবাইলে পুরনো cache সরাতে
+    if ("caches" in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
   }, []);
 
   useEffect(() => {
