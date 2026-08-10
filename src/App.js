@@ -370,7 +370,6 @@ export default function App() {
 
   const NEWS_PER_PAGE = 10;
   const T = isDark ? THEMES.dark : THEMES.light;
-  const t = translations.bn;
 
   const divisions = ["সব", "ঢাকা", "চট্টগ্রাম", "রাজশাহী", "খুলনা", "বরিশাল", "সিলেট", "রংপুর", "ময়মনসিংহ"];
   const districtsByDivision = {
@@ -1237,7 +1236,7 @@ useEffect(() => {
                       ))}
                     </div>
                     <div style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 16, marginBottom: 20 }}>
-                      <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 14 }}>📈 {"📈 প্রকল্পের অগ্রগতি তুলনা"}</h3>
+                      <h3 style={{ fontSize: 13, color: "#C9A84C", marginBottom: 14 }}>📈 {"প্রকল্পের অগ্রগতি তুলনা"}</h3>
                       {projects.map((p, i) => (
                         <HorizontalBar key={i} label={p.title.length > 20 ? p.title.slice(0, 20) + "..." : p.title} value={p.progress} max={100} color={["#006A4E", "#C9A84C", "#3B8BD4", "#9F5DCF", "#E8593C"][i % 5]} />
                       ))}
