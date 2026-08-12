@@ -155,9 +155,71 @@ function PersonModal({ person, type, onClose, T, isDark }) {
       alert("ডাউনলোড সমস্যা হয়েছে");
     }
   }
+
+  if (!person) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} ref={cardRef} style={{ background: isDark ? "#112233" : "#ffffff", border: "2px solid #C9A84C", borderRadius: 16, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto" }}>
+        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "20px", borderRadius: "14px 14px 0 0", position: "relative" }}>
+          <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", color: "#fff", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid #C9A84C", overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>
+              {person.photo_url ? <img src={person.photo_url} alt={person.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : type === "minister" ? (person.icon || "👤") : "🏅"}
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: "bold", color: "#fff", marginBottom: 4 }}>{person.name}</div>
+              <div style={{ fontSize: 12, color: "#C9A84C" }}>{type === "minister" ? person.role : person.constituency}</div>
+              {type === "minister" && person.ministry && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>📁 {person.ministry}</div>}
+              {type === "mp" && person.district && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>📍 {person.district}</div>}
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: 20 }}>
+          <div style={{ background: isDark ? "rgba(0,106,78,0.15)" : "rgba(0,106,78,0.08)", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 8, padding: "8px 14px", marginBottom: 16 }}>
+            <span style={{ fontSize: 13, color: "#4ecba0" }}>🌾 {person.party || "বাংলাদেশ জাতীয়তাবাদী দল"}</span>
+          </div>
+          {person.bio ? (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold", marginBottom: 8 }}>📋 সংক্ষিপ্ত পরিচিতি</div>
+              <div style={{ fontSize: 13, color: isDark ? "#a0c0d0" : "#3A5A6A", lineHeight: 1.8, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 12 }}>{person.bio}</div>
+            </div>
+          ) : (
+            <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 16, marginBottom: 16, textAlign: "center" }}>
+              <div style={{ fontSize: 13, color: isDark ? "#6a8a9a" : "#5A7A8A" }}>বিস্তারিত তথ্য শীঘ্রই যোগ করা হবে</div>
+            </div>
+          )}
+          {(person.phone || person.email || person.constituency) && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold", marginBottom: 8 }}>📞 যোগাযোগ</div>
+              <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 12 }}>
+                {person.constituency && <div style={{ display: "flex", gap: 8, marginBottom: 8 }}><span>📍</span><div><div style={{ fontSize: 11, color: isDark ? "#6a8a9a" : "#5A7A8A" }}>ঠিকানা</div><div style={{ fontSize: 13, color: isDark ? "#F5F0E8" : "#1A2A3A" }}>{person.constituency}</div></div></div>}
+                {person.phone && <div style={{ display: "flex", gap: 8, marginBottom: 8 }}><span>📱</span><div><div style={{ fontSize: 11, color: isDark ? "#6a8a9a" : "#5A7A8A" }}>ফোন</div><a href={"tel:" + person.phone} style={{ fontSize: 13, color: "#4ecba0", textDecoration: "none" }}>{person.phone}</a></div></div>}
+                {person.email && <div style={{ display: "flex", gap: 8 }}><span>📧</span><div><div style={{ fontSize: 11, color: isDark ? "#6a8a9a" : "#5A7A8A" }}>ইমেইল</div><a href={"mailto:" + person.email} style={{ fontSize: 13, color: "#4ecba0", textDecoration: "none" }}>{person.email}</a></div></div>}
+              </div>
+            </div>
+          )}
+          {/* শেয়ার ও ডাউনলোড */}
+          <div style={{ borderTop: "1px solid " + (isDark ? "#1e3348" : "#D0DCE8"), paddingTop: 14 }}>
+            <div style={{ fontSize: 12, color: isDark ? "#6a8a9a" : "#5A7A8A", marginBottom: 8 }}>শেয়ার করুন</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>📘 Facebook</a>
+              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>💬 WhatsApp</a>
+              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>🔗 কপি</button>
+              <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontFamily: "sans-serif" }}>📸 কার্ড ডাউনলোড</button>
+            </div>
+          </div>
+        </div>
+        {/* Watermark footer */}
+        <div style={{ background: "#006A4E", padding: "10px 20px", borderRadius: "0 0 14px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ fontSize: 11, color: "#C9A84C" }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>bnp-govt-app.vercel.app</div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function NewsModal({ news, onClose, T, isDark, currentUser, onLoginRequest }) {
+
   if (!news) return null;
   return (
     <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
@@ -196,16 +258,63 @@ function NewsModal({ news, onClose, T, isDark, currentUser, onLoginRequest }) {
               <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: "#4ecba0", fontSize: 13, textDecoration: "none" }}>🔗 মূল সংবাদ পড়ুন — {news.source}</a>
             </div>
           )}
-          {/* শেয়ার */}
+          {/* শেয়ার ও ডাউনলোড */}
           <div style={{ borderTop: "1px solid " + T.border, paddingTop: 14, marginBottom: 8 }}>
             <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>শেয়ার করুন</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>📘 Facebook</a>
+              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>💬 WhatsApp</a>
+              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>🔗 কপি</button>
+              <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontFamily: "sans-serif" }}>📸 কার্ড ডাউনলোড</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NewsModal({ news, onClose, T, isDark, currentUser, onLoginRequest }) {
+  if (!news) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: isDark ? "#112233" : "#ffffff", border: "2px solid #C9A84C", borderRadius: 16, width: "100%", maxWidth: 560, maxHeight: "88vh", overflowY: "auto" }}>
+        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "16px 20px", borderRadius: "14px 14px 0 0", position: "sticky", top: 0, zIndex: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>{news.source}</span>
+                <span style={{ fontSize: 10, background: "rgba(201,168,76,0.2)", color: "#C9A84C", padding: "2px 8px", borderRadius: 10 }}>{news.category}</span>
+              </div>
+              <div style={{ fontSize: 15, fontWeight: "bold", color: "#fff", lineHeight: 1.5 }}>{news.title}</div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>🕐 {news.time}</div>
+            </div>
+            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", color: "#fff", fontSize: 16, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          </div>
+        </div>
+        <div style={{ padding: 20 }}>
+          {news.content && news.content !== "সম্পূর্ণ সংবাদ শীঘ্রই যোগ করা হবে।" ? (
+            <div style={{ fontSize: 14, color: isDark ? "#F5F0E8" : "#1A2A3A", lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 16 }}>{news.content}</div>
+          ) : (
+            <div style={{ textAlign: "center", padding: "20px 0", marginBottom: 16 }}>
+              <div style={{ fontSize: 32, marginBottom: 10 }}>📰</div>
+              <div style={{ fontSize: 14, color: isDark ? "#6a8a9a" : "#5A7A8A", marginBottom: 8 }}>সম্পূর্ণ সংবাদ শীঘ্রই যোগ করা হবে</div>
+              {news.link && <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#006A4E", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, textDecoration: "none" }}>🔗 মূল সংবাদ পড়ুন</a>}
+            </div>
+          )}
+          {news.link && (
+            <div style={{ borderTop: "1px solid " + (isDark ? "#1e3348" : "#D0DCE8"), marginBottom: 16, paddingTop: 14 }}>
+              <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: "#4ecba0", fontSize: 13, textDecoration: "none" }}>🔗 মূল সংবাদ পড়ুন — {news.source}</a>
+            </div>
+          )}
+          <div style={{ borderTop: "1px solid " + (isDark ? "#1e3348" : "#D0DCE8"), paddingTop: 14, marginBottom: 8 }}>
+            <div style={{ fontSize: 12, color: isDark ? "#6a8a9a" : "#5A7A8A", marginBottom: 8 }}>শেয়ার করুন</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#news-" + news.id) + "&quote=" + encodeURIComponent(news.title)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>📘 Facebook</a>
               <a href={"whatsapp://send?text=" + encodeURIComponent(news.title + "\n" + window.location.origin + "/#news-" + news.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>💬 WhatsApp</a>
               <button onClick={() => { navigator.clipboard.writeText(news.title + "\n" + window.location.origin + "/#news-" + news.id); alert("কপি!"); }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>🔗 কপি</button>
             </div>
           </div>
-          {/* মন্তব্য সেকশন */}
           <CommentsSection newsId={news.id} user={currentUser} onLoginRequest={onLoginRequest} T={T} isDark={isDark} />
         </div>
       </div>
