@@ -272,7 +272,7 @@ function PersonModal({ person, type, onClose, T, isDark }) {
       </div>
     </div>
   );
-}
+
 
 function NewsModal({ news, onClose, T, isDark, currentUser, onLoginRequest }) {
   if (!news) return null;
