@@ -218,62 +218,6 @@ function PersonModal({ person, type, onClose, T, isDark }) {
     </div>
   );
 }
-
-
-  if (!news) return null;
-  return (
-    <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: T.card, border: "2px solid #C9A84C", borderRadius: 16, width: "100%", maxWidth: 560, maxHeight: "88vh", overflowY: "auto" }}>
-        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "16px 20px", borderRadius: "14px 14px 0 0", position: "sticky", top: 0, zIndex: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>{news.source}</span>
-                <span style={{ fontSize: 10, background: "rgba(201,168,76,0.2)", color: "#C9A84C", padding: "2px 8px", borderRadius: 10 }}>{news.category}</span>
-              </div>
-              <div style={{ fontSize: 15, fontWeight: "bold", color: "#fff", lineHeight: 1.5 }}>{news.title}</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>🕐 {formatBanglaDate(news.time)}</div>
-            </div>
-            <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", color: "#fff", fontSize: 16, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-          </div>
-        </div>
-        <div style={{ padding: 20 }}>
-          
-          {/* সংবাদের content */}
-         {news.content && news.content !== "সম্পূর্ণ সংবাদ শীঘ্রই যোগ করা হবে।" ? (
-          <div style={{ fontSize: 14, color: T.text, lineHeight: 1.9, whiteSpace: "pre-wrap", marginBottom: 16 }}>{news.content}</div>
-        ) : (
-          <div style={{ textAlign: "center", padding: "20px 0", marginBottom: 16 }}>
-            <div style={{ fontSize: 32, marginBottom: 10 }}>📰</div>
-            <div style={{ fontSize: 14, color: T.textMuted, marginBottom: 8 }}>সম্পূর্ণ সংবাদ শীঘ্রই যোগ করা হবে</div>
-            {news.link && (
-              <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "inline-block", background: "#006A4E", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, textDecoration: "none" }}>
-                🔗 মূল সংবাদ পড়ুন
-              </a>
-            )}
-          </div>
-        )}
-          {news.link && (
-            <div style={{ borderTop: "1px solid " + T.border, marginBottom: 16, paddingTop: 14 }}>
-              <a href={news.link} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 8, color: "#4ecba0", fontSize: 13, textDecoration: "none" }}>🔗 মূল সংবাদ পড়ুন — {news.source}</a>
-            </div>
-          )}
-          {/* শেয়ার ও ডাউনলোড */}
-          <div style={{ borderTop: "1px solid " + T.border, paddingTop: 14, marginBottom: 8 }}>
-            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>শেয়ার করুন</div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>📘 Facebook</a>
-              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>💬 WhatsApp</a>
-              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>🔗 কপি</button>
-              <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontFamily: "sans-serif" }}>📸 কার্ড ডাউনলোড</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-
 function NewsModal({ news, onClose, T, isDark, currentUser, onLoginRequest }) {
   if (!news) return null;
   return (
