@@ -209,10 +209,11 @@ function PersonModal({ person, type, onClose, T, isDark }) {
             </div>
           </div>
         </div>
+        
         {/* Watermark footer */}
         <div style={{ background: "#006A4E", padding: "10px 20px", borderRadius: "0 0 14px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontSize: 11, color: "#C9A84C" }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>bnp-govt-app.vercel.app</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>বিএনপি সরকার</div>
         </div>
       </div>
     </div>
