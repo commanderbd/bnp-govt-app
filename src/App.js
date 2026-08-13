@@ -909,16 +909,6 @@ useEffect(() => {
                       </span>
                     </h2>
                     
-                    {/* Category filter */}
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
-                      {["সব", ...new Set(currentGovtAchievements.map(a => a.category).filter(Boolean))].map(cat => (
-                        <button key={cat} onClick={() => setAchievementFilter(cat)}
-                          style={{ background: achievementFilter === cat ? "#C9A84C" : "transparent", border: "1px solid " + (achievementFilter === cat ? "#C9A84C" : T.border), borderRadius: 20, padding: "4px 12px", cursor: "pointer", fontSize: 12, color: achievementFilter === cat ? "#0D1B2A" : T.textMuted, fontFamily: "sans-serif" }}>
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-
                     {/* Collapsible filter */}
                     <div style={{ marginBottom: 16 }}>
                       <button onClick={() => setAchFilterOpen(!achFilterOpen)}
