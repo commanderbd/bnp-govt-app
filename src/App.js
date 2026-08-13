@@ -1015,7 +1015,7 @@ useEffect(() => {
                     <div style={{ background: "linear-gradient(135deg, #006A4E 0%, #006A4E 40%, #F42A41 40%, #F42A41 60%, #006A4E 60%, #006A4E 100%)", border: "2px solid #C9A84C", borderRadius: 12, padding: 20, marginBottom: 20, textAlign: "center", position: "relative", overflow: "hidden" }}>
                       <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.55)", borderRadius: 10 }} />
                       <div style={{ position: "relative", zIndex: 1 }}>
-                        <div style={{ fontSize: 24, fontWeight: "bold", color: "#fff", marginBottom: 6, textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>🇧🇩 {"🇧🇩 স্বাগতম"}</div>
+                        <div style={{ fontSize: 24, fontWeight: "bold", color: "#fff", marginBottom: 6, textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}>🇧🇩 {"স্বাগতম"}</div>
                         <div style={{ fontSize: 13, color: "#C9A84C", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>{"গণপ্রজাতন্ত্রী বাংলাদেশ সরকার — ত্রয়োদশ জাতীয় সংসদ"}</div>
                       </div>
                     </div>
@@ -1187,7 +1187,7 @@ useEffect(() => {
 
                     {/* বিভাগ ফিল্টার */}
                     <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>🗺️ {"🗺️ বিভাগ অনুযায়ী ফিল্টার"}</div>
+                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>🗺️ {"বিভাগ অনুযায়ী ফিল্টার"}</div>
                       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                         {divisions.map(div => (
                           <button key={div} onClick={() => { setMpDivision(div); setMpDistrict("সব"); }} style={{ background: mpDivision === div ? "#006A4E" : "transparent", border: "1px solid " + (mpDivision === div ? "#006A4E" : T.border), borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontSize: 12, color: mpDivision === div ? "#fff" : T.textMuted, fontFamily: "sans-serif" }}>
