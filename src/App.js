@@ -3,7 +3,8 @@ import { supabase } from "./supabase";
 import AdminPanel from "./AdminPanel";
 import AuthModal from "./AuthModal";
 import CommentsSection from "./CommentsSection";
-import { registerServiceWorker, requestNotificationPermission, showLocalNotification, checkOnlineStatus } from "./notifications";
+// এখানে checkOnlineStatus সরিয়ে ফেলা হয়েছে যেন ESLint error না আসে
+import { registerServiceWorker, requestNotificationPermission, showLocalNotification } from "./notifications";
 import html2canvas from "html2canvas";
 
 const shimmerStyle = `
