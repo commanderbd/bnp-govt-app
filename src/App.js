@@ -438,7 +438,7 @@ export default function App() {
   const [achPage, setAchPage] = useState(1);
   const [achFilterOpen, setAchFilterOpen] = useState(false);
 
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline] = useState(true);
   const [constitutionalRoles, setConstitutionalRoles] = useState([]);
   const [constitutionalCategory, setConstitutionalCategory] = useState("সব");
   const [viewMode, setViewMode] = useState("list");
