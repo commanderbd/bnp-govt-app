@@ -3,28 +3,29 @@ import { supabase } from "./supabase";
 import AdminPanel from "./AdminPanel";
 import AuthModal from "./AuthModal";
 import CommentsSection from "./CommentsSection";
-import { registerServiceWorker, requestNotificationPermission, showLocalNotification } from "./notifications";
+import { registerServiceWorker, requestNotificationPermission, showLocalNotification, checkOnlineStatus } from "./notifications";
 import html2canvas from "html2canvas";
 
 const shimmerStyle = `
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .fade-in { animation: fadeIn 0.3s ease forwards; }
-  .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease !important; }
-  .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); cursor: pointer; }
-  button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid #C9A84C !important; outline-offset: 2px !important; }
-  @media (max-width: 480px) { .grid-2col { grid-template-columns: 1fr !important; } }
+  @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;700&display=swap');
+  * { box-sizing: border-box; }
+  body { font-family: 'Hind Siliguri','Noto Sans Bengali',sans-serif !important; font-size: 17px; line-height: 1.8; -webkit-font-smoothing: antialiased; }
+  @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  .fade-in { animation: fadeIn 0.35s ease forwards; }
+  .slide-down { animation: slideDown 0.25s ease forwards; }
+  .card-hover { transition: transform 0.22s ease,box-shadow 0.25s ease,border-color 0.2s ease !important; }
+  .card-hover:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(0,0,0,0.28); border-color: #C9A84C !important; cursor: pointer; }
+  .grid-2col { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
+  .grid-3col { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:600px) { .grid-2col{grid-template-columns:1fr !important;} .grid-3col{grid-template-columns:repeat(2,1fr) !important;} .hide-mobile{display:none !important;} body{font-size:16px;} }
+  button:focus-visible,a:focus-visible,input:focus-visible { outline:2px solid #C9A84C !important; outline-offset:3px !important; }
+  ::-webkit-scrollbar{width:5px;height:5px;} ::-webkit-scrollbar-thumb{background:#1e3348;border-radius:3px;} ::-webkit-scrollbar-thumb:hover{background:#C9A84C;}
 `;
-
 const THEMES = {
-  dark: { bg: "#0D1B2A", card: "#112233", border: "#1e3348", text: "#F5F0E8", textMuted: "#6a8a9a", textSecondary: "#a0c0d0", navBg: "#0a1520", navBorder: "#1a2e40", sidebarBg: "#0a1520" },
-  light: { bg: "#F0F4F8", card: "#FFFFFF", border: "#D0DCE8", text: "#1A2A3A", textMuted: "#5A7A8A", textSecondary: "#3A5A6A", navBg: "#E0EAF4", navBorder: "#C0D4E4", sidebarBg: "#EAF0F8" }
+  dark: { bg: "#070e1a", card: "#0c1828", border: "#152035", text: "#edf2f8", textMuted: "#456070", textSecondary: "#7aa0b8", navBg: "#070e1a", navBorder: "#152035", sidebarBg: "#070e1a" },
+  light: { bg: "#eef3f9", card: "#ffffff", border: "#d0dce8", text: "#0d1e2d", textMuted: "#527080", textSecondary: "#2a4a60", navBg: "#e0eaf4", navBorder: "#c0d4e4", sidebarBg: "#e8f0f8" }
 };
 
 const BNP_LOGO = "https://jeygimupxuzalqnkeddf.supabase.co/storage/v1/object/public/images/bnp-logo.png";
@@ -135,90 +136,111 @@ async function translateToEnglish(text) {
   } catch { return text; }
 }
 
-function PersonModal({ person, type, onClose, T, isDark }) {
+function PersonModal({ person, type, onClose, T, isDark, allPersons, onNavigate }) {
   const cardRef = useRef(null);
+  const touchStartX = useRef(null);
+  const currentIndex = allPersons ? allPersons.findIndex(p => p.id === person?.id) : -1;
+
+  function handleTouchStart(e) { touchStartX.current = e.touches[0].clientX; }
+  function handleTouchEnd(e) {
+    if (!touchStartX.current || !allPersons) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && currentIndex < allPersons.length - 1) onNavigate && onNavigate(allPersons[currentIndex + 1]);
+      else if (diff < 0 && currentIndex > 0) onNavigate && onNavigate(allPersons[currentIndex - 1]);
+    }
+    touchStartX.current = null;
+  }
 
   async function downloadCard() {
     if (!cardRef.current) return;
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: isDark ? "#112233" : "#ffffff",
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-      });
+      const canvas = await html2canvas(cardRef.current, { backgroundColor: isDark ? "#0c1828" : "#ffffff", scale: 2, useCORS: true, allowTaint: true });
       const link = document.createElement("a");
-      link.download = person.name + "-বিএনপি-সরকার.png";
+      link.download = (person.name || "card") + "-বিএনপি-সরকার.png";
       link.href = canvas.toDataURL("image/png");
       link.click();
-    } catch (err) {
-      alert("ডাউনলোড সমস্যা হয়েছে");
-    }
+    } catch { alert("ডাউনলোড সমস্যা হয়েছে"); }
   }
 
   if (!person) return null;
   return (
-    <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.75)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} ref={cardRef} style={{ background: isDark ? "#112233" : "#ffffff", border: "2px solid #C9A84C", borderRadius: 16, width: "100%", maxWidth: 480, maxHeight: "85vh", overflowY: "auto" }}>
-        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "20px", borderRadius: "14px 14px 0 0", position: "relative" }}>
-          <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", color: "#fff", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", border: "3px solid #C9A84C", overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>
+    <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.82)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} ref={cardRef} style={{ background: isDark ? "#0c1828" : "#ffffff", border: "2px solid #C9A84C", borderRadius: 20, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto" }}>
+
+        {/* Swipe nav */}
+        {allPersons && allPersons.length > 1 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: isDark ? "rgba(7,14,26,0.9)" : "rgba(238,243,249,0.9)", backdropFilter: "blur(10px)", borderRadius: "18px 18px 0 0" }}>
+            <button onClick={e => { e.stopPropagation(); if (currentIndex > 0) onNavigate(allPersons[currentIndex - 1]); }} disabled={currentIndex <= 0}
+              style={{ background: currentIndex <= 0 ? "transparent" : "rgba(201,168,76,0.15)", border: "1px solid " + (currentIndex <= 0 ? "transparent" : "#C9A84C"), borderRadius: 8, padding: "5px 14px", cursor: currentIndex <= 0 ? "default" : "pointer", color: currentIndex <= 0 ? "#456070" : "#C9A84C", fontSize: 13, fontFamily: "sans-serif" }}>← আগের</button>
+            <span style={{ fontSize: 13, color: T.textMuted }}>{toBanglaNum(currentIndex + 1)} / {toBanglaNum(allPersons.length)}</span>
+            <button onClick={e => { e.stopPropagation(); if (currentIndex < allPersons.length - 1) onNavigate(allPersons[currentIndex + 1]); }} disabled={currentIndex >= allPersons.length - 1}
+              style={{ background: currentIndex >= allPersons.length - 1 ? "transparent" : "rgba(201,168,76,0.15)", border: "1px solid " + (currentIndex >= allPersons.length - 1 ? "transparent" : "#C9A84C"), borderRadius: 8, padding: "5px 14px", cursor: currentIndex >= allPersons.length - 1 ? "default" : "pointer", color: currentIndex >= allPersons.length - 1 ? "#456070" : "#C9A84C", fontSize: 13, fontFamily: "sans-serif" }}>পরের →</button>
+          </div>
+        )}
+
+        {/* Header */}
+        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "22px 20px", borderRadius: allPersons && allPersons.length > 1 ? 0 : "18px 18px 0 0", position: "relative" }}>
+          <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", color: "#fff", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <div style={{ width: 74, height: 74, borderRadius: "50%", border: "3px solid #C9A84C", overflow: "hidden", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, flexShrink: 0 }}>
               {person.photo_url ? <img src={person.photo_url} alt={person.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : type === "minister" ? (person.icon || "👤") : "🏅"}
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: "bold", color: "#fff", marginBottom: 4 }}>{person.name}</div>
-              <div style={{ fontSize: 12, color: "#C9A84C" }}>{type === "minister" ? person.role : person.constituency}</div>
-              {type === "minister" && person.ministry && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>📁 {person.ministry}</div>}
-              {type === "mp" && person.district && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>📍 {person.district}</div>}
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 4, lineHeight: 1.3 }}>{person.name}</div>
+              <div style={{ fontSize: 14, color: "#C9A84C" }}>{type === "minister" ? person.role : person.constituency}</div>
+              {type === "minister" && person.ministry && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>📁 {person.ministry}</div>}
+              {type === "mp" && person.district && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>📍 {person.district}</div>}
             </div>
           </div>
         </div>
+
         <div style={{ padding: 20 }}>
-          <div style={{ background: isDark ? "rgba(0,106,78,0.15)" : "rgba(0,106,78,0.08)", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 8, padding: "8px 14px", marginBottom: 16 }}>
-            <span style={{ fontSize: 13, color: "#4ecba0" }}>🌾 {person.party || "বাংলাদেশ জাতীয়তাবাদী দল"}</span>
+          <div style={{ background: "rgba(0,106,78,0.12)", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 10, padding: "10px 16px", marginBottom: 18 }}>
+            <span style={{ fontSize: 14, color: "#4ecba0" }}>🌾 {person.party || "বাংলাদেশ জাতীয়তাবাদী দল"}</span>
           </div>
           {person.bio ? (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold", marginBottom: 8 }}>📋 সংক্ষিপ্ত পরিচিতি</div>
-              <div style={{ fontSize: 13, color: isDark ? "#a0c0d0" : "#3A5A6A", lineHeight: 1.8, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 12 }}>{person.bio}</div>
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 13, color: "#C9A84C", fontWeight: 700, marginBottom: 10 }}>📋 সংক্ষিপ্ত পরিচিতি</div>
+              <div style={{ fontSize: 15, color: isDark ? "#7aa0b8" : "#2a4a60", lineHeight: 1.9, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 14 }}>{person.bio}</div>
             </div>
           ) : (
-            <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 16, marginBottom: 16, textAlign: "center" }}>
-              <div style={{ fontSize: 13, color: isDark ? "#6a8a9a" : "#5A7A8A" }}>বিস্তারিত তথ্য শীঘ্রই যোগ করা হবে</div>
+            <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 18, marginBottom: 18, textAlign: "center" }}>
+              <div style={{ fontSize: 14, color: isDark ? "#456070" : "#527080" }}>বিস্তারিত তথ্য শীঘ্রই যোগ করা হবে</div>
             </div>
           )}
-          {(person.phone || person.email || person.constituency) && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: "bold", marginBottom: 8 }}>📞 যোগাযোগ</div>
-              <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 8, padding: 12 }}>
-                {person.constituency && <div style={{ display: "flex", gap: 8, marginBottom: 8 }}><span>📍</span><div><div style={{ fontSize: 11, color: isDark ? "#6a8a9a" : "#5A7A8A" }}>ঠিকানা</div><div style={{ fontSize: 13, color: isDark ? "#F5F0E8" : "#1A2A3A" }}>{person.constituency}</div></div></div>}
-                {person.phone && <div style={{ display: "flex", gap: 8, marginBottom: 8 }}><span>📱</span><div><div style={{ fontSize: 11, color: isDark ? "#6a8a9a" : "#5A7A8A" }}>ফোন</div><a href={"tel:" + person.phone} style={{ fontSize: 13, color: "#4ecba0", textDecoration: "none" }}>{person.phone}</a></div></div>}
-                {person.email && <div style={{ display: "flex", gap: 8 }}><span>📧</span><div><div style={{ fontSize: 11, color: isDark ? "#6a8a9a" : "#5A7A8A" }}>ইমেইল</div><a href={"mailto:" + person.email} style={{ fontSize: 13, color: "#4ecba0", textDecoration: "none" }}>{person.email}</a></div></div>}
+          {(person.phone || person.email) && (
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 13, color: "#C9A84C", fontWeight: 700, marginBottom: 10 }}>📞 যোগাযোগ</div>
+              <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 14 }}>
+                {person.phone && <div style={{ display: "flex", gap: 10, marginBottom: 8 }}><span>📱</span><a href={"tel:" + person.phone} style={{ fontSize: 14, color: "#4ecba0", textDecoration: "none" }}>{person.phone}</a></div>}
+                {person.email && <div style={{ display: "flex", gap: 10 }}><span>📧</span><a href={"mailto:" + person.email} style={{ fontSize: 14, color: "#4ecba0", textDecoration: "none" }}>{person.email}</a></div>}
               </div>
             </div>
           )}
-          {/* শেয়ার ও ডাউনলোড */}
-          <div style={{ borderTop: "1px solid " + (isDark ? "#1e3348" : "#D0DCE8"), paddingTop: 14 }}>
-            <div style={{ fontSize: 12, color: isDark ? "#6a8a9a" : "#5A7A8A", marginBottom: 8 }}>শেয়ার করুন</div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>📘 Facebook</a>
-              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "6px 12px", fontSize: 12, textDecoration: "none" }}>💬 WhatsApp</a>
-              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>🔗 কপি</button>
-              <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", fontSize: 12, cursor: "pointer", fontFamily: "sans-serif" }}>📸 কার্ড ডাউনলোড</button>
+          <div style={{ borderTop: "1px solid " + T.border, paddingTop: 16 }}>
+            <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 10 }}>শেয়ার করুন</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>📘 Facebook</a>
+              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "
+" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>💬 WhatsApp</a>
+              <button onClick={() => { navigator.clipboard.writeText(person.name + "
+" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#152035" : "#e0eaf4", color: isDark ? "#edf2f8" : "#0d1e2d", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer" }}>🔗 কপি</button>
+              <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer", fontFamily: "sans-serif" }}>📸 কার্ড</button>
             </div>
           </div>
         </div>
-        
-        {/* Watermark footer */}
-        <div style={{ background: "#006A4E", padding: "10px 20px", borderRadius: "0 0 14px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ fontSize: 11, color: "#C9A84C" }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
-          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>বিএনপি সরকার</div>
+        {/* Watermark */}
+        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "10px 20px", borderRadius: "0 0 18px 18px", display: "flex", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: 600 }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>bnp-govt-app.vercel.app</div>
         </div>
       </div>
     </div>
   );
 }
+
+
 function NewsModal({ news, onClose, T, isDark, currentUser, onLoginRequest }) {
   if (!news) return null;
   return (
@@ -341,6 +363,36 @@ function DemandCard({ d, T, isDark }) {
   );
 }
 
+function PersonCard({ person, type, onClick, viewMode, T, isDark }) {
+  if (viewMode === "grid") {
+    return (
+      <div className="card-hover" onClick={onClick} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: 16, textAlign: "center", cursor: "pointer" }}>
+        <div style={{ width: 66, height: 66, borderRadius: "50%", border: "2.5px solid #C9A84C", overflow: "hidden", background: "linear-gradient(135deg, #006A4E, #004d38)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, margin: "0 auto 12px" }}>
+          {person.photo_url ? <img src={person.photo_url} alt={person.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : type === "minister" ? (person.icon || "👤") : "🏅"}
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4, lineHeight: 1.4 }}>{person.name}</div>
+        <div style={{ fontSize: 12, color: "#C9A84C", marginBottom: 3 }}>{type === "minister" ? person.role : person.constituency}</div>
+        <div style={{ fontSize: 11, color: T.textMuted }}>{type === "minister" ? (person.ministry || "").slice(0, 26) + ((person.ministry || "").length > 26 ? "..." : "") : person.district}</div>
+        <div style={{ marginTop: 10, fontSize: 11, color: "#C9A84C", border: "1px solid #C9A84C", borderRadius: 20, padding: "3px 10px", display: "inline-block" }}>বিস্তারিত →</div>
+      </div>
+    );
+  }
+  return (
+    <div className="card-hover" onClick={onClick} style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "center", cursor: "pointer" }}>
+      <div style={{ width: 54, height: 54, borderRadius: "50%", border: "2px solid #C9A84C", overflow: "hidden", background: "linear-gradient(135deg, #006A4E, #004d38)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>
+        {person.photo_url ? <img src={person.photo_url} alt={person.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : type === "minister" ? (person.icon || "👤") : "🏅"}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: T.text, marginBottom: 3 }}>{person.name}</div>
+        <div style={{ fontSize: 13, color: "#C9A84C" }}>{type === "minister" ? person.role : (person.constituency || "") + (person.district ? " · " + person.district : "")}</div>
+        {type === "minister" && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>📁 {person.ministry}</div>}
+        {type === "mp" && person.party && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>🌾 {person.party}</div>}
+      </div>
+      <div style={{ color: "#C9A84C", fontSize: 22 }}>›</div>
+    </div>
+  );
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [search, setSearch] = useState("");
@@ -387,6 +439,11 @@ export default function App() {
   const [achievementSearch, setAchievementSearch] = useState("");
   const [achPage, setAchPage] = useState(1);
   const [achFilterOpen, setAchFilterOpen] = useState(false);
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [constitutionalRoles, setConstitutionalRoles] = useState([]);
+  const [constitutionalCategory, setConstitutionalCategory] = useState("সব");
+  const [viewMode, setViewMode] = useState("list");
 
   const NEWS_PER_PAGE = 10;
   const T = isDark ? THEMES.dark : THEMES.light;
@@ -587,7 +644,7 @@ export default function App() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [m, n, mp, p, g, hm, a, doc, ld, ap, dem, vid] = await Promise.all([
+      const [m, n, mp, p, g, hm, a, doc, ld, ap, dem, vid, cr] = await Promise.all([
         supabase.from("ministers").select("*").order("id"),
         supabase.from("news").select("*").order("created_at", { ascending: false }).limit(50),
         supabase.from("mps").select("*").eq("government_id", 1).order("id").limit(5000),
@@ -600,6 +657,7 @@ export default function App() {
         supabase.from("activist_posts").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(50),
         supabase.from("demands").select("*").order("number"),
         supabase.from("videos").select("*").order("created_at", { ascending: false }).limit(20),
+        supabase.from("constitutional_roles").select("*").order("sort_order"),
       ]);
       setMinisters(m.data || []);
       setNews(n.data || []);
@@ -613,6 +671,7 @@ export default function App() {
       setActivistPosts(ap.data || []);
       setDemands(dem.data || []);
       setVideos(vid.data || []);
+      setConstitutionalRoles(cr.data || []);
       setLoading(false);
     }
     fetchData();
@@ -652,13 +711,58 @@ useEffect(() => {
 
   if (isAdmin) return <AdminPanel onLogout={handleLogout} isDark={isDark} T={T} />;
 
+  // OFFLINE SCREEN
+  if (!isOnline) {
+    return (
+      <>
+        <style>{shimmerStyle}</style>
+        <div style={{ minHeight: "100vh", background: isDark ? "#070e1a" : "#eef3f9", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ textAlign: "center", maxWidth: 360 }}>
+            <div style={{ fontSize: 72, marginBottom: 20 }}>📡</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: isDark ? "#edf2f8" : "#0d1e2d", marginBottom: 14 }}>ইন্টারনেট সংযোগ স্থাপন করুন</div>
+            <div style={{ fontSize: 16, color: isDark ? "#456070" : "#527080", lineHeight: 1.8, marginBottom: 28 }}>
+              গণপ্রজাতন্ত্রী বাংলাদেশ সরকার অ্যাপটি ব্যবহার করতে ইন্টারনেট সংযোগ প্রয়োজন।
+            </div>
+            <div style={{ background: isDark ? "#0c1828" : "#ffffff", border: "1px solid " + (isDark ? "#152035" : "#d0dce8"), borderRadius: 16, padding: 20, marginBottom: 28 }}>
+              <div style={{ fontSize: 15, color: isDark ? "#7aa0b8" : "#2a4a60", lineHeight: 2, textAlign: "left" }}>
+                ✓ WiFi চালু করুন<br/>
+                ✓ মোবাইল ডেটা চালু করুন<br/>
+                ✓ সংযোগ পেলে স্বয়ংক্রিয়ভাবে চালু হবে
+              </div>
+            </div>
+            <button onClick={() => window.location.reload()} style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", color: "#fff", border: "none", borderRadius: 14, padding: "14px 32px", cursor: "pointer", fontSize: 17, fontWeight: 700, fontFamily: "sans-serif", boxShadow: "0 6px 20px rgba(0,106,78,0.35)" }}>
+              🔄 পুনরায় চেষ্টা করুন
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // VIEW TOGGLE COMPONENT
+  function ViewToggle() {
+    return (
+      <div style={{ display: "flex", gap: 3, background: isDark ? "#152035" : "#e0eaf4", borderRadius: 10, padding: 3 }}>
+        <button onClick={() => setViewMode("list")} style={{ background: viewMode === "list" ? (isDark ? "#0c1828" : "#fff") : "transparent", border: "none", borderRadius: 8, padding: "5px 11px", cursor: "pointer", color: viewMode === "list" ? "#C9A84C" : T.textMuted, fontSize: 15, transition: "all 0.2s" }}>☰</button>
+        <button onClick={() => setViewMode("grid")} style={{ background: viewMode === "grid" ? (isDark ? "#0c1828" : "#fff") : "transparent", border: "none", borderRadius: 8, padding: "5px 11px", cursor: "pointer", color: viewMode === "grid" ? "#C9A84C" : T.textMuted, fontSize: 15, transition: "all 0.2s" }}>⊞</button>
+      </div>
+    );
+  }
+
   return (
     <>
       <style>{shimmerStyle}</style>
-      <div style={{ fontFamily: "'Hind Siliguri', 'Noto Sans Bengali', sans-serif", background: T.bg, minHeight: "100vh", color: T.text, fontSize: 16 }}>
+      <div style={{ fontFamily: "'Hind Siliguri','Noto Sans Bengali',sans-serif", background: T.bg, minHeight: "100vh", color: T.text, fontSize: 16 }}>
 
         {/* Modals */}
-        {selectedPerson && <PersonModal person={selectedPerson} type={personType} onClose={() => { setSelectedPerson(null); setPersonType(null); }} T={T} isDark={isDark} />}
+        {selectedPerson && <PersonModal
+          person={selectedPerson}
+          type={personType}
+          onClose={() => { setSelectedPerson(null); setPersonType(null); }}
+          T={T} isDark={isDark}
+          allPersons={personType === "minister" ? filteredMinisters : personType === "mp" ? filteredMps : (constitutionalCategory === "সব" ? constitutionalRoles : constitutionalRoles.filter(r => r.role_category === constitutionalCategory))}
+          onNavigate={(p) => setSelectedPerson(p)}
+        />}
         {selectedNews && <NewsModal news={selectedNews} onClose={() => setSelectedNews(null)} T={T} isDark={isDark} currentUser={currentUser} onLoginRequest={() => { setSelectedNews(null); setShowAuthModal(true); }} />}
         {selectedLeader && <LeaderModal leader={selectedLeader} onClose={() => setSelectedLeader(null)} T={T} isDark={isDark} />}
         {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} onSuccess={user => setCurrentUser(user)} T={T} isDark={isDark} />}
@@ -1038,10 +1142,10 @@ useEffect(() => {
                         { label: "উন্নয়ন প্রকল্প", value: projects.length, icon: "🔨", color: "#3B8BD4", tab: "projects" },
                         { label: "সর্বশেষ সংবাদ", value: news.length, icon: "📰", color: "#9F5DCF", tab: "news" },
                       ].map((stat, i) => (
-                        <div key={i} className="card-hover" onClick={() => setActiveTab(stat.tab)} style={{ background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)", border: "2px solid " + stat.color + "44", borderRadius: 12, padding: "20px 16px", cursor: "pointer", textAlign: "center" }}>
-                          <div style={{ fontSize: 32, marginBottom: 8 }}>{stat.icon}</div>
-                          <div style={{ fontSize: 36, fontWeight: "700", color: stat.color, lineHeight: 1, marginBottom: 6 }}>{toBanglaNum(stat.value)}</div>
-                          <div style={{ fontSize: 13, color: T.textMuted }}>{stat.label}</div>
+                        <div key={i} className="card-hover" onClick={() => setActiveTab(stat.tab)} style={{ background: isDark ? "rgba(255,255,255,0.04)" : "#ffffff", border: "2px solid " + stat.color + "33", borderRadius: 16, padding: "22px 16px", cursor: "pointer", textAlign: "center", boxShadow: "0 4px 16px " + stat.color + "14" }}>
+                          <div style={{ fontSize: 36, marginBottom: 10 }}>{stat.icon}</div>
+                          <div style={{ fontSize: 40, fontWeight: 800, color: stat.color, lineHeight: 1, marginBottom: 8, letterSpacing: "-1px" }}>{toBanglaNum(stat.value)}</div>
+                          <div style={{ fontSize: 14, color: T.textMuted, fontWeight: 500 }}>{stat.label}</div>
                         </div>
                       ))}
                     </div>
@@ -1128,7 +1232,7 @@ useEffect(() => {
                     </div>
                     {filteredNews.length === 0 && <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই ক্যাটাগরিতে কোনো সংবাদ নেই</div>}
                     {paginatedNews.map((n, i) => (
-                      <div key={i} id={"news-" + n.id} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12, scrollMarginTop: 80 }}>
+                      <div key={i} id={"news-" + n.id} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #006A4E", borderRadius: 14, padding: 18, marginBottom: 14, scrollMarginTop: 80 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                           <div style={{ fontSize: 11, color: "#C9A84C", fontWeight: "bold" }}>{n.source}</div>
                           <span style={{ fontSize: 10, color: "#006A4E", background: isDark ? "rgba(0,106,78,0.2)" : "rgba(0,106,78,0.1)", padding: "2px 8px", borderRadius: 10, marginLeft: 8 }}>{n.category}</span>
@@ -1182,69 +1286,53 @@ useEffect(() => {
                 {!showDocuments && !showHistory && activeTab === "mps" && (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>{"সংসদ সদস্য তালিকা"}</h2>
-                      <button onClick={() => downloadPDF("সংসদ সদস্য তালিকা", filteredMps, [{ key: "name", label: "নাম" }, { key: "constituency", label: "আসন" }, { key: "district", label: "জেলা" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>{"📥 PDF"}</button>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 12, fontSize: 18, margin: 0, fontWeight: 700 }}>সংসদ সদস্য তালিকা</h2>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => downloadPDF("এমপি তালিকা", filteredMps, [{ key: "name", label: "নাম" }, { key: "constituency", label: "আসন" }, { key: "district", label: "জেলা" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>📥 PDF</button>
+                        <ViewToggle />
+                      </div>
                     </div>
-
-                    {/* বিভাগ ফিল্টার */}
-                    <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>🗺️ {"বিভাগ অনুযায়ী ফিল্টার"}</div>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 10, fontWeight: 600 }}>🗺️ বিভাগ অনুযায়ী ফিল্টার</div>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {divisions.map(div => (
-                          <button key={div} onClick={() => { setMpDivision(div); setMpDistrict("সব"); }} style={{ background: mpDivision === div ? "#006A4E" : "transparent", border: "1px solid " + (mpDivision === div ? "#006A4E" : T.border), borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontSize: 12, color: mpDivision === div ? "#fff" : T.textMuted, fontFamily: "sans-serif" }}>
+                          <button key={div} onClick={() => { setMpDivision(div); setMpDistrict("সব"); }} style={{ background: mpDivision === div ? "#006A4E" : "transparent", border: "1px solid " + (mpDivision === div ? "#006A4E" : T.border), borderRadius: 20, padding: "6px 14px", cursor: "pointer", fontSize: 13, color: mpDivision === div ? "#fff" : T.textMuted, fontFamily: "sans-serif", fontWeight: mpDivision === div ? 600 : 400 }}>
                             {div === "সব" ? "🇧🇩 সব" : div}
                           </button>
                         ))}
                       </div>
                     </div>
-
-                    {/* জেলা ফিল্টার */}
                     {mpDivision !== "সব" && (
-                      <div style={{ marginBottom: 12 }}>
-                        <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>📍 {"জেলা অনুযায়ী ফিল্টার"} ({mpDivision} {"বিভাগ"})</div>
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      <div style={{ marginBottom: 14 }}>
+                        <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 10, fontWeight: 600 }}>📍 জেলা ({mpDivision} বিভাগ)</div>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                           {districts.map(dist => (
-                            <button key={dist} onClick={() => setMpDistrict(dist)} style={{ background: mpDistrict === dist ? "#C9A84C" : "transparent", border: "1px solid " + (mpDistrict === dist ? "#C9A84C" : T.border), borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: mpDistrict === dist ? "#0D1B2A" : T.textMuted, fontFamily: "sans-serif" }}>
+                            <button key={dist} onClick={() => setMpDistrict(dist)} style={{ background: mpDistrict === dist ? "#C9A84C" : "transparent", border: "1px solid " + (mpDistrict === dist ? "#C9A84C" : T.border), borderRadius: 20, padding: "5px 12px", cursor: "pointer", fontSize: 12, color: mpDistrict === dist ? "#0d1e2d" : T.textMuted, fontFamily: "sans-serif" }}>
                               {dist === "সব" ? "সব জেলা" : dist}
                             </button>
                           ))}
                         </div>
                       </div>
                     )}
-
-                    <input placeholder={"নাম বা আসন দিয়ে খুঁজুন..."} value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 10, boxSizing: "border-box", outline: "none" }} />
-
+                    <input placeholder="নাম বা আসন দিয়ে খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 16px", color: T.text, fontSize: 15, marginBottom: 10, boxSizing: "border-box", outline: "none" }} />
                     {(mpDivision !== "সব" || mpDistrict !== "সব" || search) && (
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10, alignItems: "center" }}>
-                        <span style={{ fontSize: 12, color: T.textMuted }}>{"ফিল্টার:"}</span>
-                        {mpDivision !== "সব" && <span style={{ background: "rgba(0,106,78,0.15)", border: "1px solid #006A4E", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#4ecba0", display: "flex", alignItems: "center", gap: 4 }}>🗺️ {mpDivision}<button onClick={() => { setMpDivision("সব"); setMpDistrict("সব"); }} style={{ background: "transparent", border: "none", color: "#4ecba0", cursor: "pointer", fontSize: 13, padding: 0 }}>✕</button></span>}
-                        {mpDistrict !== "সব" && <span style={{ background: "rgba(201,168,76,0.15)", border: "1px solid #C9A84C", borderRadius: 20, padding: "3px 10px", fontSize: 12, color: "#C9A84C", display: "flex", alignItems: "center", gap: 4 }}>📍 {mpDistrict}<button onClick={() => setMpDistrict("সব")} style={{ background: "transparent", border: "none", color: "#C9A84C", cursor: "pointer", fontSize: 13, padding: 0 }}>✕</button></span>}
-                        <button onClick={() => { setMpDivision("সব"); setMpDistrict("সব"); setSearch(""); }} style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "3px 10px", fontSize: 11, color: T.textMuted, cursor: "pointer", fontFamily: "sans-serif" }}>{"সব সরান"}</button>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12, alignItems: "center" }}>
+                        <span style={{ fontSize: 13, color: T.textMuted, fontWeight: 600 }}>ফিল্টার:</span>
+                        {mpDivision !== "সব" && <span style={{ background: "rgba(0,106,78,0.15)", border: "1px solid #006A4E", borderRadius: 20, padding: "3px 12px", fontSize: 13, color: "#4ecba0", display: "flex", alignItems: "center", gap: 6 }}>🗺️ {mpDivision}<button onClick={() => { setMpDivision("সব"); setMpDistrict("সব"); }} style={{ background: "transparent", border: "none", color: "#4ecba0", cursor: "pointer", fontSize: 14, padding: 0 }}>✕</button></span>}
+                        {mpDistrict !== "সব" && <span style={{ background: "rgba(201,168,76,0.15)", border: "1px solid #C9A84C", borderRadius: 20, padding: "3px 12px", fontSize: 13, color: "#C9A84C", display: "flex", alignItems: "center", gap: 6 }}>📍 {mpDistrict}<button onClick={() => setMpDistrict("সব")} style={{ background: "transparent", border: "none", color: "#C9A84C", cursor: "pointer", fontSize: 14, padding: 0 }}>✕</button></span>}
+                        <button onClick={() => { setMpDivision("সব"); setMpDistrict("সব"); setSearch(""); }} style={{ background: "transparent", border: "1px solid " + T.border, borderRadius: 20, padding: "3px 12px", fontSize: 12, color: T.textMuted, cursor: "pointer", fontFamily: "sans-serif" }}>সব সরান</button>
                       </div>
                     )}
-
-                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 12 }}>{toBanglaNum(filteredMps.length)} {"জন সংসদ সদস্য"}</div>
-
-                    {filteredMps.map((m, i) => (
-                      <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                        <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }} onClick={() => { setSelectedPerson(m); setPersonType("mp"); }}>
-                          {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : "🏅"}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
-                            {m.name}
-                          </div>
-                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>
-                            🏅 {m.constituency} · {m.district}
-                          </div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
-                          <button onClick={() => { setSelectedPerson(m); setPersonType("mp"); }} style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>{"বিস্তারিত দেখুন →"}</button>
-                        </div>
+                    <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 14, fontWeight: 500 }}>{toBanglaNum(filteredMps.length)} জন সংসদ সদস্য</div>
+                    {viewMode === "grid" ? (
+                      <div className="grid-3col">
+                        {filteredMps.map((m, i) => <PersonCard key={i} person={m} type="mp" onClick={() => { setSelectedPerson(m); setPersonType("mp"); }} viewMode="grid" T={T} isDark={isDark} />)}
                       </div>
-                    ))}
+                    ) : (
+                      filteredMps.map((m, i) => <PersonCard key={i} person={m} type="mp" onClick={() => { setSelectedPerson(m); setPersonType("mp"); }} viewMode="list" T={T} isDark={isDark} />)
+                    )}
                   </div>
                 )}
-
                 {/* প্রকল্প ট্যাব */}
                 {!showDocuments && !showHistory && activeTab === "projects" && (
                   <div>
@@ -1268,7 +1356,7 @@ useEffect(() => {
                       ))}
                     </div>
                     {projects.map((p, i) => (
-                      <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 18, marginBottom: 12 }}>
+                      <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 14, padding: 20, marginBottom: 14 }}>
                         <div style={{ fontSize: 15, fontWeight: "bold", color: T.text, marginBottom: 8 }}>{p.title}</div>
                         <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 8 }}>📁 {p.ministry}</div>
                         <div style={{ height: 8, background: T.border, borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
@@ -1285,6 +1373,32 @@ useEffect(() => {
                 )}
 
                 {/* অ্যাক্টিভিস্ট ট্যাব */}
+                {!showDocuments && !showHistory && activeTab === "constitutional" && (
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 12, fontSize: 18, margin: 0, fontWeight: 700 }}>🏛️ সাংবিধানিক পদাধিকারী</h2>
+                      <ViewToggle />
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+                      {["সব","রাষ্ট্রপতি","উপ-রাষ্ট্রপতি","প্রধানমন্ত্রী","উপ-প্রধানমন্ত্রী","স্পীকার","ডেপুটি স্পীকার","চিফ হুইপ","হুইপ"].map(cat => (
+                        <button key={cat} onClick={() => setConstitutionalCategory(cat)} style={{ background: constitutionalCategory === cat ? "#006A4E" : "transparent", border: "1px solid " + (constitutionalCategory === cat ? "#006A4E" : T.border), borderRadius: 20, padding: "6px 14px", cursor: "pointer", fontSize: 13, color: constitutionalCategory === cat ? "#fff" : T.textMuted, fontFamily: "sans-serif", fontWeight: constitutionalCategory === cat ? 600 : 400 }}>{cat}</button>
+                      ))}
+                    </div>
+                    {(() => {
+                      const filtered = constitutionalCategory === "সব" ? constitutionalRoles : constitutionalRoles.filter(r => r.role_category === constitutionalCategory);
+                      return filtered.length === 0 ? (
+                        <div style={{ color: T.textMuted, textAlign: "center", padding: 50, fontSize: 15 }}>এই বিভাগে কোনো তথ্য নেই</div>
+                      ) : viewMode === "grid" ? (
+                        <div className="grid-3col">
+                          {filtered.map((r, i) => <PersonCard key={i} person={r} type="minister" onClick={() => { setSelectedPerson(r); setPersonType("minister"); }} viewMode="grid" T={T} isDark={isDark} />)}
+                        </div>
+                      ) : (
+                        filtered.map((r, i) => <PersonCard key={i} person={r} type="minister" onClick={() => { setSelectedPerson(r); setPersonType("minister"); }} viewMode="list" T={T} isDark={isDark} />)
+                      );
+                    })()}
+                  </div>
+                )}
+
                 {!showDocuments && !showHistory && activeTab === "activists" && (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -1479,7 +1593,7 @@ useEffect(() => {
                       { title: "তথ্য সুরক্ষা", content: "Supabase-এর নিরাপদ অবকাঠামোতে সকল তথ্য সংরক্ষিত।" },
                       { title: "যোগাযোগ", content: "admin@commandertechbd.com — Commander Tech BD, Bangladesh" },
                     ].map((item, i) => (
-                      <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #006A4E", borderRadius: 8, padding: 16, marginBottom: 12 }}>
+                      <div key={i} style={{ background: T.card, border: "1px solid " + T.border, borderLeft: "4px solid #006A4E", borderRadius: 14, padding: 18, marginBottom: 14 }}>
                         <div style={{ fontSize: 14, fontWeight: "bold", color: "#C9A84C", marginBottom: 8 }}>🔹 {item.title}</div>
                         <div style={{ fontSize: 13, color: T.textSecondary, lineHeight: 1.8 }}>{item.content}</div>
                       </div>

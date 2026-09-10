@@ -1,20 +1,18 @@
 {
-  "short_name": "BNP সরকার",
-  "name": "গণপ্রজাতন্ত্রী বাংলাদেশ সরকার - ত্রয়োদশ সংসদ",
+  "short_name": "বিএনপি সরকার",
+  "name": "গণপ্রজাতন্ত্রী বাংলাদেশ সরকার",
   "icons": [
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
+    { "src": "favicon.ico", "sizes": "64x64 32x32 24x24 16x16", "type": "image/x-icon" },
+    { "src": "logo192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "logo512.png", "type": "image/png", "sizes": "512x512" }
   ],
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#006A4E",
-  "background_color": "#0D1B2A"
+  "background_color": "#070e1a",
+  "orientation": "portrait",
+  "scope": "/",
+  "description": "বিএনপি সরকার তথ্য অ্যাপ — মন্ত্রিসভা, এমপি, সংবাদ ও উন্নয়ন",
+  "categories": ["government", "news"],
+  "prefer_related_applications": false
 }
