@@ -3,8 +3,7 @@ import { supabase } from "./supabase";
 import AdminPanel from "./AdminPanel";
 import AuthModal from "./AuthModal";
 import CommentsSection from "./CommentsSection";
-// এখানে checkOnlineStatus সরিয়ে ফেলা হয়েছে যেন ESLint error না আসে
-import { registerServiceWorker, requestNotificationPermission, showLocalNotification } from "./notifications";
+import { registerServiceWorker, requestNotificationPermission, showLocalNotification, checkOnlineStatus } from "./notifications";
 import html2canvas from "html2canvas";
 
 const shimmerStyle = `
@@ -223,8 +222,10 @@ function PersonModal({ person, type, onClose, T, isDark, allPersons, onNavigate 
             <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 10 }}>শেয়ার করুন</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>📘 Facebook</a>
-              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>💬 WhatsApp</a>
-              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#152035" : "#e0eaf4", color: isDark ? "#edf2f8" : "#0d1e2d", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer" }}>🔗 কপি</button>
+              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "
+" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>💬 WhatsApp</a>
+              <button onClick={() => { navigator.clipboard.writeText(person.name + "
+" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#152035" : "#e0eaf4", color: isDark ? "#edf2f8" : "#0d1e2d", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer" }}>🔗 কপি</button>
               <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer", fontFamily: "sans-serif" }}>📸 কার্ড</button>
             </div>
           </div>
@@ -439,7 +440,7 @@ export default function App() {
   const [achPage, setAchPage] = useState(1);
   const [achFilterOpen, setAchFilterOpen] = useState(false);
 
-  const [isOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [constitutionalRoles, setConstitutionalRoles] = useState([]);
   const [constitutionalCategory, setConstitutionalCategory] = useState("সব");
   const [viewMode, setViewMode] = useState("list");
@@ -952,62 +953,48 @@ useEffect(() => {
 
                 {govtTab === "ministers" && (
                   <div>
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>👥 {"মন্ত্রিসভা"}</h2>
-                    {currentGovtMinisters.length === 0
-                      ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।</div>
-                      :currentGovtMinisters.map((m, i) => (
-                        <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                          <div style={{ width: 52, height: 52, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
-                            onClick={() => { setSelectedPerson(m); setPersonType("minister"); }}>
-                            {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : m.icon || "👤"}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>{m.name}</div>
-                            <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>{m.role}</div>
-                            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>📁 {m.ministry}</div>
-                            
-                            {/* বিস্তারিত বাটন যোগ */}
-                            <button onClick={() => { setSelectedPerson(m); setPersonType("minister"); }}
-                              style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>
-                              {"বিস্তারিত দেখুন →"}
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 12, fontSize: 18, margin: 0, fontWeight: 700 }}>👥 মন্ত্রিসভা</h2>
+                      <ViewToggle />
+                    </div>
+                    {currentGovtMinisters.length === 0 ? (
+                      <div style={{ color: T.textMuted, textAlign: "center", padding: 50 }}>এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।</div>
+                    ) : viewMode === "grid" ? (
+                      <div className="grid-3col">
+                        {currentGovtMinisters.map((m, i) => <PersonCard key={i} person={m} type="minister" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="grid" T={T} isDark={isDark} />)}
+                      </div>
+                    ) : (
+                      currentGovtMinisters.map((m, i) => <PersonCard key={i} person={m} type="minister" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="list" T={T} isDark={isDark} />)
+                    )}
                   </div>
                 )}
 
                 {govtTab === "mps" && (
                   <div>
-                    <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 16, fontSize: 16 }}>🏅 {"সংসদ সদস্য তালিকা"}</h2>
-                    <input placeholder={"নাম বা আসন দিয়ে খুঁজুন..."} value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
-                    {mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) && (m.name.includes(search) || (m.constituency && m.constituency.includes(search)))).length === 0
-                      ? <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।</div>
-                      : mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) && (m.name.includes(search) || (m.constituency && m.constituency.includes(search)))).map((m, i) => (
-                        <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                          <div style={{ width: 48, height: 48, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }}
-                            onClick={() => { setSelectedPerson(m); setPersonType("mp"); }}>
-                            {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : "🏅"}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
-                              {m.name}
-                            </div>
-                            <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 4 }}>
-                              🏅 {m.constituency} · {m.district}
-                            </div>
-                            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>🌾 {m.party}</div>
-                            <button onClick={() => { setSelectedPerson(m); setPersonType("mp"); }} style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>{"বিস্তারিত দেখুন →"}</button>
-                          </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 12, fontSize: 18, margin: 0, fontWeight: 700 }}>🏅 সংসদ সদস্য তালিকা</h2>
+                      <ViewToggle />
+                    </div>
+                    <input placeholder="নাম বা আসন দিয়ে খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 16px", color: T.text, fontSize: 15, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                    {(() => {
+                      const histMps = mps.filter(m => Number(m.government_id) === Number(selectedGovt.id) && (m.name.includes(search) || (m.constituency && m.constituency.includes(search))));
+                      return histMps.length === 0 ? (
+                        <div style={{ color: T.textMuted, textAlign: "center", padding: 50 }}>এই সরকারের এমপি তালিকা এখনো যোগ করা হয়নি।</div>
+                      ) : viewMode === "grid" ? (
+                        <div className="grid-3col">
+                          {histMps.map((m, i) => <PersonCard key={i} person={m} type="mp" onClick={() => { setSelectedPerson(m); setPersonType("mp"); }} viewMode="grid" T={T} isDark={isDark} />)}
                         </div>
-                      ))}
+                      ) : (
+                        histMps.map((m, i) => <PersonCard key={i} person={m} type="mp" onClick={() => { setSelectedPerson(m); setPersonType("mp"); }} viewMode="list" T={T} isDark={isDark} />)
+                      );
+                    })()}
                   </div>
                 )}
 
                 {govtTab === "achievements" && (
                   <div>
                     <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, marginBottom: 12, fontSize: 16 }}>
-                      🏆 "সাফল্য"
+                      🏆 সাফল্য
                       <span style={{ fontSize: 12, color: T.textMuted, fontWeight: "normal", marginLeft: 8 }}>
                         ({currentGovtAchievements.length}টি)
                       </span>
