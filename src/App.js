@@ -218,20 +218,20 @@ function PersonModal({ person, type, onClose, T, isDark, allPersons, onNavigate 
               </div>
             </div>
           )}
-          <div style={{ borderTop: "1px solid " + T.border, paddingTop: 16 }}>
-            <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 10 }}>শেয়ার করুন</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>📘 Facebook</a>
-              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>💬 WhatsApp</a>
-              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#152035" : "#e0eaf4", color: isDark ? "#edf2f8" : "#0d1e2d", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer" }}>🔗 কপি</button>
-              <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer", fontFamily: "sans-serif" }}>📸 কার্ড</button>
-            </div>
-          </div>
-        </div>
         {/* Watermark */}
         <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "10px 20px", borderRadius: "0 0 18px 18px", display: "flex", justifyContent: "space-between" }}>
           <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: 600 }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>bnpgovt.info</div>
+        <div style={{ borderTop: "1px solid " + T.border, paddingTop: 16 }}>
+        <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 10 }}>শেয়ার করুন</div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>📘 Facebook</a>
+              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>💬 WhatsApp</a>
+              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#152035" : "#e0eaf4", color: isDark ? "#edf2f8" : "#0d1e2d", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer" }}>🔗 কপি</button>
+              <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer", fontFamily: "sans-serif" }}>📸 ডাউনলোড কার্ড</button>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
     </div>
