@@ -1242,6 +1242,7 @@ useEffect(() => {
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                       <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>{"মন্ত্রিসভা"}</h2>
                       <button onClick={() => downloadPDF("মন্ত্রিসভা", ministers, [{ key: "name", label: "নাম" }, { key: "role", label: "পদবি" }, { key: "ministry", label: "মন্ত্রণালয়" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>{"📥 PDF"}</button>
+                      <ViewToggle />
                     </div>
                     <input placeholder={"মন্ত্রী বা মন্ত্রণালয় খুঁজুন..."} value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
                     {filteredMinisters.map((m, i) => (
@@ -1263,17 +1264,18 @@ useEffect(() => {
                         </div>
                       </div>
                     ))}
-                    {filteredMinisters.length === 0 && <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>কোনো মন্ত্রী খুঁজে পাওয়া যায়নি</div>}
-                   <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 14, fontWeight: 500 }}>{toBanglaNum(filteredMps.length)} জন সংসদ সদস্য</div>
-                    {viewMode === "grid" ? (
-                      <div className="grid-3col">
-                        {filteredMinisters.map((m, i) => <PersonCard key={i} person={m} type="mp" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="grid" T={T} isDark={isDark} />)}
-                      </div>
-                    ) : (
-                      filteredMinisters.map((m, i) => <PersonCard key={i} person={m} type="mp" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="list" T={T} isDark={isDark} />)
-                    )}
-                  </div>
-                )}
+                    
+                {currentGovtMinisters.length === 0 ? (
+                <div style={{ color: T.textMuted, textAlign: "center", padding: 50 }}>এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।</div>
+              ) : viewMode === "grid" ? (
+                <div className="grid-3col">
+                  {currentGovtMinisters.map((m, i) => <PersonCard key={i} person={m} type="minister" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="grid" T={T} isDark={isDark} />)}
+                </div>
+              ) : (
+                currentGovtMinisters.map((m, i) => <PersonCard key={i} person={m} type="minister" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="list" T={T} isDark={isDark} />)
+              )}
+            </div>
+          )}
 
                 {/* এমপি ট্যাব */}
                 {!showDocuments && !showHistory && activeTab === "mps" && (
@@ -1326,6 +1328,7 @@ useEffect(() => {
                     )}
                   </div>
                 )}
+
                 {/* প্রকল্প ট্যাব */}
                 {!showDocuments && !showHistory && activeTab === "projects" && (
                   <div>
