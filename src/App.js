@@ -1263,6 +1263,15 @@ useEffect(() => {
                         </div>
                       </div>
                     ))}
+                    {filteredMinisters.length === 0 && <div style={{ color: T.textMuted, textAlign: "center", padding: 40 }}>কোনো মন্ত্রী খুঁজে পাওয়া যায়নি</div>}
+                   <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 14, fontWeight: 500 }}>{toBanglaNum(filteredMps.length)} জন সংসদ সদস্য</div>
+                    {viewMode === "grid" ? (
+                      <div className="grid-3col">
+                        {filteredMinisters.map((m, i) => <PersonCard key={i} person={m} type="mp" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="grid" T={T} isDark={isDark} />)}
+                      </div>
+                    ) : (
+                      filteredMinisters.map((m, i) => <PersonCard key={i} person={m} type="mp" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="list" T={T} isDark={isDark} />)
+                    )}
                   </div>
                 )}
 
