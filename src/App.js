@@ -231,7 +231,7 @@ function PersonModal({ person, type, onClose, T, isDark, allPersons, onNavigate 
         {/* Watermark */}
         <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "10px 20px", borderRadius: "0 0 18px 18px", display: "flex", justifyContent: "space-between" }}>
           <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: 600 }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>bnp-govt-app.vercel.app</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>bnpgovt.info</div>
         </div>
       </div>
     </div>
