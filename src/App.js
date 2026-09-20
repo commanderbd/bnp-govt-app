@@ -1240,42 +1240,22 @@ useEffect(() => {
                 {!showDocuments && !showHistory && activeTab === "ministers" && (
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 10, fontSize: 16, margin: 0 }}>{"মন্ত্রিসভা"}</h2>
-                      <button onClick={() => downloadPDF("মন্ত্রিসভা", ministers, [{ key: "name", label: "নাম" }, { key: "role", label: "পদবি" }, { key: "ministry", label: "মন্ত্রণালয়" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 6, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>{"📥 PDF"}</button>
-                      <ViewToggle />
-                    </div>
-                    <input placeholder={"মন্ত্রী বা মন্ত্রণালয় খুঁজুন..."} value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 8, padding: "10px 14px", color: T.text, fontSize: 14, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
-                    {filteredMinisters.map((m, i) => (
-                      <div key={i} className="card-hover" style={{ background: T.card, border: "1px solid " + T.border, borderRadius: 10, padding: 16, marginBottom: 10, display: "flex", gap: 14, alignItems: "flex-start" }}>
-                        <div style={{ width: 52, height: 52, borderRadius: "50%", border: "2px solid #C9A84C", flexShrink: 0, overflow: "hidden", background: "#006A4E", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, cursor: "pointer" }} onClick={() => { setSelectedPerson(m); setPersonType("minister"); }}>
-                          {m.photo_url ? <img src={m.photo_url} alt={m.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : m.icon || "👤"}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 15, fontWeight: "bold", color: T.text }}>
-                            {m.name}
-                          </div>
-                          <div style={{ fontSize: 12, color: "#C9A84C", marginTop: 2 }}>
-                            {m.role}
-                          </div>
-                          <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>
-                            📁 {m.ministry}
-                          </div>
-                          <button onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} style={{ marginTop: 8, background: "transparent", border: "1px solid #C9A84C", borderRadius: 16, padding: "4px 12px", cursor: "pointer", fontSize: 11, color: "#C9A84C", fontFamily: "sans-serif" }}>{"বিস্তারিত দেখুন →"}</button>
-                        </div>
+                      <h2 style={{ color: "#C9A84C", borderLeft: "4px solid #006A4E", paddingLeft: 12, fontSize: 18, margin: 0, fontWeight: 700 }}>মন্ত্রিসভা</h2>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <button onClick={() => downloadPDF("মন্ত্রিসভা", ministers, [{ key: "name", label: "নাম" }, { key: "role", label: "পদবি" }, { key: "ministry", label: "মন্ত্রণালয়" }])} style={{ background: "#006A4E", color: "#fff", border: "none", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>📥 PDF</button>
+                        <ViewToggle />
                       </div>
-                    ))}
-                    
-                {currentGovtMinisters.length === 0 ? (
-                <div style={{ color: T.textMuted, textAlign: "center", padding: 50 }}>এই সরকারের মন্ত্রিসভার তথ্য এখনো যোগ করা হয়নি।</div>
-              ) : viewMode === "grid" ? (
-                <div className="grid-3col">
-                  {currentGovtMinisters.map((m, i) => <PersonCard key={i} person={m} type="minister" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="grid" T={T} isDark={isDark} />)}
-                </div>
-              ) : (
-                currentGovtMinisters.map((m, i) => <PersonCard key={i} person={m} type="minister" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="list" T={T} isDark={isDark} />)
-              )}
-            </div>
-          )}
+                    </div>
+                    <input placeholder="মন্ত্রী বা মন্ত্রণালয় খুঁজুন..." value={search} onChange={e => setSearch(e.target.value)} style={{ width: "100%", background: T.card, border: "1px solid " + T.border, borderRadius: 12, padding: "12px 16px", color: T.text, fontSize: 15, marginBottom: 16, boxSizing: "border-box", outline: "none" }} />
+                    {viewMode === "grid" ? (
+                      <div className="grid-3col">
+                        {filteredMinisters.map((m, i) => <PersonCard key={i} person={m} type="minister" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="grid" T={T} isDark={isDark} />)}
+                      </div>
+                    ) : (
+                      filteredMinisters.map((m, i) => <PersonCard key={i} person={m} type="minister" onClick={() => { setSelectedPerson(m); setPersonType("minister"); }} viewMode="list" T={T} isDark={isDark} />)
+                    )}
+                  </div>
+                )}
 
                 {/* এমপি ট্যাব */}
                 {!showDocuments && !showHistory && activeTab === "mps" && (
@@ -1328,7 +1308,6 @@ useEffect(() => {
                     )}
                   </div>
                 )}
-
                 {/* প্রকল্প ট্যাব */}
                 {!showDocuments && !showHistory && activeTab === "projects" && (
                   <div>
