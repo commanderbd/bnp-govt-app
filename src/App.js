@@ -166,9 +166,9 @@ function PersonModal({ person, type, onClose, T, isDark, allPersons, onNavigate 
   if (!person) return null;
   return (
     <div onClick={onClose} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.82)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} ref={cardRef} style={{ background: isDark ? "#0c1828" : "#ffffff", border: "2px solid #C9A84C", borderRadius: 20, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto" }}>
+      <div onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ background: isDark ? "#0c1828" : "#ffffff", border: "2px solid #C9A84C", borderRadius: 20, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto" }}>
 
-        {/* Swipe nav */}
+        {/* Swipe nav — বাইরে, ডাউনলোড কার্ডে যাবে না */}
         {allPersons && allPersons.length > 1 && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: isDark ? "rgba(7,14,26,0.9)" : "rgba(238,243,249,0.9)", backdropFilter: "blur(10px)", borderRadius: "18px 18px 0 0" }}>
             <button onClick={e => { e.stopPropagation(); if (currentIndex > 0) onNavigate(allPersons[currentIndex - 1]); }} disabled={currentIndex <= 0}
@@ -179,59 +179,67 @@ function PersonModal({ person, type, onClose, T, isDark, allPersons, onNavigate 
           </div>
         )}
 
-        {/* Header */}
-        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "22px 20px", borderRadius: allPersons && allPersons.length > 1 ? 0 : "18px 18px 0 0", position: "relative" }}>
-          <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", color: "#fff", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-            <div style={{ width: 74, height: 74, borderRadius: "50%", border: "3px solid #C9A84C", overflow: "hidden", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, flexShrink: 0 }}>
-              {person.photo_url ? <img src={person.photo_url} alt={person.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : type === "minister" ? (person.icon || "👤") : "🏅"}
-            </div>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 4, lineHeight: 1.3 }}>{person.name}</div>
-              <div style={{ fontSize: 14, color: "#C9A84C" }}>{type === "minister" ? person.role : person.constituency}</div>
-              {type === "minister" && person.ministry && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>📁 {person.ministry}</div>}
-              {type === "mp" && person.district && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>📍 {person.district}</div>}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ padding: 20 }}>
-          <div style={{ background: "rgba(0,106,78,0.12)", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 10, padding: "10px 16px", marginBottom: 18 }}>
-            <span style={{ fontSize: 14, color: "#4ecba0" }}>🌾 {person.party || "বাংলাদেশ জাতীয়তাবাদী দল"}</span>
-          </div>
-          {person.bio ? (
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 13, color: "#C9A84C", fontWeight: 700, marginBottom: 10 }}>📋 সংক্ষিপ্ত পরিচিতি</div>
-              <div style={{ fontSize: 15, color: isDark ? "#7aa0b8" : "#2a4a60", lineHeight: 1.9, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 14 }}>{person.bio}</div>
-            </div>
-          ) : (
-            <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 18, marginBottom: 18, textAlign: "center" }}>
-              <div style={{ fontSize: 14, color: isDark ? "#456070" : "#527080" }}>বিস্তারিত তথ্য শীঘ্রই যোগ করা হবে</div>
-            </div>
-          )}
-          {(person.phone || person.email) && (
-            <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 13, color: "#C9A84C", fontWeight: 700, marginBottom: 10 }}>📞 যোগাযোগ</div>
-              <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 14 }}>
-                {person.phone && <div style={{ display: "flex", gap: 10, marginBottom: 8 }}><span>📱</span><a href={"tel:" + person.phone} style={{ fontSize: 14, color: "#4ecba0", textDecoration: "none" }}>{person.phone}</a></div>}
-                {person.email && <div style={{ display: "flex", gap: 10 }}><span>📧</span><a href={"mailto:" + person.email} style={{ fontSize: 14, color: "#4ecba0", textDecoration: "none" }}>{person.email}</a></div>}
+        {/* ডাউনলোডযোগ্য অংশ শুরু — cardRef */}
+        <div ref={cardRef}>
+          {/* Header */}
+          <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "22px 20px", borderRadius: allPersons && allPersons.length > 1 ? 0 : "18px 18px 0 0", position: "relative" }}>
+            <button onClick={onClose} style={{ position: "absolute", top: 12, right: 12, background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", color: "#fff", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+              <div style={{ width: 74, height: 74, borderRadius: "50%", border: "3px solid #C9A84C", overflow: "hidden", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, flexShrink: 0 }}>
+                {person.photo_url ? <img src={person.photo_url} alt={person.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => e.target.style.display = "none"} /> : type === "minister" ? (person.icon || "👤") : "🏅"}
+              </div>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginBottom: 4, lineHeight: 1.3 }}>{person.name}</div>
+                <div style={{ fontSize: 14, color: "#C9A84C" }}>{type === "minister" ? person.role : person.constituency}</div>
+                {type === "minister" && person.ministry && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>📁 {person.ministry}</div>}
+                {type === "mp" && person.district && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>📍 {person.district}</div>}
               </div>
             </div>
-          )}
-          <div style={{ borderTop: "1px solid " + T.border, paddingTop: 16 }}>
-            <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 10 }}>শেয়ার করুন</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>📘 Facebook</a>
-              <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>💬 WhatsApp</a>
-              <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#152035" : "#e0eaf4", color: isDark ? "#edf2f8" : "#0d1e2d", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer" }}>🔗 কপি</button>
-              <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer", fontFamily: "sans-serif" }}>📸 ডাউনলোড</button>
+          </div>
+
+          <div style={{ padding: 20 }}>
+            <div style={{ background: "rgba(0,106,78,0.12)", border: "1px solid rgba(0,106,78,0.3)", borderRadius: 10, padding: "10px 16px", marginBottom: 18 }}>
+              <span style={{ fontSize: 14, color: "#4ecba0" }}>🌾 {person.party || "বাংলাদেশ জাতীয়তাবাদী দল"}</span>
             </div>
+            {person.bio ? (
+              <div>
+                <div style={{ fontSize: 13, color: "#C9A84C", fontWeight: 700, marginBottom: 10 }}>📋 সংক্ষিপ্ত পরিচিতি</div>
+                <div style={{ fontSize: 15, color: isDark ? "#7aa0b8" : "#2a4a60", lineHeight: 1.9, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 14 }}>{person.bio}</div>
+              </div>
+            ) : (
+              <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 18, textAlign: "center" }}>
+                <div style={{ fontSize: 14, color: isDark ? "#456070" : "#527080" }}>বিস্তারিত তথ্য শীঘ্রই যোগ করা হবে</div>
+              </div>
+            )}
+          </div>
+          {/* Watermark */}
+          <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "10px 20px", display: "flex", justifyContent: "space-between" }}>
+            <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: 600 }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>bnpgovt.info</div>
           </div>
         </div>
-        {/* Watermark */}
-        <div style={{ background: "linear-gradient(135deg, #006A4E, #004d38)", padding: "10px 20px", borderRadius: "0 0 18px 18px", display: "flex", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 12, color: "#C9A84C", fontWeight: 600 }}>🇧🇩 গণপ্রজাতন্ত্রী বাংলাদেশ সরকার</div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>bnpgovt.info</div>
+        {/* ডাউনলোডযোগ্য অংশ শেষ */}
+
+        {/* যোগাযোগ — ডাউনলোড কার্ডে যাবে না */}
+        {(person.phone || person.email) && (
+          <div style={{ padding: "0 20px 20px" }}>
+            <div style={{ fontSize: 13, color: "#C9A84C", fontWeight: 700, marginBottom: 10, marginTop: 18 }}>📞 যোগাযোগ</div>
+            <div style={{ background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)", borderRadius: 10, padding: 14 }}>
+              {person.phone && <div style={{ display: "flex", gap: 10, marginBottom: 8 }}><span>📱</span><a href={"tel:" + person.phone} style={{ fontSize: 14, color: "#4ecba0", textDecoration: "none" }}>{person.phone}</a></div>}
+              {person.email && <div style={{ display: "flex", gap: 10 }}><span>📧</span><a href={"mailto:" + person.email} style={{ fontSize: 14, color: "#4ecba0", textDecoration: "none" }}>{person.email}</a></div>}
+            </div>
+          </div>
+        )}
+
+        {/* শেয়ার ও ডাউনলোড — বাইরে, ডাউনলোড কার্ডে যাবে না */}
+        <div style={{ padding: "0 20px 20px", borderTop: "1px solid " + T.border, marginTop: 4, paddingTop: 16 }}>
+          <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 10 }}>শেয়ার করুন</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(window.location.origin + "/#" + type + "-" + person.id) + "&quote=" + encodeURIComponent(person.name)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>📘 Facebook</a>
+            <a href={"whatsapp://send?text=" + encodeURIComponent(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id)} style={{ background: "#25D366", color: "#fff", borderRadius: 8, padding: "7px 14px", fontSize: 13, textDecoration: "none" }}>💬 WhatsApp</a>
+            <button onClick={() => { navigator.clipboard.writeText(person.name + "\n" + window.location.origin + "/#" + type + "-" + person.id); alert("কপি!"); }} style={{ background: isDark ? "#152035" : "#e0eaf4", color: isDark ? "#edf2f8" : "#0d1e2d", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer" }}>🔗 কপি</button>
+            <button onClick={downloadCard} style={{ background: "#9F5DCF", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", fontSize: 13, cursor: "pointer", fontFamily: "sans-serif" }}>📸 কার্ড</button>
+          </div>
         </div>
       </div>
     </div>
