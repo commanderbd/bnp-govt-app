@@ -507,7 +507,7 @@ export default function App() {
   const waText = encodeURIComponent(title + "\n" + shareUrl);
   return (
     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
-      <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(shareUrl) + "&quote=" + encodeURIComponent(title)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, textDecoration: "none" }}>📘 FB</a>
+      <a href={"https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(shareUrl) + "&quote=" + encodeURIComponent(title)} target="_blank" rel="noreferrer" style={{ background: "#1877F2", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, textDecoration: "none" }}>ⓕ FB</a>
       <a href={"whatsapp://send?text=" + waText} style={{ background: "#25D366", color: "#fff", borderRadius: 6, padding: "4px 10px", fontSize: 11, textDecoration: "none" }}>💬 WA</a>
       <button onClick={() => navigator.clipboard.writeText(title + "\n" + shareUrl).then(() => alert("কপি!"))} style={{ background: isDark ? "#1e3348" : "#D0DCE8", color: isDark ? "#F5F0E8" : "#1A2A3A", border: "none", borderRadius: 6, padding: "4px 10px", fontSize: 11, cursor: "pointer" }}>🔗</button>
     </div>
